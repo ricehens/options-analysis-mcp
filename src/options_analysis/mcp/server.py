@@ -6,6 +6,7 @@ from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
 from options_analysis.mcp.models import (
+    ProviderAuthStatusResult,
     ProviderListResult,
     ProviderSummary,
     ServerInfoResult,
@@ -78,6 +79,22 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             defaults={
                 "market_data": application.settings.default_market_data_provider,
             },
+        )
+
+    @server.tool(name="options_provider_auth_status")
+    def options_provider_auth_status(provider: str) -> ProviderAuthStatusResult:
+        """Return safe authentication state; never credentials or tokens."""
+
+        status = application.provider_service.auth_status(provider)
+        return ProviderAuthStatusResult(
+            provider_id=status.provider_id,
+            authentication_type=status.authentication_type.value,
+            state=status.state.value,
+            configured=status.configured,
+            authorized=status.authorized,
+            expires_at=(status.expires_at.isoformat() if status.expires_at else None),
+            reauthorization_required=status.reauthorization_required,
+            message=status.message,
         )
 
 

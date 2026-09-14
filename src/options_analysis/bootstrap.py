@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from options_analysis.config import AppSettings
 from options_analysis.providers import ProviderRegistry, ProviderRouter
 from options_analysis.providers.fake import FakeProvider
+from options_analysis.providers.schwab import build_schwab_provider
 from options_analysis.services import MarketDataService, ProviderService
 
 
@@ -21,6 +22,8 @@ def build_application(settings: AppSettings | None = None) -> Application:
     registry = ProviderRegistry(resolved_settings.enabled_providers)
     if "fake" in resolved_settings.enabled_providers:
         registry.register(FakeProvider())
+    if "schwab" in resolved_settings.enabled_providers:
+        registry.register(build_schwab_provider(resolved_settings))
     registry.load_entry_point_plugins()
     router = ProviderRouter(
         registry,

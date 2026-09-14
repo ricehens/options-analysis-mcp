@@ -4,11 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "options-analysis-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Provider-pluggable, read-only options data and analysis services"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "httpx>=0.28,<1",
   "mcp>=2.2,<3",
   "pydantic>=2.11,<3",
   "pydantic-settings>=2.10,<3",
@@ -16,6 +17,8 @@ dependencies = [
 
 [project.scripts]
 options-analysis-mcp = "options_analysis.mcp.server:main"
+options-analysis-schwab-auth = "options_analysis.providers.schwab.cli:main"
+options-analysis-schwab-smoke = "options_analysis.providers.schwab.cli:smoke_main"
 
 [dependency-groups]
 dev = [

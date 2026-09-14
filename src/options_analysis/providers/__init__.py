@@ -1,6 +1,8 @@
 """Provider contracts, discovery, routing, and built-in offline adapters."""
 
 from options_analysis.providers.contracts import (
+    AuthenticatingProvider,
+    AuthenticationState,
     AuthenticationType,
     Capability,
     FreshnessMode,
@@ -10,6 +12,7 @@ from options_analysis.providers.contracts import (
     PortfolioProvider,
     PriceHistoryQuery,
     Provider,
+    ProviderAuthStatus,
     ProviderDescriptor,
     ProviderStatus,
     StreamingProvider,
@@ -17,6 +20,8 @@ from options_analysis.providers.contracts import (
 from options_analysis.providers.registry import ProviderRegistry, ProviderRouter
 
 __all__ = [
+    "AuthenticatingProvider",
+    "AuthenticationState",
     "AuthenticationType",
     "Capability",
     "FreshnessMode",
@@ -26,6 +31,7 @@ __all__ = [
     "PortfolioProvider",
     "PriceHistoryQuery",
     "Provider",
+    "ProviderAuthStatus",
     "ProviderDescriptor",
     "ProviderRegistry",
     "ProviderRouter",

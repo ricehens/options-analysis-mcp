@@ -2,7 +2,7 @@ import pytest
 
 from options_analysis.bootstrap import build_application
 from options_analysis.config import AppSettings
-from options_analysis.providers import Capability
+from options_analysis.providers import AuthenticationState, Capability
 
 
 @pytest.mark.asyncio
@@ -23,3 +23,12 @@ def test_provider_service_lists_capabilities_without_secrets() -> None:
 
     assert Capability.OPTION_CHAINS in status.descriptor.capabilities
     assert "credential" not in status.model_dump_json().lower()
+
+
+def test_provider_service_reports_generic_auth_status() -> None:
+    application = build_application(AppSettings(_env_file=None))
+
+    status = application.provider_service.auth_status("fake")
+
+    assert status.state is AuthenticationState.NOT_REQUIRED
+    assert status.authorized is True

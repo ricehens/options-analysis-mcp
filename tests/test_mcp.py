@@ -15,7 +15,11 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
     async with Client(server) as client:
         listed = await client.list_tools()
         names = {tool.name for tool in listed.tools}
-        assert names == {"options_list_providers", "options_server_info"}
+        assert names == {
+            "options_list_providers",
+            "options_provider_auth_status",
+            "options_server_info",
+        }
         assert all(tool.output_schema is not None for tool in listed.tools)
 
         info = await client.call_tool("options_server_info", {})
@@ -29,6 +33,14 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert providers.structured_content is not None
         assert providers.structured_content["providers"][0]["provider_id"] == "fake"
         assert providers.structured_content["defaults"]["market_data"] == "fake"
+
+        auth = await client.call_tool(
+            "options_provider_auth_status", {"provider": "fake"}
+        )
+        assert auth.is_error is False
+        assert auth.structured_content is not None
+        assert auth.structured_content["state"] == "not_required"
+        assert auth.structured_content["authorized"] is True
 
 
 @pytest.mark.asyncio
@@ -44,6 +56,7 @@ async def test_foundation_tools_over_stdio_subprocess() -> None:
         listed = await client.list_tools()
         assert {tool.name for tool in listed.tools} == {
             "options_list_providers",
+            "options_provider_auth_status",
             "options_server_info",
         }
         result = await client.call_tool("options_server_info", {})

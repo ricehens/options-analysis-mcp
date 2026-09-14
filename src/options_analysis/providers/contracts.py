@@ -32,6 +32,15 @@ class AuthenticationType(StrEnum):
     SESSION = "session"
 
 
+class AuthenticationState(StrEnum):
+    NOT_REQUIRED = "not_required"
+    NOT_CONFIGURED = "not_configured"
+    NOT_AUTHORIZED = "not_authorized"
+    AUTHORIZED = "authorized"
+    REFRESH_NEEDED = "refresh_needed"
+    REAUTHORIZATION_REQUIRED = "reauthorization_required"
+
+
 class FreshnessMode(StrEnum):
     DETERMINISTIC = "deterministic"
     DELAYED = "delayed"
@@ -53,6 +62,22 @@ class ProviderStatus(DomainModel):
     configured: bool
     ready: bool
     message: str | None = None
+
+
+class ProviderAuthStatus(DomainModel):
+    provider_id: str
+    authentication_type: AuthenticationType
+    state: AuthenticationState
+    configured: bool
+    authorized: bool
+    expires_at: datetime | None = None
+    reauthorization_required: bool = False
+    message: str | None = None
+
+    @field_validator("expires_at")
+    @classmethod
+    def expiry_is_aware(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else require_aware_datetime(value)
 
 
 class OptionChainQuery(DomainModel):
@@ -115,6 +140,11 @@ class Provider(Protocol):
     def descriptor(self) -> ProviderDescriptor: ...
 
     def status(self) -> ProviderStatus: ...
+
+
+@runtime_checkable
+class AuthenticatingProvider(Provider, Protocol):
+    def auth_status(self) -> ProviderAuthStatus: ...
 
 
 @runtime_checkable

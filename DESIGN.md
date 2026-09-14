@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Foundation implemented through Milestone 1
+Status: Offline implementation complete through Milestone 2
 
 Last updated: 2026-09-14
 
@@ -453,6 +453,11 @@ dividend, timestamp, and volatility inputs.
   captures provider credentials.
 - Reauthorization failure produces an actionable status rather than retrying
   indefinitely.
+
+The default Schwab endpoint URLs are adapter configuration rather than core
+constants. They must be checked against the application's current Schwab portal
+documentation during first live activation; changing them does not affect
+domain models, services, or MCP schemas.
 
 No secret is accepted as an MCP tool argument because model-visible tool
 arguments can be logged by clients.

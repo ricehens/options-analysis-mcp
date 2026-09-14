@@ -14,10 +14,12 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 1 is complete and awaiting review. The offline skeleton includes
-strict domain models, provider capability contracts, an allow-listed registry,
-a deterministic fake provider, and two working MCP foundation tools. No Schwab
-credentials, tokens, SDK calls, or network integration have been added.
+Milestone 2's code is complete. In addition to the offline skeleton, the project
+has a Schwab adapter with OAuth callback validation, private atomic token
+storage, refresh coordination, a GET-only HTTP gateway, typed provider errors,
+and a third generic MCP tool, `options_provider_auth_status`. The live OAuth and
+single-read check remain a local operational step requiring your approved
+Schwab application.
 
 Read these documents first:
 
@@ -28,6 +30,8 @@ Read these documents first:
 
 - `options_server_info` returns safe runtime and read-only status.
 - `options_list_providers` returns enabled providers and capabilities.
+- `options_provider_auth_status` reports safe provider authorization state
+  without exposing credentials or token values.
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
 - The MCP server runs locally over stdio.
@@ -59,6 +63,33 @@ uv run options-analysis-mcp
 The process waits for MCP messages on standard input and does not print a normal
 interactive prompt.
 
+## Schwab local authorization
+
+Copy `.env.example` to the ignored `.env`, set the application client ID,
+secret, and exact registered callback, and add `schwab` to
+`OPTIONS_ANALYSIS_ENABLED_PROVIDERS`. Never commit `.env`.
+
+Then run:
+
+```console
+uv run options-analysis-schwab-auth
+```
+
+The command opens the provider authorization page (unless `--no-open` is used)
+and asks you to paste the full callback URL into hidden terminal input. Tokens
+default to a user-only file under macOS Application Support, outside the repo.
+
+To opt into one narrow read-only gateway check:
+
+```console
+OPTIONS_ANALYSIS_ALLOW_LIVE_SMOKE_TESTS=true \
+  uv run options-analysis-schwab-smoke --symbol SPY
+```
+
+The smoke command reports only response shape metadata, not the quote payload.
+The configured endpoint defaults must be confirmed against the current Schwab
+developer portal during this first activation.
+
 ## Safety boundary
 
 The planned initial system can read market data and, when a configured adapter
@@ -70,7 +101,6 @@ or captured Schwab response containing private account data.
 
 ## Resume
 
-After reviewing the Milestone 1 skeleton and `STATUS.md`, explicitly approve
-Milestone 2. That milestone adds Schwab OAuth, secure local token handling, the
-read-only Schwab gateway, and provider authentication status. Work pauses again
-after that checkpoint.
+Read `STATUS.md` for the exact checkpoint. Milestone 3 adds normalized quote,
+expiration, filtered-chain, option-quote, and underlying-history MCP tools while
+preserving the provider-neutral interfaces.

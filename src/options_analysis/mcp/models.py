@@ -34,3 +34,14 @@ class ProviderSummary(MCPResult):
 class ProviderListResult(MCPResult):
     providers: tuple[ProviderSummary, ...]
     defaults: dict[str, str]
+
+
+class ProviderAuthStatusResult(MCPResult):
+    provider_id: str
+    authentication_type: str
+    state: str
+    configured: bool
+    authorized: bool
+    expires_at: str | None
+    reauthorization_required: bool
+    message: str | None
