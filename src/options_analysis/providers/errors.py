@@ -34,6 +34,10 @@ class ProviderUpstreamUnavailableError(ProviderError):
 class ProviderResponseSchemaError(ProviderError):
     """The upstream response could not be safely interpreted."""
 
+    def __init__(self, message: str, *, field_paths: tuple[str, ...] = ()) -> None:
+        super().__init__(message)
+        self.field_paths = field_paths
+
 
 class ProviderValidationError(ProviderError):
     """The provider rejected request parameters."""

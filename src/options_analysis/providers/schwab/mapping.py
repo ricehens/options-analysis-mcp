@@ -68,8 +68,8 @@ class SchwabMapper:
         try:
             return self._map_quote_entry(source)
         except (ValidationError, ValueError) as error:
-            raise ProviderResponseSchemaError(
-                "Schwab quote fields could not be normalized."
+            raise _schema_error(
+                "Schwab quote fields could not be normalized.", error
             ) from error
 
     def option_quotes(
@@ -87,8 +87,9 @@ class SchwabMapper:
             try:
                 quote = self._map_quote_entry(source)
             except (ValidationError, ValueError) as error:
-                raise ProviderResponseSchemaError(
-                    f"Schwab quote fields could not be normalized for {requested!r}."
+                raise _schema_error(
+                    f"Schwab quote fields could not be normalized for {requested!r}.",
+                    error,
                 ) from error
             if quote.instrument.asset_type is not AssetType.OPTION:
                 raise ProviderResponseSchemaError(
@@ -110,8 +111,9 @@ class SchwabMapper:
                 )
             )
         except (ValidationError, ValueError) as error:
-            raise ProviderResponseSchemaError(
-                "Schwab expiration response did not match the expected schema."
+            raise _schema_error(
+                "Schwab expiration response did not match the expected schema.",
+                error,
             ) from error
 
     def option_chain(self, payload: object, query: OptionChainQuery) -> OptionChain:
@@ -119,8 +121,9 @@ class SchwabMapper:
             response = SchwabChainResponse.model_validate(payload)
             self._require_success(response.status, "option-chain", allow_partial=True)
         except ValidationError as error:
-            raise ProviderResponseSchemaError(
-                "Schwab option-chain response did not match the expected schema."
+            raise _schema_error(
+                "Schwab option-chain response did not match the expected schema.",
+                error,
             ) from error
 
         received = self._clock()
@@ -204,16 +207,17 @@ class SchwabMapper:
                 for candle in response.candles
             )
         except (ValidationError, ValueError) as error:
-            raise ProviderResponseSchemaError(
-                "Schwab price-history response did not match the expected schema."
+            raise _schema_error(
+                "Schwab price-history response did not match the expected schema.",
+                error,
             ) from error
 
     def _parse_quotes(self, payload: object) -> dict[str, SchwabQuoteEntry]:
         try:
             return SchwabQuoteResponse.model_validate(payload).root
         except ValidationError as error:
-            raise ProviderResponseSchemaError(
-                "Schwab quote response did not match the expected schema."
+            raise _schema_error(
+                "Schwab quote response did not match the expected schema.", error
             ) from error
 
     def _map_quote_entry(self, source: SchwabQuoteEntry) -> Quote:
@@ -640,3 +644,15 @@ class SchwabMapper:
             raise ValueError(
                 f"unsupported price-history resolution: {resolution}"
             ) from error
+
+
+def _schema_error(
+    message: str, error: ValidationError | ValueError
+) -> ProviderResponseSchemaError:
+    field_paths: tuple[str, ...] = ()
+    if isinstance(error, ValidationError):
+        field_paths = tuple(
+            ".".join(str(part) for part in item["loc"])
+            for item in error.errors(include_url=False)[:5]
+        )
+    return ProviderResponseSchemaError(message, field_paths=field_paths)

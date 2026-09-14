@@ -95,3 +95,14 @@ def test_maps_price_history_and_rejects_schema_drift() -> None:
 
     with pytest.raises(ProviderResponseSchemaError):
         mapper().price_history({"candles": []}, query)
+
+
+def test_schema_drift_reports_field_paths_without_response_body() -> None:
+    with pytest.raises(ProviderResponseSchemaError) as caught:
+        mapper().quote(
+            {"SPY": {"assetMainType": "EQUITY", "privateValue": "do-not-copy"}},
+            "SPY",
+        )
+
+    assert caught.value.field_paths == ("SPY.symbol",)
+    assert "do-not-copy" not in str(caught.value)

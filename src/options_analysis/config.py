@@ -41,6 +41,8 @@ class AppSettings(BaseSettings):
     enabled_providers: tuple[str, ...] = ("fake",)
     default_market_data_provider: str = "fake"
     allow_live_smoke_tests: bool = False
+    snapshot_cache_ttl_seconds: float = 1.0
+    snapshot_cache_max_entries: int = 512
     schwab_client_id: SecretStr | None = None
     schwab_client_secret: SecretStr | None = None
     schwab_redirect_uri: str = "https://127.0.0.1"
@@ -51,6 +53,20 @@ class AppSettings(BaseSettings):
     schwab_http_timeout_seconds: float = 10.0
     schwab_http_max_attempts: int = 3
     schwab_http_max_response_bytes: int = 5_000_000
+
+    @field_validator("snapshot_cache_ttl_seconds")
+    @classmethod
+    def validate_cache_ttl(cls, value: float) -> float:
+        if not 0 <= value <= 60:
+            raise ValueError("snapshot cache TTL must be between 0 and 60 seconds")
+        return value
+
+    @field_validator("snapshot_cache_max_entries")
+    @classmethod
+    def validate_cache_size(cls, value: int) -> int:
+        if not 1 <= value <= 10_000:
+            raise ValueError("snapshot cache size must be between 1 and 10000")
+        return value
 
     @field_validator("enabled_providers")
     @classmethod

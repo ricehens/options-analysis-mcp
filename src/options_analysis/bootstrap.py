@@ -11,6 +11,7 @@ from options_analysis.services import (
     PositionAnalysisService,
     ProviderService,
 )
+from options_analysis.services.cache import TTLCache
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,7 +35,13 @@ def build_application(settings: AppSettings | None = None) -> Application:
         registry,
         default_market_data_provider=resolved_settings.default_market_data_provider,
     )
-    market_data = MarketDataService(router)
+    market_data = MarketDataService(
+        router,
+        quote_cache=TTLCache(
+            ttl_seconds=resolved_settings.snapshot_cache_ttl_seconds,
+            max_entries=resolved_settings.snapshot_cache_max_entries,
+        ),
+    )
     return Application(
         settings=resolved_settings,
         registry=registry,

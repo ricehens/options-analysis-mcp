@@ -1,4 +1,4 @@
-.PHONY: sync format lint type test check run
+.PHONY: sync format lint type test check build release-check run
 
 UV ?= uv
 
@@ -22,6 +22,11 @@ check:
 	$(UV) run ruff check .
 	$(UV) run mypy
 	$(UV) run pytest
+
+build:
+	$(UV) build
+
+release-check: check build
 
 run:
 	$(UV) run options-analysis-mcp

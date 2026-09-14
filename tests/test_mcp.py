@@ -114,6 +114,20 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert analysis.structured_content["analysis"]["max_profit"] == "200"
         assert analysis.structured_content["analysis"]["break_even_prices"] == ["98"]
 
+        error = await client.call_tool(
+            "options_get_underlying_quote",
+            {"symbol": "SPY", "provider": "disabled"},
+        )
+        assert error.is_error is False
+        assert error.structured_content is not None
+        assert error.structured_content["error"] == {
+            "category": "configuration",
+            "message": "unknown or disabled provider: disabled",
+            "retryable": False,
+            "reauthorization_required": False,
+            "field_paths": [],
+        }
+
 
 @pytest.mark.asyncio
 async def test_foundation_tools_over_stdio_subprocess() -> None:

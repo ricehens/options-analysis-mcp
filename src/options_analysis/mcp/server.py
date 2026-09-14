@@ -11,6 +11,7 @@ from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
 from options_analysis.domain import PositionRequestLeg, PutCall, ValuationMode
+from options_analysis.mcp.errors import tool_error
 from options_analysis.mcp.models import (
     ExpirationListResult,
     ExpirationSummary,
@@ -25,6 +26,7 @@ from options_analysis.mcp.models import (
     ServerInfoResult,
 )
 from options_analysis.providers import OptionChainQuery, PriceHistoryQuery
+from options_analysis.providers.errors import ProviderError
 
 SERVER_NAME = "options-analysis"
 
@@ -96,10 +98,15 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
         )
 
     @server.tool(name="options_provider_auth_status")
-    def options_provider_auth_status(provider: str) -> ProviderAuthStatusResult:
+    def options_provider_auth_status(
+        provider: str,
+    ) -> ProviderAuthStatusResult:
         """Return safe authentication state; never credentials or tokens."""
 
-        status = application.provider_service.auth_status(provider)
+        try:
+            status = application.provider_service.auth_status(provider)
+        except ProviderError as error:
+            return ProviderAuthStatusResult(error=tool_error(error))
         return ProviderAuthStatusResult(
             provider_id=status.provider_id,
             authentication_type=status.authentication_type.value,
@@ -117,9 +124,12 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> QuoteResult:
         """Get one normalized stock, ETF, or index quote."""
 
-        quote = await application.market_data_service.get_underlying_quote(
-            symbol, provider
-        )
+        try:
+            quote = await application.market_data_service.get_underlying_quote(
+                symbol, provider
+            )
+        except (ProviderError, ValueError) as error:
+            return QuoteResult(error=tool_error(error))
         return QuoteResult(quote=quote)
 
     @server.tool(name="options_get_option_expirations")
@@ -128,12 +138,19 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> ExpirationListResult:
         """List available option expirations for an underlying symbol."""
 
-        expirations = await application.market_data_service.get_option_expirations(
-            underlying_symbol, provider
-        )
+        try:
+            expirations = await application.market_data_service.get_option_expirations(
+                underlying_symbol, provider
+            )
+        except (ProviderError, ValueError) as error:
+            return ExpirationListResult(error=tool_error(error))
         today = datetime.now(UTC).date()
         return ExpirationListResult(
-            provider_id=provider or application.settings.default_market_data_provider,
+            provider_id=(
+                provider.strip().lower()
+                if provider
+                else application.settings.default_market_data_provider
+            ),
             underlying_symbol=underlying_symbol.strip().upper(),
             expirations=tuple(
                 ExpirationSummary(
@@ -157,16 +174,21 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> OptionChainResult:
         """Get a narrow normalized option chain with explicit filters."""
 
-        query = OptionChainQuery(
-            underlying_symbol=underlying_symbol,
-            expiration_from=expiration_from,
-            expiration_to=expiration_to,
-            put_call=put_call,
-            strike_from=strike_from,
-            strike_to=strike_to,
-            limit=limit,
-        )
-        chain = await application.market_data_service.get_option_chain(query, provider)
+        try:
+            query = OptionChainQuery(
+                underlying_symbol=underlying_symbol,
+                expiration_from=expiration_from,
+                expiration_to=expiration_to,
+                put_call=put_call,
+                strike_from=strike_from,
+                strike_to=strike_to,
+                limit=limit,
+            )
+            chain = await application.market_data_service.get_option_chain(
+                query, provider
+            )
+        except (ProviderError, ValueError) as error:
+            return OptionChainResult(error=tool_error(error))
         return OptionChainResult(chain=chain)
 
     @server.tool(name="options_get_option_quotes")
@@ -176,9 +198,12 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> OptionQuoteListResult:
         """Get normalized detailed quotes for selected option symbols."""
 
-        quotes = await application.market_data_service.get_option_quotes(
-            symbols, provider
-        )
+        try:
+            quotes = await application.market_data_service.get_option_quotes(
+                symbols, provider
+            )
+        except (ProviderError, ValueError) as error:
+            return OptionQuoteListResult(error=tool_error(error))
         return OptionQuoteListResult(quotes=quotes)
 
     @server.tool(name="options_get_price_history")
@@ -191,10 +216,15 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> PriceHistoryResult:
         """Get underlying price history; this is not option-chain history."""
 
-        query = PriceHistoryQuery(
-            symbol=symbol, start=start, end=end, resolution=resolution
-        )
-        bars = await application.market_data_service.get_price_history(query, provider)
+        try:
+            query = PriceHistoryQuery(
+                symbol=symbol, start=start, end=end, resolution=resolution
+            )
+            bars = await application.market_data_service.get_price_history(
+                query, provider
+            )
+        except (ProviderError, ValueError) as error:
+            return PriceHistoryResult(error=tool_error(error))
         return PriceHistoryResult(bars=bars)
 
     @server.tool(name="options_analyze_positions")
@@ -216,12 +246,15 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
     ) -> PositionAnalysisResult:
         """Enrich signed positions and calculate Greeks, payoff, and scenarios."""
 
-        analysis = await application.position_analysis_service.analyze(
-            legs,
-            provider_id=provider,
-            valuation_mode=valuation_mode,
-            scenario_moves=scenario_moves,
-        )
+        try:
+            analysis = await application.position_analysis_service.analyze(
+                legs,
+                provider_id=provider,
+                valuation_mode=valuation_mode,
+                scenario_moves=scenario_moves,
+            )
+        except (ProviderError, ValueError) as error:
+            return PositionAnalysisResult(error=tool_error(error))
         return PositionAnalysisResult(analysis=analysis)
 
 

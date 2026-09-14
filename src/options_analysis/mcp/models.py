@@ -1,6 +1,7 @@
 """Structured, secret-safe MCP results."""
 
 from datetime import date
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
@@ -8,8 +9,32 @@ from options_analysis.config import EnvironmentName
 from options_analysis.domain import OptionChain, PositionAnalysis, PriceBar, Quote
 
 
-class MCPResult(BaseModel):
+class _StrictResultModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class ErrorCategory(StrEnum):
+    CONFIGURATION = "configuration"
+    AUTHORIZATION = "authorization"
+    ENTITLEMENT = "entitlement"
+    NOT_FOUND = "not_found"
+    UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    VALIDATION = "validation"
+    RATE_LIMIT = "rate_limit"
+    UPSTREAM_UNAVAILABLE = "upstream_unavailable"
+    UPSTREAM_SCHEMA = "upstream_schema"
+
+
+class ToolErrorDetail(_StrictResultModel):
+    category: ErrorCategory
+    message: str
+    retryable: bool
+    reauthorization_required: bool = False
+    field_paths: tuple[str, ...] = ()
+
+
+class MCPResult(_StrictResultModel):
+    error: ToolErrorDetail | None = None
 
 
 class ServerInfoResult(MCPResult):
@@ -40,18 +65,18 @@ class ProviderListResult(MCPResult):
 
 
 class ProviderAuthStatusResult(MCPResult):
-    provider_id: str
-    authentication_type: str
-    state: str
-    configured: bool
-    authorized: bool
-    expires_at: str | None
-    reauthorization_required: bool
-    message: str | None
+    provider_id: str | None = None
+    authentication_type: str | None = None
+    state: str | None = None
+    configured: bool | None = None
+    authorized: bool | None = None
+    expires_at: str | None = None
+    reauthorization_required: bool | None = None
+    message: str | None = None
 
 
 class QuoteResult(MCPResult):
-    quote: Quote
+    quote: Quote | None = None
 
 
 class ExpirationSummary(MCPResult):
@@ -60,22 +85,22 @@ class ExpirationSummary(MCPResult):
 
 
 class ExpirationListResult(MCPResult):
-    provider_id: str
-    underlying_symbol: str
-    expirations: tuple[ExpirationSummary, ...]
+    provider_id: str | None = None
+    underlying_symbol: str | None = None
+    expirations: tuple[ExpirationSummary, ...] = ()
 
 
 class OptionChainResult(MCPResult):
-    chain: OptionChain
+    chain: OptionChain | None = None
 
 
 class OptionQuoteListResult(MCPResult):
-    quotes: tuple[Quote, ...]
+    quotes: tuple[Quote, ...] = ()
 
 
 class PriceHistoryResult(MCPResult):
-    bars: tuple[PriceBar, ...]
+    bars: tuple[PriceBar, ...] = ()
 
 
 class PositionAnalysisResult(MCPResult):
-    analysis: PositionAnalysis
+    analysis: PositionAnalysis | None = None

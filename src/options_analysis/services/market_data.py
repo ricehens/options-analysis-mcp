@@ -9,17 +9,32 @@ from options_analysis.providers import (
     PriceHistoryQuery,
     ProviderRouter,
 )
+from options_analysis.services.cache import TTLCache
 
 
 class MarketDataService:
-    def __init__(self, router: ProviderRouter) -> None:
+    def __init__(
+        self,
+        router: ProviderRouter,
+        *,
+        quote_cache: TTLCache[tuple[str, str], Quote] | None = None,
+    ) -> None:
         self._router = router
+        self._quote_cache = quote_cache
 
     async def get_underlying_quote(
         self, symbol: str, provider_id: str | None = None
     ) -> Quote:
         provider = self._router.market_data(provider_id)
-        return await provider.get_underlying_quote(symbol)
+        normalized = symbol.strip().upper()
+        key = (provider.descriptor.provider_id, normalized)
+        cached = self._quote_cache.get(key) if self._quote_cache is not None else None
+        if cached is not None:
+            return cached
+        quote = await provider.get_underlying_quote(normalized)
+        if self._quote_cache is not None:
+            self._quote_cache.put(key, quote)
+        return quote
 
     async def get_option_expirations(
         self, underlying_symbol: str, provider_id: str | None = None

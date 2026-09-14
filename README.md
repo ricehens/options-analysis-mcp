@@ -14,11 +14,11 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 4's offline code is complete. In addition to normalized market data,
-the reusable service and MCP server accept signed caller-supplied positions,
-enrich them with current quotes, and calculate multiplier-aware values, Greeks,
-expiration payoff, break-even, bounded risk, and price scenarios. Live Schwab
-activation remains a local step requiring your approved developer application.
+Milestone 5's local release is complete. The reusable service and MCP server
+provide normalized option market data and caller-supplied position analytics,
+with secure Schwab OAuth, bounded reads/cache, structured error results, a
+packaged provider-conformance helper, and full operating documentation. Live
+Schwab activation remains a local step requiring your developer application.
 
 Read these documents first:
 
@@ -41,6 +41,11 @@ Read these documents first:
   chains.
 - `options_analyze_positions` analyzes 1–100 signed equity, ETF, or option legs.
   Positive quantity is long and negative quantity is short.
+- The fake provider supplies deterministic quotes, expirations, chains, selected
+  option quotes, and underlying history to offline services and contract tests.
+- The MCP server runs locally over stdio.
+- Provider-neutral models enforce instrument identity, timezone-aware data,
+  Decimal values, provenance, namespaced extensions, and position invariants.
 
 Example position-analysis arguments:
 
@@ -69,11 +74,10 @@ Option prices and Greeks are treated as per underlying unit and multiplied by
 the contract multiplier. `max_loss` is the minimum profit/loss value, so a loss
 is represented as a negative number. Delta-gamma scenarios hold volatility and
 time constant; they are local approximations, not forecasts.
-- The fake provider supplies deterministic quotes, expirations, chains, selected
-  option quotes, and underlying history to offline services and contract tests.
-- The MCP server runs locally over stdio.
-- Provider-neutral models enforce instrument identity, timezone-aware data,
-  Decimal values, provenance, namespaced extensions, and position invariants.
+
+Handled tool failures return a non-null `error` object with a stable category,
+retryability, reauthorization flag, and sanitized schema field paths. Successful
+tool results have `error: null`.
 
 ## Local setup and verification
 
@@ -136,8 +140,17 @@ replace, or cancel orders.
 Never commit an application secret, access token, refresh token, account number,
 or captured Schwab response containing private account data.
 
+## Documentation
+
+- `docs/OPERATIONS.md` — setup, authorization, routine use, and troubleshooting.
+- `SECURITY.md` — threat boundary, secret handling, and incident response.
+- `docs/MCP_HOSTS.md` — generic local stdio host configuration.
+- `docs/PROVIDERS.md` — adapter API, entry points, mapping rules, and conformance.
+- `docs/RELEASE.md` — quality, build, version, Git, and tag checklist.
+- `docs/MILESTONE_*.md` — durable implementation and verification decisions.
+
 ## Resume
 
-Read `STATUS.md` for the exact checkpoint. Milestone 5 focuses on security and
-operating guides, plug-in documentation, stable structured error output,
-schema-drift diagnostics, caching/rate behavior, and release packaging.
+Read `STATUS.md` for the exact checkpoint. Streaming remains optional and should
+be added only after live use demonstrates that bounded snapshot reads are too
+slow for the analysis workflow.

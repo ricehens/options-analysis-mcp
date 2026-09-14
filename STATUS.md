@@ -4,10 +4,11 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 4 implementation is complete on `codex/milestone-4`. The project can
-analyze caller-supplied option strategies end to end using deterministic fake
-data or a locally authorized Schwab market-data adapter. Live Schwab activation
-remains an owner-controlled operational gate.
+Milestone 5 local-release hardening is complete on `codex/milestone-5`. The
+project provides a secure, provider-pluggable Schwab/fake market-data MCP and
+caller-supplied option-position analytics with durable documentation and build
+checks. Live Schwab activation still requires the repository owner's local
+developer credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -21,8 +22,8 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 - [ ] Milestone 3 operational activation — owner live mapping check
 - [x] Milestone 4 — Caller-supplied position enrichment and analytics
 - [ ] Optional Schwab account positions — requires Trader API entitlement
-- [ ] Milestone 5 — Hardening and packaging
-- [ ] Milestone 6 — Optional streaming
+- [x] Milestone 5 — Hardening, documentation, and packaging
+- [ ] Milestone 6 — Optional streaming; decision gate not met
 
 ## Available MCP tools
 
@@ -36,49 +37,56 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 - `options_get_price_history`
 - `options_analyze_positions`
 
-## Milestone 4 architecture
+Every tool result now includes `error`; it is null on success and contains a
+stable, secret-safe detail object for handled failures.
 
-- `PositionRequestLeg` contains provider-neutral user input only: symbol, asset
-  type, signed quantity, and optional per-unit open price.
-- `PositionAnalysisService` resolves quotes and selects mark, midpoint, or
-  liquidation values before calling pure analytics.
-- `analytics.positions` aggregates signed, multiplier-aware exposures and
-  computes exact piecewise-linear expiration results without provider imports.
-- Greek outputs include completeness and exact missing symbols.
-- One-factor price scenarios are omitted when positions span underlyings.
-- Exact payoff is omitted for calendars instead of pretending later options
-  have no time value.
-- `docs/MILESTONE_4.md` records conventions, limitations, and test cases.
+## Hardening delivered
+
+- GET-only Schwab gateway, exact OAuth callback/state validation, private atomic
+  token storage, bounded timeouts/retries/response bytes, and no redirect follow.
+- Provider-normalized values, provenance, quality warnings, and sanitized schema
+  drift paths.
+- Bounded one-second LRU/TTL cache for repeated underlying quotes only.
+- Packaged `options_analysis.testing.assert_market_data_provider_contract`.
+- Operations, security, MCP-host, provider, release, milestone, and changelog
+  documentation.
+- `make release-check` performs formatting, lint, strict typing, tests, and
+  package builds.
 
 ## Verification evidence
 
-`make check UV=.uv-bootstrap/bin/uv` passes: all 58 files are formatted, Ruff
-lint reports no errors, mypy strict reports no issues across 35 source files,
-and all 45 pytest tests pass. The real MCP protocol test exercises all nine
-tools, including the hand-calculated vertical-spread analysis.
+`make release-check UV=.uv-bootstrap/bin/uv` passes: all 70 files are formatted,
+Ruff lint reports no errors, mypy strict reports no issues across 39 source
+files, and all 49 pytest tests pass. It built the 0.5.0 source distribution and
+wheel; inspection confirmed the wheel contains all runtime layers and the
+packaged `options_analysis.testing` conformance helper.
 
-## Operational gate
+## Required owner activation
 
-Follow `docs/MILESTONE_2.md` to authorize Schwab locally, then verify the mapping
-assumptions in `docs/MILESTONE_3.md`. Do not paste or commit credentials, OAuth
-callbacks, token values, account data, or captured live responses.
+1. Follow `docs/MILESTONE_2.md` and `docs/OPERATIONS.md` for local OAuth.
+2. Confirm current official endpoints and the mapping assumptions in
+   `docs/MILESTONE_3.md`.
+3. Run one narrow live stock quote, expiration list, chain, selected option
+   quote, and position analysis without saving provider bodies.
+4. Decide whether Trader API Individual is available and whether account
+   positions are worth adding.
 
-## Next milestone
+Never paste or commit credentials, callbacks, token values, account data, or
+captured live responses.
 
-Milestone 5 hardens the usable local release:
+## Streaming decision gate
 
-- Operating and security guides, MCP host examples, and troubleshooting.
-- Provider plug-in development and conformance-test documentation.
-- Stable structured provider error results at the MCP boundary.
-- Better schema-drift diagnostics without leaking provider bodies.
-- Bounded caching and rate-limit observability where it improves local use.
-- Build/install verification and a release/version checklist.
+Milestone 6 is deliberately optional. Do not implement it until live use shows
+that snapshot latency is inadequate. If needed, implement the existing
+`StreamingProvider` contract with bounded symbol subscriptions, bounded cache,
+freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 
 ## Resume prompt for another session
 
 Continue the provider-pluggable options-analysis project at
-`/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `DESIGN.md`,
-`STATUS.md`, and `docs/MILESTONE_*.md`; inspect Git and the latest tag. Continue
-the first incomplete milestone, preserve the read-only/provider-neutral
-boundaries, run all offline checks, update the handoff, and push a GitHub
-checkpoint. Never commit secrets, private responses, or execution capability.
+`/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
+`STATUS.md`, and `docs/`. Inspect Git and the latest milestone tag. First perform
+any owner-approved live activation checks; otherwise work only on the first
+explicitly requested enhancement. Preserve the provider-neutral, read-only,
+bounded, and secret-safe boundaries. Run `make release-check` and push a new
+checkpoint. Never commit secrets or private responses.
