@@ -1,0 +1,24 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+.venv/
+.uv-bootstrap/
+.uv-cache/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Never commit provider credentials, OAuth tokens, or captured private data.
+credentials/
+tokens/
+*.token.json
+*.oauth.json
+tests/fixtures/private/
