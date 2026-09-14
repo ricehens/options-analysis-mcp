@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.8 — 2026-09-14
+
+- Added keyboard-operable interface text-size controls for 90%, 100%, 115%,
+  and 130% modes, with one-click reset.
+- Persisted the preference in browser-local storage with safe fallback when
+  storage is unavailable.
+- Converted interface typography to root-relative units while retaining the
+  mobile 16-pixel form-control minimum and native browser zoom.
+- Added unit coverage for normalization, bounded stepping, and persistence.
+
 ## 0.6.7 — 2026-09-14
 
 - Added reusable accessible warning disclosures for underlying quotes, option

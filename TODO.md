@@ -23,7 +23,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | ID | Status | Work item | Depends on | Completion evidence |
 | --- | --- | --- | --- | --- |
 | UI-010 | done | Milestone 6B: SQLite-backed watchlist service, CRUD API, and persistent React controls | UI-001 code | CRUD/restart tests, proxy CRUD check, release check |
-| UI-011 | blocked | Manually inspect the responsive Milestone 6A–6C UI in a browser and record defects | Browser-control availability or owner inspection | Desktop and narrow viewport screenshots or inspection notes |
+| UI-011 | blocked | Desktop UI approved by owner; narrow-viewport inspection remains | Browser-control availability or owner inspection | Narrow viewport screenshot or inspection notes |
 | UI-020 | done | Milestone 6C: chain explorer with strike range, expiration/DTE, side, liquidity, and moneyness filters | UI-010 | API filter and TypeScript view-model tests |
 | UI-021 | done | Add sortable chain columns and clear stale/missing-data indicators | UI-020 | Sort tests and visible freshness/warning summary |
 | UI-022 | done | Add contract selection from calls/puts into a draft leg tray | UI-020 | Buy/sell/quantity/remove UI with production build |
@@ -35,6 +35,8 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-050 | done | Milestone 6F: expand catalog with protective put, collar, cash-secured put, straddle/strangle, and calendar/diagonal workflows | UI-040 | Fifteen catalog definitions, automatic second-expiration loading, draft/payoff fixtures |
 | UI-051 | done | Milestone 6G: persist named strategy drafts separately from watchlists | UI-040 | Provider-neutral domain/service, SQLite restart CRUD, HTTP/UI save-load-delete tests |
 | UI-052 | done | Milestone 6H: add expandable chain, per-contract, and analysis warning details | UI-040 | Accessible disclosures with field provenance and server-rendered component tests |
+| UI-053 | done | Milestone 6I: adjustable, browser-persisted interface font size | Owner desktop feedback | Keyboard-operable 90–130% controls, persistence unit tests, production build |
+| UI-054 | ready | Milestone 6J: underlying price chart with 1-minute, 5-minute, daily, weekly, and monthly views | UI-053, provider history capability | Provider-neutral HTTP history contract, responsive chart, interval tests |
 
 ## Schwab activation
 

@@ -44,6 +44,11 @@ terminals and open `http://127.0.0.1:5173`. Vite proxies `/api` to FastAPI.
 After a UI change, run `make web-build`; this replaces the packaged assets under
 `src/options_analysis/web/static`.
 
+Use the **Text size** controls at the bottom of the desktop sidebar (or below
+the watchlist on a narrow screen) to select 90%, 100%, 115%, or 130%. The middle
+button resets to 100%. This preference is stored only in browser-local storage;
+native browser zoom remains available independently.
+
 ## 3. Enable Schwab
 
 1. Confirm the developer application is approved and its callback URI.

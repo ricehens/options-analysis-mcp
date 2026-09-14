@@ -15,15 +15,17 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6H is complete. A responsive React workspace is bundled into the
+Milestone 6I is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
 and a fifteen-template strategy builder with combined Greeks, risk bounds,
 break-evens, expiration payoff, and delta-gamma scenarios. Calendar and
 diagonal workflows automatically load the next available expiration. Named
-strategy drafts persist locally and reopen with current provider quotes. Live
-Schwab activation remains a local step requiring your developer application.
+strategy drafts persist locally and reopen with current provider quotes. The
+interface text can be adjusted from 90% through 130% and persists in the local
+browser. Live Schwab activation remains a local step requiring your developer
+application.
 
 Read these documents first:
 
@@ -61,6 +63,8 @@ Read these documents first:
   freshness, and warning counts.
 - Expandable chain, underlying, contract, and analysis warnings show stable
   codes, messages, affected fields, and field provenance when available.
+- Sidebar text-size controls scale typography to 90%, 100%, 115%, or 130% and
+  remember the preference in browser-local storage.
 - Fifteen canonical strategy presets include long calls/puts, covered calls,
   protective puts, collars, cash-secured puts, verticals, straddles, strangles,
   butterflies, iron condors, call calendars/diagonals, and custom legs.
@@ -204,6 +208,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6F.md` — expanded strategy catalog and calendar workflows.
 - `docs/MILESTONE_6G.md` — persistent named strategy drafts.
 - `docs/MILESTONE_6H.md` — expandable data-quality and analysis warnings.
+- `docs/MILESTONE_6I.md` — adjustable, locally persisted interface typography.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

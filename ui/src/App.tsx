@@ -48,6 +48,13 @@ import type {
   StrategyTemplate,
   WorkspaceSnapshot,
 } from "./types";
+import {
+  FONT_SCALE_OPTIONS,
+  loadFontScale,
+  persistFontScale,
+  stepFontScale,
+} from "./preferences";
+import type { FontScale } from "./preferences";
 import WarningDisclosure from "./WarningDisclosure";
 
 function money(value: DecimalValue | null | undefined): string {
@@ -87,6 +94,13 @@ function percent(value: DecimalValue | null | undefined, digits = 1): string {
 }
 
 function App() {
+  const [fontScale, setFontScale] = useState<FontScale>(() => {
+    try {
+      return loadFontScale(window.localStorage);
+    } catch {
+      return 100;
+    }
+  });
   const [symbols, setSymbols] = useState<string[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState("SPY");
   const [symbolInput, setSymbolInput] = useState("");
@@ -122,6 +136,15 @@ function App() {
   const [draftsError, setDraftsError] = useState<string | null>(null);
   const strategyRequest = useRef(0);
   const hydratedAnalysis = useRef(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.fontScale = String(fontScale);
+    try {
+      persistFontScale(window.localStorage, fontScale);
+    } catch {
+      // Browser storage may be disabled; the in-memory preference still works.
+    }
+  }, [fontScale]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -592,6 +615,36 @@ function App() {
             </div>
           ))}
         </nav>
+
+        <div className="text-size-card">
+          <span>Text size</span>
+          <div aria-label="Text size" className="text-size-controls" role="group">
+            <button
+              aria-label="Decrease text size"
+              disabled={fontScale === FONT_SCALE_OPTIONS[0]}
+              onClick={() => setFontScale((current) => stepFontScale(current, -1))}
+              type="button"
+            >
+              A−
+            </button>
+            <button
+              aria-label={`Reset text size, current ${fontScale} percent`}
+              onClick={() => setFontScale(100)}
+              title="Reset text size"
+              type="button"
+            >
+              {fontScale}%
+            </button>
+            <button
+              aria-label="Increase text size"
+              disabled={fontScale === FONT_SCALE_OPTIONS.at(-1)}
+              onClick={() => setFontScale((current) => stepFontScale(current, 1))}
+              type="button"
+            >
+              A+
+            </button>
+          </div>
+        </div>
 
         <div className="connection-card">
           <span className="status-dot" />
