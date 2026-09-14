@@ -6,7 +6,11 @@ from options_analysis.config import AppSettings
 from options_analysis.providers import ProviderRegistry, ProviderRouter
 from options_analysis.providers.fake import FakeProvider
 from options_analysis.providers.schwab import build_schwab_provider
-from options_analysis.services import MarketDataService, ProviderService
+from options_analysis.services import (
+    MarketDataService,
+    PositionAnalysisService,
+    ProviderService,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -15,6 +19,7 @@ class Application:
     registry: ProviderRegistry
     provider_service: ProviderService
     market_data_service: MarketDataService
+    position_analysis_service: PositionAnalysisService
 
 
 def build_application(settings: AppSettings | None = None) -> Application:
@@ -29,9 +34,11 @@ def build_application(settings: AppSettings | None = None) -> Application:
         registry,
         default_market_data_provider=resolved_settings.default_market_data_provider,
     )
+    market_data = MarketDataService(router)
     return Application(
         settings=resolved_settings,
         registry=registry,
         provider_service=ProviderService(registry),
-        market_data_service=MarketDataService(router),
+        market_data_service=market_data,
+        position_analysis_service=PositionAnalysisService(market_data),
     )

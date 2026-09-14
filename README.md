@@ -14,11 +14,11 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 3's offline code is complete. The reusable services and MCP server now
-provide normalized stock quotes, expirations, filtered option chains, selected
-option quotes, and underlying price history through either the fake provider or
-the Schwab adapter. The live OAuth and market-data check remain a local
-operational step requiring your approved Schwab application.
+Milestone 4's offline code is complete. In addition to normalized market data,
+the reusable service and MCP server accept signed caller-supplied positions,
+enrich them with current quotes, and calculate multiplier-aware values, Greeks,
+expiration payoff, break-even, bounded risk, and price scenarios. Live Schwab
+activation remains a local step requiring your approved developer application.
 
 Read these documents first:
 
@@ -39,6 +39,36 @@ Read these documents first:
 - `options_get_option_quotes` retrieves 1–100 explicitly selected contracts.
 - `options_get_price_history` retrieves underlying bars, not historical option
   chains.
+- `options_analyze_positions` analyzes 1–100 signed equity, ETF, or option legs.
+  Positive quantity is long and negative quantity is short.
+
+Example position-analysis arguments:
+
+```json
+{
+  "legs": [
+    {
+      "symbol": "SPY300118C00095000",
+      "asset_type": "option",
+      "quantity": "1",
+      "average_open_price": "6"
+    },
+    {
+      "symbol": "SPY300118C00100000",
+      "asset_type": "option",
+      "quantity": "-1",
+      "average_open_price": "3"
+    }
+  ],
+  "valuation_mode": "mark",
+  "scenario_moves": ["-0.10", "0", "0.10"]
+}
+```
+
+Option prices and Greeks are treated as per underlying unit and multiplied by
+the contract multiplier. `max_loss` is the minimum profit/loss value, so a loss
+is represented as a negative number. Delta-gamma scenarios hold volatility and
+time constant; they are local approximations, not forecasts.
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
 - The MCP server runs locally over stdio.
@@ -108,6 +138,6 @@ or captured Schwab response containing private account data.
 
 ## Resume
 
-Read `STATUS.md` for the exact checkpoint. Milestone 4 adds caller-supplied
-position enrichment, signed Greek aggregation, expiration payoff, break-even,
-and a bounded scenario grid.
+Read `STATUS.md` for the exact checkpoint. Milestone 5 focuses on security and
+operating guides, plug-in documentation, stable structured error output,
+schema-drift diagnostics, caching/rate behavior, and release packaging.

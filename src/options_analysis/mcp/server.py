@@ -10,12 +10,13 @@ from pydantic import Field
 from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
-from options_analysis.domain import PutCall
+from options_analysis.domain import PositionRequestLeg, PutCall, ValuationMode
 from options_analysis.mcp.models import (
     ExpirationListResult,
     ExpirationSummary,
     OptionChainResult,
     OptionQuoteListResult,
+    PositionAnalysisResult,
     PriceHistoryResult,
     ProviderAuthStatusResult,
     ProviderListResult,
@@ -59,7 +60,7 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             transport="stdio",
             read_only=True,
             allow_live_smoke_tests=public.allow_live_smoke_tests,
-            feature_groups=("foundation", "market_data"),
+            feature_groups=("foundation", "market_data", "position_analysis"),
         )
 
     @server.tool(name="options_list_providers")
@@ -195,6 +196,33 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
         )
         bars = await application.market_data_service.get_price_history(query, provider)
         return PriceHistoryResult(bars=bars)
+
+    @server.tool(name="options_analyze_positions")
+    async def options_analyze_positions(
+        legs: Annotated[
+            tuple[PositionRequestLeg, ...], Field(min_length=1, max_length=100)
+        ],
+        provider: str | None = None,
+        valuation_mode: ValuationMode = ValuationMode.MARK,
+        scenario_moves: Annotated[
+            tuple[Decimal, ...], Field(min_length=1, max_length=21)
+        ] = (
+            Decimal("-0.20"),
+            Decimal("-0.10"),
+            Decimal("0"),
+            Decimal("0.10"),
+            Decimal("0.20"),
+        ),
+    ) -> PositionAnalysisResult:
+        """Enrich signed positions and calculate Greeks, payoff, and scenarios."""
+
+        analysis = await application.position_analysis_service.analyze(
+            legs,
+            provider_id=provider,
+            valuation_mode=valuation_mode,
+            scenario_moves=scenario_moves,
+        )
+        return PositionAnalysisResult(analysis=analysis)
 
 
 mcp = create_server()

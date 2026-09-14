@@ -1,5 +1,14 @@
 """Canonical, provider-neutral domain models."""
 
+from options_analysis.domain.analysis import (
+    AggregateGreeks,
+    GreekExposure,
+    PayoffPoint,
+    PositionAnalysis,
+    PositionRequestLeg,
+    ScenarioPoint,
+    ValuationMode,
+)
 from options_analysis.domain.instruments import (
     AssetType,
     ExerciseStyle,
@@ -20,19 +29,26 @@ from options_analysis.domain.market_data import (
 from options_analysis.domain.positions import LongShort, PositionLeg
 
 __all__ = [
+    "AggregateGreeks",
     "AssetType",
     "DataQualityWarning",
     "ExerciseStyle",
     "FieldProvenance",
+    "GreekExposure",
     "Instrument",
     "LongShort",
     "OptionChain",
     "OptionGreeks",
     "OptionTerms",
+    "PayoffPoint",
+    "PositionAnalysis",
     "PositionLeg",
+    "PositionRequestLeg",
     "PriceBar",
     "ProvenanceKind",
     "PutCall",
     "Quote",
+    "ScenarioPoint",
     "SettlementType",
+    "ValuationMode",
 ]

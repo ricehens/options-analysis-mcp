@@ -4,19 +4,12 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 3 implementation is complete on `codex/milestone-3`. The project has
-an offline-tested provider-neutral options market-data surface and Schwab
-adapter. Live OAuth and market-data verification require the repository owner's
-local developer credentials and remain an explicit operational gate.
+Milestone 4 implementation is complete on `codex/milestone-4`. The project can
+analyze caller-supplied option strategies end to end using deterministic fake
+data or a locally authorized Schwab market-data adapter. Live Schwab activation
+remains an owner-controlled operational gate.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
-
-## Goal
-
-Create reusable, read-only data and analytics for applications that analyze
-stock-option positions. Schwab is the first plug-in; the same domain, services,
-analytics, and MCP interfaces must support other providers and later desktop,
-web, mobile, or notebook clients.
 
 ## Milestone checklist
 
@@ -26,7 +19,8 @@ web, mobile, or notebook clients.
 - [ ] Milestone 2 operational activation — owner OAuth and one live read
 - [x] Milestone 3 — Option market-data tools (offline code)
 - [ ] Milestone 3 operational activation — owner live mapping check
-- [ ] Milestone 4 — Position enrichment and first analytics
+- [x] Milestone 4 — Caller-supplied position enrichment and analytics
+- [ ] Optional Schwab account positions — requires Trader API entitlement
 - [ ] Milestone 5 — Hardening and packaging
 - [ ] Milestone 6 — Optional streaming
 
@@ -40,54 +34,51 @@ web, mobile, or notebook clients.
 - `options_get_option_chain`
 - `options_get_option_quotes`
 - `options_get_price_history`
+- `options_analyze_positions`
 
-## Milestone 3 architecture
+## Milestone 4 architecture
 
-- The provider router selects a provider by capability and separately validates
-  market-data and historical-data contracts.
-- The service layer exposes every read operation without importing Schwab.
-- Schwab source models and mapping live only in
-  `options_analysis.providers.schwab`.
-- Provider fields are normalized to the existing domain models with provenance,
-  namespaced extensions, and quality warnings.
-- Chain request dates, strike count, local filters, symbol count, output count,
-  and response bytes are bounded.
-- Synthetic fixtures are identified in `tests/fixtures/schwab/README.md`.
-- `docs/MILESTONE_3.md` records mapping assumptions that need one live check.
+- `PositionRequestLeg` contains provider-neutral user input only: symbol, asset
+  type, signed quantity, and optional per-unit open price.
+- `PositionAnalysisService` resolves quotes and selects mark, midpoint, or
+  liquidation values before calling pure analytics.
+- `analytics.positions` aggregates signed, multiplier-aware exposures and
+  computes exact piecewise-linear expiration results without provider imports.
+- Greek outputs include completeness and exact missing symbols.
+- One-factor price scenarios are omitted when positions span underlyings.
+- Exact payoff is omitted for calendars instead of pretending later options
+  have no time value.
+- `docs/MILESTONE_4.md` records conventions, limitations, and test cases.
 
 ## Verification evidence
 
-`make check UV=.uv-bootstrap/bin/uv` passes: all 53 files are formatted, Ruff
-lint reports no errors, mypy strict reports no issues across 32 source files,
-and all 38 pytest tests pass. The MCP suite exercises every one of the eight
-tools over the in-memory protocol and starts the server over real stdio.
+`make check UV=.uv-bootstrap/bin/uv` passes: all 58 files are formatted, Ruff
+lint reports no errors, mypy strict reports no issues across 35 source files,
+and all 45 pytest tests pass. The real MCP protocol test exercises all nine
+tools, including the hand-calculated vertical-spread analysis.
 
 ## Operational gate
 
-Follow `docs/MILESTONE_2.md` to authorize locally. Then use the read-only MCP
-tools on one liquid symbol and compare the normalized values to the current
-official Schwab schema. In particular verify volatility units, settlement and
-exercise codes, timestamp units, endpoint paths, and option-symbol spacing.
-Never commit the resulting live response.
+Follow `docs/MILESTONE_2.md` to authorize Schwab locally, then verify the mapping
+assumptions in `docs/MILESTONE_3.md`. Do not paste or commit credentials, OAuth
+callbacks, token values, account data, or captured live responses.
 
 ## Next milestone
 
-Milestone 4 adds:
+Milestone 5 hardens the usable local release:
 
-- Caller-supplied equity and option position inputs.
-- Quote enrichment using the selected market-data provider.
-- Signed multiplier-aware aggregate delta, gamma, theta, vega, and rho.
-- Net current value and premium/cost inputs.
-- Expiration payoff points, break-even roots, bounded max-profit/max-loss where
-  mathematically supported, and a bounded underlying-price scenario grid.
-- Optional Schwab account positions only if read-only Trader API access is
-  available; account mode must remain separately feature-gated.
+- Operating and security guides, MCP host examples, and troubleshooting.
+- Provider plug-in development and conformance-test documentation.
+- Stable structured provider error results at the MCP boundary.
+- Better schema-drift diagnostics without leaking provider bodies.
+- Bounded caching and rate-limit observability where it improves local use.
+- Build/install verification and a release/version checklist.
 
 ## Resume prompt for another session
 
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `DESIGN.md`,
-`STATUS.md`, and `docs/MILESTONE_*.md`. Inspect Git status and remote branches.
-Continue the first incomplete milestone, run the full offline suite, update the
-handoff, and push a GitHub checkpoint. Never commit secrets, private provider
-responses, or any order capability.
+`STATUS.md`, and `docs/MILESTONE_*.md`; inspect Git and the latest tag. Continue
+the first incomplete milestone, preserve the read-only/provider-neutral
+boundaries, run all offline checks, update the handoff, and push a GitHub
+checkpoint. Never commit secrets, private responses, or execution capability.

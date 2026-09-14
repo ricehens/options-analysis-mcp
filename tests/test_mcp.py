@@ -16,6 +16,7 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         listed = await client.list_tools()
         names = {tool.name for tool in listed.tools}
         assert names == {
+            "options_analyze_positions",
             "options_get_option_chain",
             "options_get_option_expirations",
             "options_get_option_quotes",
@@ -89,6 +90,30 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert history.structured_content is not None
         assert len(history.structured_content["bars"]) == 1
 
+        analysis = await client.call_tool(
+            "options_analyze_positions",
+            {
+                "legs": [
+                    {
+                        "symbol": "SPY300118C00095000",
+                        "asset_type": "option",
+                        "quantity": "1",
+                        "average_open_price": "6",
+                    },
+                    {
+                        "symbol": "SPY300118C00100000",
+                        "asset_type": "option",
+                        "quantity": "-1",
+                        "average_open_price": "3",
+                    },
+                ]
+            },
+        )
+        assert analysis.is_error is False
+        assert analysis.structured_content is not None
+        assert analysis.structured_content["analysis"]["max_profit"] == "200"
+        assert analysis.structured_content["analysis"]["break_even_prices"] == ["98"]
+
 
 @pytest.mark.asyncio
 async def test_foundation_tools_over_stdio_subprocess() -> None:
@@ -102,6 +127,7 @@ async def test_foundation_tools_over_stdio_subprocess() -> None:
     async with Client(parameters, read_timeout_seconds=10) as client:
         listed = await client.list_tools()
         assert {tool.name for tool in listed.tools} == {
+            "options_analyze_positions",
             "options_get_option_chain",
             "options_get_option_expirations",
             "options_get_option_quotes",
