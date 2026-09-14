@@ -4,12 +4,12 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6G saved strategies are complete on `codex/milestone-6g`. Named
-strategy drafts persist in a dedicated table in the local state database,
-remain separate from watchlists and provider adapters, and reopen through fresh
-provider quote enrichment. Saving the same case-insensitive name updates its
-stable draft ID. FastAPI and MCP continue to reuse the same provider-neutral
-services and routing. Live Schwab activation still requires owner credentials.
+Milestone 6H warning transparency is complete on `codex/milestone-6h`.
+Expandable disclosures now expose chain, underlying, per-contract, and
+analysis warnings with stable codes, messages, affected fields, and available
+field provenance. Analysis assumptions remain distinct from warnings. FastAPI
+and MCP continue to reuse the same provider-neutral services and routing. Live
+Schwab activation still requires owner credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -34,6 +34,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6E — Packaged browser delivery and responsive hardening
 - [x] Milestone 6F — Expanded strategy catalog and multi-expiration workflows
 - [x] Milestone 6G — Persistent named strategy drafts
+- [x] Milestone 6H — Expandable warning and provenance details
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -56,6 +57,8 @@ milestone; do not rely on chat history as the backlog.
   same normalized workspace endpoint; no provider-specific UI logic is added.
 - Named strategy definitions support list, save/update, rehydrate, and delete
   operations through `/api/v1/strategy-drafts`.
+- Warning disclosures preserve normalized quality codes and field-level source
+  context instead of reducing quality signals to a count.
 - Production assets are packaged under `options_analysis.web.static`, use
   same-origin API calls, and receive a restrictive content security policy.
 
@@ -89,10 +92,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6G pre-release checks pass: mypy strict reports no issues across 55
-source files, all 70 Python tests and thirteen TypeScript tests pass, and the
+Milestone 6H pre-release checks pass: mypy strict reports no issues across 55
+source files, all 70 Python tests and sixteen TypeScript tests pass, and the
 React production bundle and Python distributions build successfully. Detailed
-persistence and runtime evidence is recorded in `docs/MILESTONE_6G.md`.
+rendering evidence is recorded in `docs/MILESTONE_6H.md`.
 
 ## Required owner activation
 

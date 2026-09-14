@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.7 — 2026-09-14
+
+- Added reusable accessible warning disclosures for underlying quotes, option
+  chains, individual call/put contracts, and combined analysis.
+- Exposed stable warning codes, human-readable messages, affected field names,
+  and normalized field provenance when available.
+- Separated analysis assumptions from data-quality warnings in the UI.
+- Added server-rendered component tests for empty, detailed, and compact warning
+  states.
+
 ## 0.6.6 — 2026-09-14
 
 - Added provider-neutral saved-strategy definitions and a dedicated SQLite

@@ -34,7 +34,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-040 | done | Milestone 6E: responsive/accessibility hardening and production static serving/packaging | UI-033 | Semantic/focus/reduced-motion tests by build, API static/header test, one-process startup, wheel inspection |
 | UI-050 | done | Milestone 6F: expand catalog with protective put, collar, cash-secured put, straddle/strangle, and calendar/diagonal workflows | UI-040 | Fifteen catalog definitions, automatic second-expiration loading, draft/payoff fixtures |
 | UI-051 | done | Milestone 6G: persist named strategy drafts separately from watchlists | UI-040 | Provider-neutral domain/service, SQLite restart CRUD, HTTP/UI save-load-delete tests |
-| UI-052 | backlog | Add expandable per-contract and analysis warning details | UI-040 | Warning rendering tests |
+| UI-052 | done | Milestone 6H: add expandable chain, per-contract, and analysis warning details | UI-040 | Accessible disclosures with field provenance and server-rendered component tests |
 
 ## Schwab activation
 

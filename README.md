@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6G is complete. A responsive React workspace is bundled into the
+Milestone 6H is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -59,6 +59,8 @@ Read these documents first:
   open-interest, and maximum bid/ask-spread filters.
 - Calls and puts show delta, IV, bid, ask, spread, open interest, moneyness,
   freshness, and warning counts.
+- Expandable chain, underlying, contract, and analysis warnings show stable
+  codes, messages, affected fields, and field provenance when available.
 - Fifteen canonical strategy presets include long calls/puts, covered calls,
   protective puts, collars, cash-secured puts, verticals, straddles, strangles,
   butterflies, iron condors, call calendars/diagonals, and custom legs.
@@ -201,6 +203,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6E.md` — packaged browser delivery and accessibility hardening.
 - `docs/MILESTONE_6F.md` — expanded strategy catalog and calendar workflows.
 - `docs/MILESTONE_6G.md` — persistent named strategy drafts.
+- `docs/MILESTONE_6H.md` — expandable data-quality and analysis warnings.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

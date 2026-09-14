@@ -1,6 +1,7 @@
 import { decimal } from "./chain";
 import { payoffGeometry } from "./payoff";
 import type { DecimalValue, PositionAnalysis } from "./types";
+import WarningDisclosure from "./WarningDisclosure";
 
 interface Props {
   analysis: PositionAnalysis | null;
@@ -113,12 +114,14 @@ export default function AnalysisPanel({ analysis, loading, error }: Props) {
         ))}
       </div>
 
-      {analysis.warnings.length || analysis.assumptions.length ? (
+      <WarningDisclosure
+        title="Analysis warnings"
+        warnings={analysis.warnings}
+      />
+
+      {analysis.assumptions.length ? (
         <details className="analysis-notes">
-          <summary>Assumptions and warnings ({analysis.warnings.length})</summary>
-          {analysis.warnings.map((warning) => (
-            <p key={`${warning.code}-${warning.message}`}>{warning.message}</p>
-          ))}
+          <summary>Analysis assumptions ({analysis.assumptions.length})</summary>
           {analysis.assumptions.map((assumption) => <p key={assumption}>{assumption}</p>)}
         </details>
       ) : null}

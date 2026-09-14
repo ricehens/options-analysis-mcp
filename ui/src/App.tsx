@@ -48,6 +48,7 @@ import type {
   StrategyTemplate,
   WorkspaceSnapshot,
 } from "./types";
+import WarningDisclosure from "./WarningDisclosure";
 
 function money(value: DecimalValue | null | undefined): string {
   const parsed = decimal(value);
@@ -628,6 +629,11 @@ function App() {
             <span className="eyebrow">Underlying mark</span>
             <div className="hero-price">{money(quote?.mark)}</div>
             <span className="as-of">As of {asOf}</span>
+            <WarningDisclosure
+              provenance={quote?.field_provenance}
+              title="Underlying warnings"
+              warnings={quote?.warnings ?? []}
+            />
           </div>
           <div className="quote-grid">
             <div><span>Bid</span><strong>{money(quote?.bid)}</strong></div>
@@ -744,6 +750,10 @@ function App() {
             <div className="chain-meta">
               <span>{rows.length} strikes shown</span>
               <span>Click + to add a contract to the draft</span>
+              <WarningDisclosure
+                title="Chain warnings"
+                warnings={workspace?.chain.warnings ?? []}
+              />
             </div>
 
             <div className="table-wrap">
@@ -773,7 +783,7 @@ function App() {
                   {rows.map((row) => (
                     <tr key={row.strike}>
                       <td>
-                        {row.call ? (
+                        {row.call ? <div className="contract-actions">
                           <button
                             aria-label={`Toggle call at ${row.strike}`}
                             aria-pressed={selectedContracts.has(row.call.instrument.provider_symbol)}
@@ -781,7 +791,13 @@ function App() {
                             onClick={() => toggleContract(row.call)}
                             type="button"
                           >+</button>
-                        ) : null}
+                          <WarningDisclosure
+                            compact
+                            provenance={row.call.field_provenance}
+                            title={`${row.call.instrument.provider_symbol} warnings`}
+                            warnings={row.call.warnings}
+                          />
+                        </div> : null}
                       </td>
                       <td>{number(row.call?.greeks?.delta)}</td>
                       <td>{percent(row.call?.implied_volatility)}</td>
@@ -796,7 +812,7 @@ function App() {
                         </small>
                       </td>
                       <td>
-                        {row.put ? (
+                        {row.put ? <div className="contract-actions">
                           <button
                             aria-label={`Toggle put at ${row.strike}`}
                             aria-pressed={selectedContracts.has(row.put.instrument.provider_symbol)}
@@ -804,7 +820,13 @@ function App() {
                             onClick={() => toggleContract(row.put)}
                             type="button"
                           >+</button>
-                        ) : null}
+                          <WarningDisclosure
+                            compact
+                            provenance={row.put.field_provenance}
+                            title={`${row.put.instrument.provider_symbol} warnings`}
+                            warnings={row.put.warnings}
+                          />
+                        </div> : null}
                       </td>
                       <td>{number(row.put?.greeks?.delta)}</td>
                       <td>{percent(row.put?.implied_volatility)}</td>

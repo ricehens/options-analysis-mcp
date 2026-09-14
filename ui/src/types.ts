@@ -33,6 +33,19 @@ export interface Greeks {
   rho: DecimalValue | null;
 }
 
+export interface DataQualityWarning {
+  code: string;
+  message: string;
+  fields: string[];
+}
+
+export interface FieldProvenance {
+  kind: "provider" | "local_calculation" | "user_input";
+  provider_id: string | null;
+  as_of: string;
+  method: string | null;
+}
+
 export interface Quote {
   instrument: Instrument;
   provider_id: string;
@@ -46,7 +59,8 @@ export interface Quote {
   open_interest: number | null;
   implied_volatility: DecimalValue | null;
   greeks: Greeks | null;
-  warnings: Array<{ code: string; message: string }>;
+  field_provenance?: Record<string, FieldProvenance>;
+  warnings: DataQualityWarning[];
 }
 
 export interface OptionChain {
@@ -55,7 +69,7 @@ export interface OptionChain {
   as_of: string;
   underlying_quote: Quote | null;
   contracts: Quote[];
-  warnings: Array<{ code: string; message: string }>;
+  warnings: DataQualityWarning[];
 }
 
 export interface WorkspaceSnapshot {
@@ -191,7 +205,7 @@ export interface PositionAnalysis {
     method: string;
   }>;
   assumptions: string[];
-  warnings: Array<{ code: string; message: string; fields: string[] }>;
+  warnings: DataQualityWarning[];
 }
 
 export interface PositionAnalysisResult {
