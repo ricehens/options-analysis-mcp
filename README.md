@@ -15,12 +15,13 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6D is complete. A responsive React workspace and local-only FastAPI
-facade sit beside the MCP server and reuse the same provider-neutral services.
-The UI provides a persistent SQLite-backed watchlist, selected-symbol quote
-summary, a detailed option chain, and a strategy builder with combined Greeks,
-risk bounds, break-evens, expiration payoff, and delta-gamma scenarios. Live
-Schwab activation remains a local step requiring your developer application.
+Milestone 6E is complete. A responsive React workspace is bundled into the
+Python package and served by the local-only FastAPI facade, while MCP and HTTP
+reuse the same provider-neutral services. The UI provides a persistent
+SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
+and a strategy builder with combined Greeks, risk bounds, break-evens,
+expiration payoff, and delta-gamma scenarios. Live Schwab activation remains a
+local step requiring your developer application.
 
 Read these documents first:
 
@@ -47,9 +48,10 @@ Read these documents first:
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
 - The MCP server runs locally over stdio.
-- The HTTP API runs locally on `127.0.0.1:8000` and publishes OpenAPI at
-  `/api/docs`.
-- The React UI runs on `127.0.0.1:5173` and proxies `/api` to the local API.
+- The production browser workspace and HTTP API run together on
+  `127.0.0.1:8000`; OpenAPI remains available at `/api/docs`.
+- Vite runs separately on `127.0.0.1:5173` only for frontend development and
+  proxies `/api` to the local API.
 - Watchlist add/remove changes persist in a private local SQLite database.
 - The option chain supports expiration/side/strike, near-money,
   open-interest, and maximum bid/ask-spread filters.
@@ -124,17 +126,21 @@ interactive prompt.
 
 ## Browser UI
 
-Start the local API and UI in two terminals:
+The repository includes the latest production bundle. Start the complete local
+application with one process:
 
 ```console
 make web-api
-make web-ui
 ```
 
-Open `http://127.0.0.1:5173`. The committed default uses deterministic fake
+Open `http://127.0.0.1:8000`. The committed default uses deterministic fake
 data, requires no credentials, and makes no external font or data request. The
-API binds only to loopback and accepts development cross-origin reads only from
-the two local Vite origins.
+API binds only to loopback. Responses include a same-origin content security
+policy and related browser protections.
+
+For frontend development, run `make web-api` and `make web-ui` in separate
+terminals and open `http://127.0.0.1:5173`. Run `make web-build` after UI changes
+to refresh the packaged static bundle.
 
 The watchlist database defaults to
 `~/Library/Application Support/options-analysis-mcp/state.sqlite3`. Override it
@@ -187,6 +193,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6B.md` — persistent watchlist design and verification.
 - `docs/MILESTONE_6C.md` — chain exploration and contract-selection contract.
 - `docs/MILESTONE_6D.md` — strategy builder and combined-analysis contract.
+- `docs/MILESTONE_6E.md` — packaged browser delivery and accessibility hardening.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

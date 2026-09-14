@@ -33,6 +33,11 @@ requests only from `127.0.0.1:5173` and `localhost:5173`. Do not expose the API
 on a LAN or public interface without adding TLS, authentication, origin/host
 validation, and a separate deployment threat model.
 
+The production UI is served from the same loopback origin as the API. Responses
+set a restrictive same-origin content security policy, deny framing, disable
+MIME sniffing, and omit referrer data. These headers reduce browser attack
+surface but do not turn the local single-user service into a safe hosted app.
+
 Watchlist symbols are stored in a separate SQLite state file outside the source
 repository. Its parent directory is created user-only and its file mode is
 forced to user read/write on POSIX systems. The state database contains no

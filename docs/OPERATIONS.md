@@ -34,10 +34,15 @@ Install the locked frontend dependencies once:
 make web-sync
 ```
 
-Then start `make web-api` and `make web-ui` in separate terminals and open
-`http://127.0.0.1:5173`. The browser uses the same configured default provider
-as MCP. The committed default is `fake`, so this path works fully offline after
-dependencies are installed.
+The latest production UI is bundled with the Python package. Start the complete
+local workspace with `make web-api` and open `http://127.0.0.1:8000`. The
+browser uses the same configured default provider as MCP. The committed default
+is `fake`, so this path works fully offline.
+
+For frontend development, start `make web-api` and `make web-ui` in separate
+terminals and open `http://127.0.0.1:5173`. Vite proxies `/api` to FastAPI.
+After a UI change, run `make web-build`; this replaces the packaged assets under
+`src/options_analysis/web/static`.
 
 ## 3. Enable Schwab
 

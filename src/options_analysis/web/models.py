@@ -28,6 +28,7 @@ class ServerInfo(WebModel):
     environment: EnvironmentName
     read_only: bool
     default_market_data_provider: str
+    frontend_available: bool
 
 
 class ServerInfoResult(WebModel):

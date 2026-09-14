@@ -8,7 +8,10 @@ from options_analysis.web import create_app
 
 @pytest.fixture
 def app(tmp_path) -> FastAPI:  # type: ignore[no-untyped-def]
-    return create_app(AppSettings(_env_file=None, state_db_path=tmp_path / "state.db"))
+    return create_app(
+        AppSettings(_env_file=None, state_db_path=tmp_path / "state.db"),
+        static_dir=tmp_path / "not-built",
+    )
 
 
 @pytest.mark.asyncio
@@ -22,10 +25,11 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.3",
+        "version": "0.6.4",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
+        "frontend_available": False,
     }
     assert info.json()["error"] is None
     assert providers.status_code == 200
@@ -176,3 +180,30 @@ async def test_strategy_catalog_and_position_analysis(app) -> None:  # type: ign
     assert analysis.status_code == 200
     assert analysis.json()["analysis"]["max_profit"] == "200"
     assert analysis.json()["analysis"]["break_even_prices"] == ["98"]
+
+
+@pytest.mark.asyncio
+async def test_bundled_frontend_and_security_headers_are_served(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    static = tmp_path / "static"
+    assets = static / "assets"
+    assets.mkdir(parents=True)
+    (static / "index.html").write_text("<!doctype html><title>Test UI</title>")
+    (assets / "app.js").write_text("export {}")
+    bundled = create_app(
+        AppSettings(_env_file=None, state_db_path=tmp_path / "state.db"),
+        static_dir=static,
+    )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=bundled), base_url="http://test"
+    ) as client:
+        root = await client.get("/")
+        asset = await client.get("/assets/app.js")
+        info = await client.get("/api/v1/info")
+
+    assert root.status_code == 200
+    assert "Test UI" in root.text
+    assert asset.status_code == 200
+    assert root.headers["x-content-type-options"] == "nosniff"
+    assert "frame-ancestors 'none'" in root.headers["content-security-policy"]
+    assert info.json()["info"]["frontend_available"] is True

@@ -4,12 +4,13 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6D strategy analysis is complete on `codex/milestone-6d`. The React
-workspace now turns canonical strategy templates or manually selected
-contracts into editable signed legs and displays combined debit/credit, Greeks,
-risk bounds, break-evens, payoff, scenarios, assumptions, and warnings. FastAPI
-and MCP continue to reuse the same provider-neutral services and routing. Live
-Schwab activation still requires owner credentials.
+Milestone 6E browser delivery is complete on `codex/milestone-6e`. The packaged
+Python application now serves the production React workspace and API from one
+loopback process. Keyboard semantics, visible focus, touch targets, narrow
+viewport behavior, reduced-motion handling, browser security headers, and a
+minimal web-app manifest are included. FastAPI and MCP continue to reuse the
+same provider-neutral services and routing. Live Schwab activation still
+requires owner credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -31,7 +32,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6B — SQLite-backed persistent watchlists
 - [x] Milestone 6C — Rich option-chain explorer
 - [x] Milestone 6D — Strategy builder and combined analytics
-- [ ] Milestone 6E — Live Schwab UI verification and responsive hardening
+- [x] Milestone 6E — Packaged browser delivery and responsive hardening
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -40,8 +41,9 @@ milestone; do not rely on chat history as the backlog.
 - `GET /api/v1/providers` returns enabled provider capabilities.
 - `GET /api/v1/workspaces/{symbol}` combines the normalized quote, expiration
   list, and bounded filtered option chain.
-- `make web-api` starts the loopback FastAPI service.
-- `make web-ui` starts the Vite UI at `http://127.0.0.1:5173`.
+- `make web-api` serves the bundled UI and API at `http://127.0.0.1:8000`.
+- `make web-ui` starts the development-only Vite UI at
+  `http://127.0.0.1:5173`.
 - Watchlist changes persist through `/api/v1/watchlist` in a private local
   SQLite state file.
 - The chain explorer displays paired calls/puts with provider-side strike
@@ -49,6 +51,8 @@ milestone; do not rely on chat history as the backlog.
   selected-contract draft tray.
 - The HTTP strategy catalog and position-analysis endpoint support eight
   presets/custom legs without adding any order capability.
+- Production assets are packaged under `options_analysis.web.static`, use
+  same-origin API calls, and receive a restrictive content security policy.
 
 ## Available MCP tools
 
@@ -80,11 +84,12 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6D pre-release checks pass: mypy strict reports no issues across 50
-source files, all 62 Python tests and nine TypeScript tests pass, the React
-production build succeeds, and live local proxy calls return the catalog and
-expected iron-condor analysis. Run the final `make release-check
-UV=.uv-bootstrap/bin/uv` before tagging.
+Milestone 6E pre-release checks pass: mypy strict reports no issues across 52
+source files, all 63 Python tests and nine TypeScript tests pass, and the React
+production bundle builds into the Python package. An isolated install of the
+built wheel served the UI and API successfully, and the source runtime returned
+the expected security headers. Wheel contents and final release evidence are
+recorded in `docs/MILESTONE_6E.md`.
 
 ## Required owner activation
 
@@ -110,8 +115,9 @@ freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
-`STATUS.md`, `TODO.md`, and the latest milestone note. Inspect Git and the latest milestone
-tag. Continue with Milestone 6E unless the owner requests live activation or a
-different feature. Preserve the provider-neutral, local-only, read-only,
-bounded, and secret-safe boundaries. Run `make release-check` and push a new
-checkpoint. Never commit secrets or private responses.
+`STATUS.md`, `TODO.md`, and the latest milestone note. Inspect Git and the latest
+milestone tag. Take the lowest-numbered `ready` item in `TODO.md`, or ask the
+owner to choose among backlog items if none is ready. Preserve the
+provider-neutral, local-only, read-only, bounded, and secret-safe boundaries.
+Run `make release-check` and push a new checkpoint. Never commit secrets or
+private responses.

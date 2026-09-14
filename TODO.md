@@ -31,7 +31,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-031 | done | Add editable signed legs for long call/put, covered call, verticals, butterflies, and iron condors | UI-030 | Hand-calculated iron-condor and signed-leg tests |
 | UI-032 | done | Add combined debit/credit, Greeks, max profit/loss, and break-even results | UI-031 | Service/API tests and runtime proxy result |
 | UI-033 | done | Add expiration payoff chart and scenario table with assumptions/warnings | UI-032 | Payoff geometry tests and production build |
-| UI-040 | ready | Milestone 6E: responsive/accessibility hardening and production static serving/packaging | UI-033 | Keyboard/mobile inspection and packaged startup test |
+| UI-040 | done | Milestone 6E: responsive/accessibility hardening and production static serving/packaging | UI-033 | Semantic/focus/reduced-motion tests by build, API static/header test, one-process startup, wheel inspection |
 | UI-050 | backlog | Expand catalog with protective put, collar, cash-secured put, straddle/strangle, and calendar/diagonal workflows | UI-040 | Per-template definitions and payoff fixtures |
 | UI-051 | backlog | Persist named strategy drafts separately from watchlists | UI-040 | SQLite migration and restart CRUD tests |
 | UI-052 | backlog | Add expandable per-contract and analysis warning details | UI-040 | Warning rendering tests |

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.4 — 2026-09-14
+
+- Bundled the production React assets into the Python distribution so one
+  loopback FastAPI process serves both the browser workspace and API.
+- Added same-origin content security, no-referrer, MIME-sniffing, and framing
+  protections plus API coverage for static delivery and headers.
+- Improved keyboard semantics, visible focus, screen-reader status text, touch
+  targets, narrow-screen controls, and reduced-motion behavior.
+- Added a minimal local web-app manifest and durable Milestone 6E handoff.
+
 ## 0.6.3 — 2026-09-14
 
 - Added a provider-neutral catalog for long calls/puts, covered calls, bullish

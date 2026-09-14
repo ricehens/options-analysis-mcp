@@ -3,6 +3,7 @@
 import asyncio
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import FastAPI, Query, Request
@@ -10,6 +11,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import Response
 
 from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
@@ -38,6 +42,26 @@ _LOCAL_ORIGINS = (
 )
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
+            "form-action 'self'; img-src 'self'; script-src 'self'; "
+            "style-src 'self'; connect-src 'self'"
+        )
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        return response
+
+
+def bundled_frontend_directory() -> Path:
+    return Path(__file__).with_name("static")
+
+
 def _error_status(detail: ErrorDetail) -> int:
     return {
         ErrorCategory.AUTHORIZATION: 401,
@@ -62,10 +86,13 @@ def create_app(
     settings: AppSettings | None = None,
     *,
     application: Application | None = None,
+    static_dir: Path | None = None,
 ) -> FastAPI:
     """Build an isolated HTTP application for serving or tests."""
 
     resolved_application = application or build_application(settings)
+    resolved_static_dir = static_dir or bundled_frontend_directory()
+    frontend_available = (resolved_static_dir / "index.html").is_file()
     app = FastAPI(
         title="Options Analysis API",
         summary="Read-only provider-neutral market-data API for the browser UI",
@@ -80,6 +107,7 @@ def create_app(
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Accept", "Content-Type"],
     )
+    app.add_middleware(SecurityHeadersMiddleware)
 
     async def handled_error(_: Request, error: Exception) -> JSONResponse:
         assert isinstance(error, ProviderError)
@@ -119,6 +147,7 @@ def create_app(
                 environment=public.environment,
                 read_only=True,
                 default_market_data_provider=public.default_market_data_provider,
+                frontend_available=frontend_available,
             )
         )
 
@@ -228,6 +257,13 @@ def create_app(
             scenario_moves=request.scenario_moves,
         )
         return PositionAnalysisResult(analysis=analysis)
+
+    if frontend_available:
+        app.mount(
+            "/",
+            StaticFiles(directory=resolved_static_dir, html=True),
+            name="frontend",
+        )
 
     return app
 

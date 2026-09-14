@@ -380,6 +380,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">Skip to market workspace</a>
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark">OA</span>
@@ -413,7 +414,11 @@ function App() {
               className={`watch-row ${selectedSymbol === symbol ? "active" : ""}`}
               key={symbol}
             >
-              <button className="symbol-button" onClick={() => selectSymbol(symbol)}>
+              <button
+                className="symbol-button"
+                onClick={() => selectSymbol(symbol)}
+                type="button"
+              >
                 <span>{symbol}</span>
                 <small>{symbol === selectedSymbol ? money(quote?.mark) : "View"}</small>
               </button>
@@ -423,6 +428,7 @@ function App() {
                 disabled={watchlistBusy}
                 onClick={() => removeSymbol(symbol)}
                 title={`Remove ${symbol}`}
+                type="button"
               >
                 ×
               </button>
@@ -439,20 +445,22 @@ function App() {
         </div>
       </aside>
 
-      <main>
+      <main aria-busy={loading || analysisLoading} id="main-content" tabIndex={-1}>
         <header className="topbar">
           <div>
             <span className="eyebrow">Market workspace</span>
             <h1>{selectedSymbol || "No symbol"}</h1>
           </div>
-          <div className="market-status">
+          <div aria-live="polite" className="market-status" role="status">
             <span className={`status-dot ${warningCount ? "warning" : ""}`} />
             {freshness} · {warningCount} warning{warningCount === 1 ? "" : "s"}
           </div>
         </header>
 
         {error || watchlistError || filterError ? (
-          <div className="error-banner">{error ?? watchlistError ?? filterError}</div>
+          <div className="error-banner" role="alert">
+            {error ?? watchlistError ?? filterError}
+          </div>
         ) : null}
 
         <section className={`quote-hero ${loading ? "loading" : ""}`}>
@@ -494,6 +502,7 @@ function App() {
                       className={putCall === side ? "selected" : ""}
                       key={side}
                       onClick={() => setPutCall(side)}
+                      type="button"
                     >
                       {side}
                     </button>
@@ -579,6 +588,9 @@ function App() {
 
             <div className="table-wrap">
               <table>
+                <caption className="sr-only">
+                  Calls and puts for {selectedSymbol} expiring {expiration}
+                </caption>
                 <thead>
                   <tr>
                     <th colSpan={7}>Calls</th>
@@ -587,14 +599,14 @@ function App() {
                   </tr>
                   <tr className="subhead">
                     <th /><th>Delta</th>
-                    <th><button className="sort-button" onClick={() => changeSort("call_iv")}>IV{sortLabel("call_iv")}</button></th>
+                    <th aria-sort={sortKey === "call_iv" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}><button className="sort-button" onClick={() => changeSort("call_iv")} type="button">IV{sortLabel("call_iv")}</button></th>
                     <th>Bid</th><th>Ask</th><th>Spread</th>
-                    <th><button className="sort-button" onClick={() => changeSort("call_open_interest")}>OI{sortLabel("call_open_interest")}</button></th>
-                    <th><button className="sort-button" onClick={() => changeSort("strike")}>Price{sortLabel("strike")}</button></th>
+                    <th aria-sort={sortKey === "call_open_interest" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}><button className="sort-button" onClick={() => changeSort("call_open_interest")} type="button">OI{sortLabel("call_open_interest")}</button></th>
+                    <th aria-sort={sortKey === "strike" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}><button className="sort-button" onClick={() => changeSort("strike")} type="button">Price{sortLabel("strike")}</button></th>
                     <th /><th>Delta</th>
-                    <th><button className="sort-button" onClick={() => changeSort("put_iv")}>IV{sortLabel("put_iv")}</button></th>
+                    <th aria-sort={sortKey === "put_iv" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}><button className="sort-button" onClick={() => changeSort("put_iv")} type="button">IV{sortLabel("put_iv")}</button></th>
                     <th>Bid</th><th>Ask</th><th>Spread</th>
-                    <th><button className="sort-button" onClick={() => changeSort("put_open_interest")}>OI{sortLabel("put_open_interest")}</button></th>
+                    <th aria-sort={sortKey === "put_open_interest" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}><button className="sort-button" onClick={() => changeSort("put_open_interest")} type="button">OI{sortLabel("put_open_interest")}</button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -607,6 +619,7 @@ function App() {
                             aria-pressed={selectedContracts.has(row.call.instrument.provider_symbol)}
                             className={`contract-picker ${selectedContracts.has(row.call.instrument.provider_symbol) ? "selected" : ""}`}
                             onClick={() => toggleContract(row.call)}
+                            type="button"
                           >+</button>
                         ) : null}
                       </td>
@@ -629,6 +642,7 @@ function App() {
                             aria-pressed={selectedContracts.has(row.put.instrument.provider_symbol)}
                             className={`contract-picker ${selectedContracts.has(row.put.instrument.provider_symbol) ? "selected" : ""}`}
                             onClick={() => toggleContract(row.put)}
+                            type="button"
                           >+</button>
                         ) : null}
                       </td>
@@ -662,6 +676,7 @@ function App() {
                   className={strategyId === template.template_id ? "active" : ""}
                   key={template.template_id}
                   onClick={() => selectStrategy(template)}
+                  type="button"
                 >
                   <span>
                     <strong>{template.display_name}</strong>
@@ -680,6 +695,7 @@ function App() {
                       setDraftLegs([]);
                       setStrategyId("custom");
                     }}
+                    type="button"
                   >Clear</button>
                 ) : null}
               </div>
@@ -742,6 +758,7 @@ function App() {
                         aria-label={`Remove ${symbol} from draft`}
                         className="leg-remove"
                         onClick={() => toggleContract(leg.quote)}
+                        type="button"
                       >×</button>
                     </div>
                   );

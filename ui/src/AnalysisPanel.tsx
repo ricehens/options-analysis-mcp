@@ -40,8 +40,10 @@ function premiumLabel(value: DecimalValue | null): string {
 }
 
 export default function AnalysisPanel({ analysis, loading, error }: Props) {
-  if (error) return <div className="analysis-error">{error}</div>;
-  if (loading) return <div className="analysis-empty">Calculating combined position…</div>;
+  if (error) return <div className="analysis-error" role="alert">{error}</div>;
+  if (loading) {
+    return <div className="analysis-empty" role="status">Calculating combined position…</div>;
+  }
   if (!analysis) {
     return (
       <div className="analysis-empty">

@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser strategy-analysis workflow implemented through Milestone 6D
+Status: Packaged browser strategy-analysis workflow implemented through Milestone 6E
 
 Last updated: 2026-09-14
 
@@ -727,7 +727,11 @@ Acceptance:
 - 6C: rich option-chain filters and contract selection. (complete)
 - 6D: strategy templates, leg editing, payoff, and combined analytics.
   (complete)
-- 6E: owner-driven live Schwab validation and responsive hardening.
+- 6E: packaged same-origin browser delivery, security headers, responsive and
+  accessibility hardening. (complete)
+
+Owner-driven live Schwab validation is tracked independently as `LIVE-010`
+through `LIVE-030` in `TODO.md` so UI packaging does not depend on credentials.
 
 ### Milestone 7 — Optional streaming
 

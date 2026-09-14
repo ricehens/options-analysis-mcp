@@ -8,8 +8,11 @@
 4. Run `make web-sync` when `ui/package-lock.json` changed.
 5. Run `make release-check` (or add `UV=.uv-bootstrap/bin/uv`). This includes
    the React type check and production build.
-6. Inspect wheel contents and confirm `options_analysis.testing` is packaged.
-7. Start the built environment over stdio and call `options_server_info`.
+6. Inspect wheel contents and confirm `options_analysis.testing` and
+   `options_analysis.web.static` are packaged.
+7. Start the built environment over stdio and call `options_server_info`; start
+   `options-analysis-web` and confirm `/`, `/api/v1/info`, and browser security
+   headers from the single process.
 8. Commit on a `codex/milestone-N` branch.
 9. Create annotated tag `milestone-N`, push the branch and tag, then
    fast-forward `main` only after all checks pass.
