@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1 — 2026-09-14
+
+- Added a provider-neutral watchlist service and SQLite persistence adapter.
+- Added idempotent list/add/remove HTTP endpoints and connected the React
+  controls to server-side persistence.
+- Added first-run defaults, explicit empty-list preservation, symbol
+  validation, private database permissions, and restart-safe tests.
+
 ## 0.6.0 — 2026-09-14
 
 - Added a local-only FastAPI interface beside MCP using the same application

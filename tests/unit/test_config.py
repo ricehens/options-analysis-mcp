@@ -60,3 +60,12 @@ def test_schwab_redirect_rejects_lookalike_loopback_host() -> None:
         assert "HTTPS or loopback HTTP" in str(error)
     else:
         raise AssertionError("non-loopback HTTP redirect was accepted")
+
+
+def test_state_database_path_must_be_absolute() -> None:
+    try:
+        AppSettings(_env_file=None, state_db_path="relative/state.sqlite3")
+    except ValidationError as error:
+        assert "state database path must be absolute" in str(error)
+    else:
+        raise AssertionError("relative state database path was accepted")

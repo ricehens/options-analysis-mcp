@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser foundation implemented through Milestone 6A
+Status: Browser and persistent watchlists implemented through Milestone 6B
 
 Last updated: 2026-09-14
 
@@ -132,6 +132,8 @@ The packages are planned as:
 - options_analysis.analytics — aggregation, payoff, and scenario calculations.
 - options_analysis.mcp — provider-neutral MCP schemas and tool handlers.
 - options_analysis.web — local-only provider-neutral HTTP endpoints.
+- options_analysis.storage — local persistence adapters behind service
+  protocols; SQLite is the first implementation.
 - ui — responsive React/TypeScript client containing no provider credentials.
 
 This split allows a later application to import the services directly or put an
@@ -721,7 +723,7 @@ Acceptance:
 
 ### Milestone 6B–6E — Browser analysis workflow
 
-- 6B: SQLite-backed watchlist persistence.
+- 6B: SQLite-backed watchlist persistence. (complete)
 - 6C: rich option-chain filters and contract selection.
 - 6D: strategy templates, leg editing, payoff, and combined analytics.
 - 6E: owner-driven live Schwab validation and responsive hardening.

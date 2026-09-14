@@ -4,13 +4,17 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6A browser foundation is complete on `codex/milestone-6a`. The project
-now provides a responsive React workspace and a local-only FastAPI interface in
-addition to the secure, provider-pluggable MCP. Both interfaces reuse the same
-application services and provider routing. Live Schwab activation still
-requires the repository owner's local developer credentials.
+Milestone 6B persistent watchlists are complete on `codex/milestone-6b`. The
+responsive React workspace now stores watchlist changes through a
+provider-neutral service and private local SQLite database. The local FastAPI
+and MCP interfaces continue to reuse the same application services and provider
+routing. Live Schwab activation still requires the repository owner's local
+developer credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
+
+The canonical cross-session work queue is `TODO.md`. Update it with every
+milestone; do not rely on chat history as the backlog.
 
 ## Milestone checklist
 
@@ -24,7 +28,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 - [ ] Optional Schwab account positions — requires Trader API entitlement
 - [x] Milestone 5 — Hardening, documentation, and packaging
 - [x] Milestone 6A — FastAPI and responsive React browser foundation
-- [ ] Milestone 6B — SQLite-backed persistent watchlists
+- [x] Milestone 6B — SQLite-backed persistent watchlists
 - [ ] Milestone 6C — Rich option-chain explorer
 - [ ] Milestone 6D — Strategy builder and combined analytics
 - [ ] Milestone 6E — Live Schwab UI verification and responsive hardening
@@ -38,7 +42,8 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
   list, and bounded filtered option chain.
 - `make web-api` starts the loopback FastAPI service.
 - `make web-ui` starts the Vite UI at `http://127.0.0.1:5173`.
-- Watchlist changes are currently session-only; Milestone 6B persists them.
+- Watchlist changes persist through `/api/v1/watchlist` in a private local
+  SQLite state file.
 
 ## Available MCP tools
 
@@ -70,11 +75,11 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6A checks pass: Python formatting and Ruff lint are clean, mypy strict
-reports no issues across 44 source files, all 53 pytest tests pass, the React
-TypeScript production build succeeds, and a request through the Vite proxy
-returned the combined fake-provider workspace. Run the final `make
-release-check UV=.uv-bootstrap/bin/uv` before tagging.
+Milestone 6B pre-release checks pass: mypy strict reports no issues across 48
+source files, all 59 tests pass, the React production build succeeds, and a
+GET/POST/DELETE sequence through the Vite proxy persists to a temporary SQLite
+database. Run the final `make release-check UV=.uv-bootstrap/bin/uv` before
+tagging.
 
 ## Required owner activation
 
@@ -100,8 +105,8 @@ freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
-`STATUS.md`, and `docs/MILESTONE_6A.md`. Inspect Git and the latest milestone
-tag. Continue with Milestone 6B unless the owner requests live activation or a
+`STATUS.md`, `TODO.md`, and the latest milestone note. Inspect Git and the latest milestone
+tag. Continue with Milestone 6C unless the owner requests live activation or a
 different feature. Preserve the provider-neutral, local-only, read-only,
 bounded, and secret-safe boundaries. Run `make release-check` and push a new
 checkpoint. Never commit secrets or private responses.

@@ -19,10 +19,12 @@ from options_analysis.errors import ErrorCategory, ErrorDetail, error_detail
 from options_analysis.providers import OptionChainQuery
 from options_analysis.providers.errors import ProviderError
 from options_analysis.web.models import (
+    AddWatchlistItemRequest,
     ProviderListResult,
     ProviderSummary,
     ServerInfo,
     ServerInfoResult,
+    WatchlistResult,
     WorkspaceResult,
     WorkspaceSnapshot,
 )
@@ -72,7 +74,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=list(_LOCAL_ORIGINS),
         allow_credentials=False,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Accept", "Content-Type"],
     )
 
@@ -179,6 +181,31 @@ def create_app(
                 expirations=expirations,
                 chain=chain,
             )
+        )
+
+    @app.get("/api/v1/watchlist", response_model=WatchlistResult)
+    def watchlist() -> WatchlistResult:
+        return WatchlistResult(
+            items=resolved_application.watchlist_service.list_items()
+        )
+
+    @app.post(
+        "/api/v1/watchlist",
+        response_model=WatchlistResult,
+        status_code=201,
+    )
+    def add_watchlist_item(request: AddWatchlistItemRequest) -> WatchlistResult:
+        return WatchlistResult(
+            items=resolved_application.watchlist_service.add(request.symbol)
+        )
+
+    @app.delete(
+        "/api/v1/watchlist/{symbol}",
+        response_model=WatchlistResult,
+    )
+    def delete_watchlist_item(symbol: str) -> WatchlistResult:
+        return WatchlistResult(
+            items=resolved_application.watchlist_service.remove(symbol)
         )
 
     return app

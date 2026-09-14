@@ -5,7 +5,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from options_analysis.config import EnvironmentName
-from options_analysis.domain import OptionChain, Quote
+from options_analysis.domain import OptionChain, Quote, WatchlistItem
 from options_analysis.errors import ErrorDetail
 
 
@@ -52,4 +52,13 @@ class WorkspaceSnapshot(WebModel):
 
 class WorkspaceResult(WebModel):
     workspace: WorkspaceSnapshot | None = None
+    error: ErrorDetail | None = None
+
+
+class AddWatchlistItemRequest(WebModel):
+    symbol: str
+
+
+class WatchlistResult(WebModel):
+    items: tuple[WatchlistItem, ...] = ()
     error: ErrorDetail | None = None

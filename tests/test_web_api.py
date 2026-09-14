@@ -1,4 +1,5 @@
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from options_analysis.config import AppSettings
@@ -6,8 +7,8 @@ from options_analysis.web import create_app
 
 
 @pytest.fixture
-def app():  # type: ignore[no-untyped-def]
-    return create_app(AppSettings(_env_file=None))
+def app(tmp_path) -> FastAPI:  # type: ignore[no-untyped-def]
+    return create_app(AppSettings(_env_file=None, state_db_path=tmp_path / "state.db"))
 
 
 @pytest.mark.asyncio
@@ -21,7 +22,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.0",
+        "version": "0.6.1",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -85,3 +86,49 @@ async def test_local_vite_origin_is_allowed(app) -> None:  # type: ignore[no-unt
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
+    assert "POST" in response.headers["access-control-allow-methods"]
+    assert "DELETE" in response.headers["access-control-allow-methods"]
+
+
+@pytest.mark.asyncio
+async def test_watchlist_crud_is_idempotent_and_persistent(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        initial = await client.get("/api/v1/watchlist")
+        added = await client.post("/api/v1/watchlist", json={"symbol": " aapl "})
+        duplicate = await client.post("/api/v1/watchlist", json={"symbol": "AAPL"})
+        removed = await client.delete("/api/v1/watchlist/QQQ")
+
+    assert [item["symbol"] for item in initial.json()["items"]] == [
+        "SPY",
+        "QQQ",
+        "IWM",
+    ]
+    assert added.status_code == 201
+    assert [item["symbol"] for item in added.json()["items"]] == [
+        "SPY",
+        "QQQ",
+        "IWM",
+        "AAPL",
+    ]
+    assert len(duplicate.json()["items"]) == 4
+    assert [item["symbol"] for item in removed.json()["items"]] == [
+        "SPY",
+        "IWM",
+        "AAPL",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_watchlist_rejects_invalid_symbol(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/v1/watchlist", json={"symbol": "not a symbol"}
+        )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["category"] == "validation"
+    assert "at most 12" in response.json()["error"]["message"]

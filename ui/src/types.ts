@@ -70,3 +70,14 @@ export interface WorkspaceResult {
   workspace: WorkspaceSnapshot | null;
   error: ErrorDetail | null;
 }
+
+export interface WatchlistItem {
+  symbol: string;
+  created_at: string;
+  sort_order: number;
+}
+
+export interface WatchlistResult {
+  items: WatchlistItem[];
+  error: ErrorDetail | null;
+}

@@ -1,9 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { ApiError, loadWorkspace } from "./api";
+import {
+  addWatchlistSymbol,
+  ApiError,
+  deleteWatchlistSymbol,
+  loadWatchlist,
+  loadWorkspace,
+} from "./api";
 import type { DecimalValue, PutCall, Quote, WorkspaceSnapshot } from "./types";
 
-const initialSymbols = ["SPY", "QQQ", "IWM"];
 const strategyNames = [
   "Single option",
   "Covered call",
@@ -51,7 +56,7 @@ interface ChainRow {
 }
 
 function App() {
-  const [symbols, setSymbols] = useState(initialSymbols);
+  const [symbols, setSymbols] = useState<string[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState("SPY");
   const [symbolInput, setSymbolInput] = useState("");
   const [expiration, setExpiration] = useState("");
@@ -60,8 +65,36 @@ function App() {
   const [workspace, setWorkspace] = useState<WorkspaceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [watchlistBusy, setWatchlistBusy] = useState(true);
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    loadWatchlist(controller.signal)
+      .then((loadedSymbols) => {
+        setSymbols(loadedSymbols);
+        setSelectedSymbol((current) =>
+          loadedSymbols.includes(current) ? current : (loadedSymbols[0] ?? ""),
+        );
+      })
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        setWatchlistError(
+          reason instanceof Error ? reason.message : "Unable to load the watchlist.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setWatchlistBusy(false);
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSymbol) {
+      setWorkspace(null);
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     setLoading(true);
     setError(null);
@@ -84,7 +117,9 @@ function App() {
             : "Unable to load market data.";
         setError(message);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
     return () => controller.abort();
   }, [expiration, putCall, selectedSymbol]);
 
@@ -101,24 +136,42 @@ function App() {
     return [...indexed.values()].sort((left, right) => left.strike - right.strike);
   }, [workspace]);
 
-  function addSymbol(event: FormEvent) {
+  async function addSymbol(event: FormEvent) {
     event.preventDefault();
     const normalized = symbolInput.trim().toUpperCase();
-    if (!normalized || !/^[A-Z.]{1,8}$/.test(normalized)) return;
-    setSymbols((current) =>
-      current.includes(normalized) ? current : [...current, normalized],
-    );
-    setSelectedSymbol(normalized);
-    setExpiration("");
-    setSymbolInput("");
+    if (!normalized) return;
+    setWatchlistBusy(true);
+    setWatchlistError(null);
+    try {
+      setSymbols(await addWatchlistSymbol(normalized));
+      setSelectedSymbol(normalized);
+      setExpiration("");
+      setSymbolInput("");
+    } catch (reason) {
+      setWatchlistError(
+        reason instanceof Error ? reason.message : "Unable to add the symbol.",
+      );
+    } finally {
+      setWatchlistBusy(false);
+    }
   }
 
-  function removeSymbol(symbol: string) {
-    const remaining = symbols.filter((item) => item !== symbol);
-    setSymbols(remaining);
-    if (selectedSymbol === symbol && remaining.length) {
-      setSelectedSymbol(remaining[0]);
-      setExpiration("");
+  async function removeSymbol(symbol: string) {
+    setWatchlistBusy(true);
+    setWatchlistError(null);
+    try {
+      const remaining = await deleteWatchlistSymbol(symbol);
+      setSymbols(remaining);
+      if (selectedSymbol === symbol) {
+        setSelectedSymbol(remaining[0] ?? "");
+        setExpiration("");
+      }
+    } catch (reason) {
+      setWatchlistError(
+        reason instanceof Error ? reason.message : "Unable to remove the symbol.",
+      );
+    } finally {
+      setWatchlistBusy(false);
     }
   }
 
@@ -148,7 +201,7 @@ function App() {
 
         <div className="section-label">
           <span>Watchlist</span>
-          <span>{symbols.length}</span>
+          <span>{watchlistBusy ? "…" : symbols.length}</span>
         </div>
         <form className="symbol-form" onSubmit={addSymbol}>
           <input
@@ -159,7 +212,7 @@ function App() {
             placeholder="Add symbol"
             value={symbolInput}
           />
-          <button aria-label="Add symbol" type="submit">
+          <button aria-label="Add symbol" disabled={watchlistBusy} type="submit">
             +
           </button>
         </form>
@@ -177,6 +230,7 @@ function App() {
               <button
                 aria-label={`Remove ${symbol}`}
                 className="remove-button"
+                disabled={watchlistBusy}
                 onClick={() => removeSymbol(symbol)}
                 title={`Remove ${symbol}`}
               >
@@ -199,14 +253,16 @@ function App() {
         <header className="topbar">
           <div>
             <span className="eyebrow">Market workspace</span>
-            <h1>{selectedSymbol}</h1>
+            <h1>{selectedSymbol || "No symbol"}</h1>
           </div>
           <div className="market-status">
             <span className="status-dot" /> Offline-safe data
           </div>
         </header>
 
-        {error ? <div className="error-banner">{error}</div> : null}
+        {error || watchlistError ? (
+          <div className="error-banner">{error ?? watchlistError}</div>
+        ) : null}
 
         <section className={`quote-hero ${loading ? "loading" : ""}`}>
           <div>

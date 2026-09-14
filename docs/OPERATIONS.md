@@ -56,6 +56,16 @@ dependencies are installed.
 Restart the HTTP API after changing provider configuration. The browser needs
 no Schwab-specific setting and must never receive a client secret or token.
 
+### Watchlist state
+
+Watchlist changes persist at
+`~/Library/Application Support/options-analysis-mcp/state.sqlite3`. Set
+`OPTIONS_ANALYSIS_STATE_DB_PATH` to an absolute path to override it. To start
+fresh, stop the API and move that one database file to Trash; the next watchlist
+request creates a new database with `SPY`, `QQQ`, and `IWM`. Do not remove the
+application-support directory recursively because it may also contain the
+Schwab token file.
+
 ## 4. Routine checks
 
 - Call `options_provider_auth_status` before a live session.

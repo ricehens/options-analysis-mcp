@@ -43,6 +43,7 @@ class AppSettings(BaseSettings):
     allow_live_smoke_tests: bool = False
     snapshot_cache_ttl_seconds: float = 1.0
     snapshot_cache_max_entries: int = 512
+    state_db_path: Path | None = None
     schwab_client_id: SecretStr | None = None
     schwab_client_secret: SecretStr | None = None
     schwab_redirect_uri: str = "https://127.0.0.1"
@@ -67,6 +68,16 @@ class AppSettings(BaseSettings):
         if not 1 <= value <= 10_000:
             raise ValueError("snapshot cache size must be between 1 and 10000")
         return value
+
+    @field_validator("state_db_path")
+    @classmethod
+    def validate_state_db_path(cls, value: Path | None) -> Path | None:
+        if value is None:
+            return None
+        expanded = value.expanduser()
+        if not expanded.is_absolute():
+            raise ValueError("state database path must be absolute")
+        return expanded
 
     @field_validator("enabled_providers")
     @classmethod

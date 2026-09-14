@@ -33,6 +33,11 @@ requests only from `127.0.0.1:5173` and `localhost:5173`. Do not expose the API
 on a LAN or public interface without adding TLS, authentication, origin/host
 validation, and a separate deployment threat model.
 
+Watchlist symbols are stored in a separate SQLite state file outside the source
+repository. Its parent directory is created user-only and its file mode is
+forced to user read/write on POSIX systems. The state database contains no
+Schwab tokens and must never become a general credential store.
+
 ## Reporting a vulnerability
 
 Report security concerns privately to the repository owner. Do not open a
