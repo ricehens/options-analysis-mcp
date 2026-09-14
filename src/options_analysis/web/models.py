@@ -1,11 +1,20 @@
 """Provider-neutral HTTP response models."""
 
 from datetime import date
+from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from options_analysis.config import EnvironmentName
-from options_analysis.domain import OptionChain, Quote, WatchlistItem
+from options_analysis.domain import (
+    OptionChain,
+    PositionAnalysis,
+    PositionRequestLeg,
+    Quote,
+    StrategyTemplate,
+    ValuationMode,
+    WatchlistItem,
+)
 from options_analysis.errors import ErrorDetail
 
 
@@ -61,4 +70,27 @@ class AddWatchlistItemRequest(WebModel):
 
 class WatchlistResult(WebModel):
     items: tuple[WatchlistItem, ...] = ()
+    error: ErrorDetail | None = None
+
+
+class StrategyCatalogResult(WebModel):
+    strategies: tuple[StrategyTemplate, ...] = ()
+    error: ErrorDetail | None = None
+
+
+class AnalyzePositionsRequest(WebModel):
+    legs: tuple[PositionRequestLeg, ...] = Field(min_length=1, max_length=100)
+    provider: str | None = None
+    valuation_mode: ValuationMode = ValuationMode.MARK
+    scenario_moves: tuple[Decimal, ...] = (
+        Decimal("-0.20"),
+        Decimal("-0.10"),
+        Decimal("0"),
+        Decimal("0.10"),
+        Decimal("0.20"),
+    )
+
+
+class PositionAnalysisResult(WebModel):
+    analysis: PositionAnalysis | None = None
     error: ErrorDetail | None = None

@@ -4,12 +4,12 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6C option-chain exploration is complete on `codex/milestone-6c`. The
-responsive React workspace now provides persistent watchlists, detailed
-expiration/strike/moneyness/liquidity filters, sortable option metrics,
-freshness/warning visibility, and selection into editable draft legs. The local
-FastAPI and MCP interfaces continue to reuse the same provider-neutral services
-and routing. Live Schwab activation still requires owner credentials.
+Milestone 6D strategy analysis is complete on `codex/milestone-6d`. The React
+workspace now turns canonical strategy templates or manually selected
+contracts into editable signed legs and displays combined debit/credit, Greeks,
+risk bounds, break-evens, payoff, scenarios, assumptions, and warnings. FastAPI
+and MCP continue to reuse the same provider-neutral services and routing. Live
+Schwab activation still requires owner credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -30,7 +30,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6A — FastAPI and responsive React browser foundation
 - [x] Milestone 6B — SQLite-backed persistent watchlists
 - [x] Milestone 6C — Rich option-chain explorer
-- [ ] Milestone 6D — Strategy builder and combined analytics
+- [x] Milestone 6D — Strategy builder and combined analytics
 - [ ] Milestone 6E — Live Schwab UI verification and responsive hardening
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
@@ -47,6 +47,8 @@ milestone; do not rely on chat history as the backlog.
 - The chain explorer displays paired calls/puts with provider-side strike
   bounds, local liquidity/moneyness filters, sortable detailed metrics, and a
   selected-contract draft tray.
+- The HTTP strategy catalog and position-analysis endpoint support eight
+  presets/custom legs without adding any order capability.
 
 ## Available MCP tools
 
@@ -78,9 +80,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6C pre-release checks pass: mypy strict reports no issues across 48
-source files, all 59 Python tests and four TypeScript view-model tests pass, and
-the React production build succeeds. Run the final `make release-check
+Milestone 6D pre-release checks pass: mypy strict reports no issues across 50
+source files, all 62 Python tests and nine TypeScript tests pass, the React
+production build succeeds, and live local proxy calls return the catalog and
+expected iron-condor analysis. Run the final `make release-check
 UV=.uv-bootstrap/bin/uv` before tagging.
 
 ## Required owner activation
@@ -108,7 +111,7 @@ freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
 `STATUS.md`, `TODO.md`, and the latest milestone note. Inspect Git and the latest milestone
-tag. Continue with Milestone 6D unless the owner requests live activation or a
+tag. Continue with Milestone 6E unless the owner requests live activation or a
 different feature. Preserve the provider-neutral, local-only, read-only,
 bounded, and secret-safe boundaries. Run `make release-check` and push a new
 checkpoint. Never commit secrets or private responses.

@@ -20,10 +20,13 @@ from options_analysis.providers import OptionChainQuery
 from options_analysis.providers.errors import ProviderError
 from options_analysis.web.models import (
     AddWatchlistItemRequest,
+    AnalyzePositionsRequest,
+    PositionAnalysisResult,
     ProviderListResult,
     ProviderSummary,
     ServerInfo,
     ServerInfoResult,
+    StrategyCatalogResult,
     WatchlistResult,
     WorkspaceResult,
     WorkspaceSnapshot,
@@ -207,6 +210,24 @@ def create_app(
         return WatchlistResult(
             items=resolved_application.watchlist_service.remove(symbol)
         )
+
+    @app.get("/api/v1/strategies", response_model=StrategyCatalogResult)
+    def strategies() -> StrategyCatalogResult:
+        return StrategyCatalogResult(
+            strategies=resolved_application.strategy_catalog_service.list_templates()
+        )
+
+    @app.post("/api/v1/analyses/positions", response_model=PositionAnalysisResult)
+    async def analyze_positions(
+        request: AnalyzePositionsRequest,
+    ) -> PositionAnalysisResult:
+        analysis = await resolved_application.position_analysis_service.analyze(
+            request.legs,
+            provider_id=request.provider,
+            valuation_mode=request.valuation_mode,
+            scenario_moves=request.scenario_moves,
+        )
+        return PositionAnalysisResult(analysis=analysis)
 
     return app
 

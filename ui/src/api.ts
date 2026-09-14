@@ -1,5 +1,10 @@
 import type {
+  AnalysisRequestLeg,
+  PositionAnalysis,
+  PositionAnalysisResult,
   PutCall,
+  StrategyCatalogResult,
+  StrategyTemplate,
   WatchlistResult,
   WorkspaceResult,
   WorkspaceSnapshot,
@@ -83,4 +88,38 @@ export function deleteWatchlistSymbol(symbol: string): Promise<string[]> {
   return watchlistRequest(`/api/v1/watchlist/${encodeURIComponent(symbol)}`, {
     method: "DELETE",
   });
+}
+
+export async function loadStrategies(signal?: AbortSignal): Promise<StrategyTemplate[]> {
+  const response = await fetch("/api/v1/strategies", { signal });
+  const result = (await response.json()) as StrategyCatalogResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  return result.strategies;
+}
+
+export async function analyzePositions(
+  legs: AnalysisRequestLeg[],
+  provider: string,
+  signal?: AbortSignal,
+): Promise<PositionAnalysis> {
+  const response = await fetch("/api/v1/analyses/positions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ legs, provider }),
+    signal,
+  });
+  const result = (await response.json()) as PositionAnalysisResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  if (!result.analysis) throw new ApiError("The API returned no analysis.");
+  return result.analysis;
 }

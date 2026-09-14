@@ -77,7 +77,7 @@ async def test_liquidation_mode_uses_bid_for_long_and_ask_for_short() -> None:
         valuation_mode=ValuationMode.LIQUIDATION,
     )
 
-    assert result.net_market_value == Decimal("-260")
+    assert result.net_market_value == Decimal("290")
     assert result.net_cost_basis is None
     assert result.break_even_prices == ()
     assert {warning.code for warning in result.warnings} >= {"missing_cost_basis"}
@@ -146,3 +146,24 @@ async def test_multiple_underlyings_do_not_produce_one_factor_scenarios() -> Non
     assert result.underlying_price is None
     assert result.scenarios == ()
     assert "multiple_underlyings" in {warning.code for warning in result.warnings}
+
+
+@pytest.mark.asyncio
+async def test_iron_condor_matches_hand_calculated_credit_and_bounds() -> None:
+    service = build_application(AppSettings(_env_file=None)).position_analysis_service
+
+    result = await service.analyze(
+        (
+            option_leg("SPY300118P00090000", "1", "0.5"),
+            option_leg("SPY300118P00095000", "-1", "2"),
+            option_leg("SPY300118C00105000", "-1", "2"),
+            option_leg("SPY300118C00110000", "1", "0.5"),
+        )
+    )
+
+    assert result.net_cost_basis == Decimal("-300.0")
+    assert result.break_even_prices == (Decimal("92.0"), Decimal("108.0"))
+    assert result.max_profit == Decimal("300.0")
+    assert result.max_profit_bounded is True
+    assert result.max_loss == Decimal("-200.0")
+    assert result.max_loss_bounded is True

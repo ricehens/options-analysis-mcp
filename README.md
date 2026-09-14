@@ -15,12 +15,12 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6C is complete. A responsive React workspace and local-only FastAPI
+Milestone 6D is complete. A responsive React workspace and local-only FastAPI
 facade sit beside the MCP server and reuse the same provider-neutral services.
 The UI provides a persistent SQLite-backed watchlist, selected-symbol quote
-summary, a sortable and filterable detailed option chain, and contract
-selection into editable draft legs. Live Schwab activation remains a local step
-requiring your developer application.
+summary, a detailed option chain, and a strategy builder with combined Greeks,
+risk bounds, break-evens, expiration payoff, and delta-gamma scenarios. Live
+Schwab activation remains a local step requiring your developer application.
 
 Read these documents first:
 
@@ -55,8 +55,11 @@ Read these documents first:
   open-interest, and maximum bid/ask-spread filters.
 - Calls and puts show delta, IV, bid, ask, spread, open interest, moneyness,
   freshness, and warning counts.
-- Selected contracts form an editable buy/sell draft; strategy calculations
-  follow in Milestone 6D.
+- Eight canonical strategy presets include long call/put, covered call, bull
+  call and bear put spreads, long call butterfly, iron condor, and custom.
+- Selected/template legs have editable buy/sell, quantity, and entry price.
+- Combined results include debit/credit, Greeks, max profit/loss, break-evens,
+  expiration payoff chart, scenario table, assumptions, and warnings.
 - Provider-neutral models enforce instrument identity, timezone-aware data,
   Decimal values, provenance, namespaced extensions, and position invariants.
 
@@ -183,6 +186,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6A.md` — browser foundation contract and next UI work.
 - `docs/MILESTONE_6B.md` — persistent watchlist design and verification.
 - `docs/MILESTONE_6C.md` — chain exploration and contract-selection contract.
+- `docs/MILESTONE_6D.md` — strategy builder and combined-analysis contract.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

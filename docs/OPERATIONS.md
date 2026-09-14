@@ -66,6 +66,15 @@ request creates a new database with `SPY`, `QQQ`, and `IWM`. Do not remove the
 application-support directory recursively because it may also contain the
 Schwab token file.
 
+### Strategy analysis
+
+Load a symbol with both calls and puts and a strike range wide enough for the
+selected template. Choosing a template generates a draft using strikes near the
+underlying mark; every action, quantity, and entry price remains editable.
+Template entries default to current marks. Results are research calculations,
+not executable quotes or order previews. Expand assumptions and warnings below
+the scenario table before interpreting a result.
+
 ## 4. Routine checks
 
 - Call `options_provider_auth_status` before a live session.

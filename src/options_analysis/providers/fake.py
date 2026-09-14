@@ -103,7 +103,13 @@ class FakeProvider:
         )
         strikes = tuple(
             strike
-            for strike in (Decimal("95"), Decimal("100"), Decimal("105"))
+            for strike in (
+                Decimal("90"),
+                Decimal("95"),
+                Decimal("100"),
+                Decimal("105"),
+                Decimal("110"),
+            )
             if (query.strike_from is None or strike >= query.strike_from)
             and (query.strike_to is None or strike <= query.strike_to)
         )
@@ -196,8 +202,13 @@ class FakeProvider:
             option=option,
         )
         distance = abs(strike - Decimal("100"))
-        mark = Decimal("5.00") - distance / Decimal("2")
-        mark = max(mark, Decimal("0.50"))
+        intrinsic = (
+            max(Decimal("100") - strike, Decimal())
+            if side is PutCall.CALL
+            else max(strike - Decimal("100"), Decimal())
+        )
+        time_value = max(Decimal("4.00") - distance * Decimal("0.40"), Decimal("0.50"))
+        mark = intrinsic + time_value
         return Quote(
             instrument=instrument,
             provider_id="fake",

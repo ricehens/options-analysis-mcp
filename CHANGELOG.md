@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.3 — 2026-09-14
+
+- Added a provider-neutral catalog for long calls/puts, covered calls, bullish
+  and bearish verticals, long call butterflies, iron condors, and custom legs.
+- Added a read-only HTTP position-analysis endpoint over the existing service.
+- Added one-click template-to-leg generation, editable action/quantity/entry
+  values, combined debit/credit and Greeks, payoff chart, break-evens, bounded
+  risk, scenario table, assumptions, and warnings.
+- Expanded deterministic option pricing and added hand-calculated iron-condor,
+  template-generation, signed-leg, and payoff-chart tests.
+
 ## 0.6.2 — 2026-09-14
 
 - Added provider-side strike bounds and local moneyness, open-interest, and

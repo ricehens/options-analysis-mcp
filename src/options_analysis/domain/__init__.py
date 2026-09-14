@@ -27,6 +27,12 @@ from options_analysis.domain.market_data import (
     Quote,
 )
 from options_analysis.domain.positions import LongShort, PositionLeg
+from options_analysis.domain.strategies import (
+    StrategyAction,
+    StrategyLegRole,
+    StrategyOutlook,
+    StrategyTemplate,
+)
 from options_analysis.domain.watchlists import WatchlistItem
 
 __all__ = [
@@ -51,6 +57,10 @@ __all__ = [
     "Quote",
     "ScenarioPoint",
     "SettlementType",
+    "StrategyAction",
+    "StrategyLegRole",
+    "StrategyOutlook",
+    "StrategyTemplate",
     "ValuationMode",
     "WatchlistItem",
 ]

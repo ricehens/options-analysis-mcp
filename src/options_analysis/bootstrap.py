@@ -10,6 +10,7 @@ from options_analysis.services import (
     MarketDataService,
     PositionAnalysisService,
     ProviderService,
+    StrategyCatalogService,
     WatchlistService,
 )
 from options_analysis.services.cache import TTLCache
@@ -24,6 +25,7 @@ class Application:
     market_data_service: MarketDataService
     position_analysis_service: PositionAnalysisService
     watchlist_service: WatchlistService
+    strategy_catalog_service: StrategyCatalogService
 
 
 def build_application(settings: AppSettings | None = None) -> Application:
@@ -56,4 +58,5 @@ def build_application(settings: AppSettings | None = None) -> Application:
                 resolved_settings.state_db_path or default_state_db_path()
             )
         ),
+        strategy_catalog_service=StrategyCatalogService(),
     )

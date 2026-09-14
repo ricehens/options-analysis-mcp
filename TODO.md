@@ -27,11 +27,14 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-020 | done | Milestone 6C: chain explorer with strike range, expiration/DTE, side, liquidity, and moneyness filters | UI-010 | API filter and TypeScript view-model tests |
 | UI-021 | done | Add sortable chain columns and clear stale/missing-data indicators | UI-020 | Sort tests and visible freshness/warning summary |
 | UI-022 | done | Add contract selection from calls/puts into a draft leg tray | UI-020 | Buy/sell/quantity/remove UI with production build |
-| UI-030 | ready | Milestone 6D: canonical strategy-template catalog | UI-022 | Unit tests for template-to-leg generation |
-| UI-031 | backlog | Add editable signed legs for long call/put, covered call, verticals, butterflies, and iron condors | UI-030 | Hand-calculated strategy fixtures |
-| UI-032 | backlog | Add combined debit/credit, Greeks, max profit/loss, and break-even results | UI-031 | Service/API/UI tests against existing analyzer |
-| UI-033 | backlog | Add expiration payoff chart and scenario table with assumptions/warnings | UI-032 | Chart data tests and visual inspection |
-| UI-040 | backlog | Milestone 6E: responsive/accessibility hardening and production static serving/packaging | UI-033 | Keyboard/mobile inspection and packaged startup test |
+| UI-030 | done | Milestone 6D: canonical strategy-template catalog | UI-022 | Catalog and template-generation tests |
+| UI-031 | done | Add editable signed legs for long call/put, covered call, verticals, butterflies, and iron condors | UI-030 | Hand-calculated iron-condor and signed-leg tests |
+| UI-032 | done | Add combined debit/credit, Greeks, max profit/loss, and break-even results | UI-031 | Service/API tests and runtime proxy result |
+| UI-033 | done | Add expiration payoff chart and scenario table with assumptions/warnings | UI-032 | Payoff geometry tests and production build |
+| UI-040 | ready | Milestone 6E: responsive/accessibility hardening and production static serving/packaging | UI-033 | Keyboard/mobile inspection and packaged startup test |
+| UI-050 | backlog | Expand catalog with protective put, collar, cash-secured put, straddle/strangle, and calendar/diagonal workflows | UI-040 | Per-template definitions and payoff fixtures |
+| UI-051 | backlog | Persist named strategy drafts separately from watchlists | UI-040 | SQLite migration and restart CRUD tests |
+| UI-052 | backlog | Add expandable per-contract and analysis warning details | UI-040 | Warning rendering tests |
 
 ## Schwab activation
 

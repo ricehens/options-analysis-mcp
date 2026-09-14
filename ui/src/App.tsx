@@ -2,11 +2,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
   addWatchlistSymbol,
+  analyzePositions,
   ApiError,
   deleteWatchlistSymbol,
   loadWatchlist,
+  loadStrategies,
   loadWorkspace,
 } from "./api";
+import AnalysisPanel from "./AnalysisPanel";
 import {
   buildChainRows,
   daysToExpiration,
@@ -22,15 +25,21 @@ import type {
   SortDirection,
   SortKey,
 } from "./chain";
-import type { DecimalValue, PutCall, Quote, WorkspaceSnapshot } from "./types";
-
-const strategyNames = [
-  "Single option",
-  "Covered call",
-  "Vertical spread",
-  "Butterfly",
-  "Iron condor",
-];
+import {
+  buildTemplateDraft,
+  draftFromQuote,
+  StrategyBuildError,
+  toAnalysisRequestLegs,
+} from "./strategies";
+import type { DraftLeg } from "./strategies";
+import type {
+  DecimalValue,
+  PositionAnalysis,
+  PutCall,
+  Quote,
+  StrategyTemplate,
+  WorkspaceSnapshot,
+} from "./types";
 
 function money(value: DecimalValue | null | undefined): string {
   const parsed = decimal(value);
@@ -68,19 +77,14 @@ function percent(value: DecimalValue | null | undefined, digits = 1): string {
   return parsed === null ? "—" : `${(parsed * 100).toFixed(digits)}%`;
 }
 
-interface DraftLeg {
-  quote: Quote;
-  action: "buy" | "sell";
-  quantity: number;
-}
-
 function App() {
   const [symbols, setSymbols] = useState<string[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState("SPY");
   const [symbolInput, setSymbolInput] = useState("");
   const [expiration, setExpiration] = useState("");
   const [putCall, setPutCall] = useState<PutCall | "all">("all");
-  const [strategy, setStrategy] = useState(strategyNames[0]);
+  const [strategies, setStrategies] = useState<StrategyTemplate[]>([]);
+  const [strategyId, setStrategyId] = useState("long_call");
   const [workspace, setWorkspace] = useState<WorkspaceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +103,9 @@ function App() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [filterError, setFilterError] = useState<string | null>(null);
   const [draftLegs, setDraftLegs] = useState<DraftLeg[]>([]);
+  const [analysis, setAnalysis] = useState<PositionAnalysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -117,6 +124,21 @@ function App() {
       })
       .finally(() => {
         if (!controller.signal.aborted) setWatchlistBusy(false);
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadStrategies(controller.signal)
+      .then(setStrategies)
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        setAnalysisError(
+          reason instanceof Error
+            ? reason.message
+            : "Unable to load strategy templates.",
+        );
       });
     return () => controller.abort();
   }, []);
@@ -159,6 +181,34 @@ function App() {
       });
     return () => controller.abort();
   }, [expiration, putCall, selectedSymbol, strikeRange.from, strikeRange.to]);
+
+  useEffect(() => {
+    if (!draftLegs.length || !workspace) {
+      setAnalysis(null);
+      setAnalysisLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setAnalysisLoading(true);
+    setAnalysisError(null);
+    analyzePositions(
+      toAnalysisRequestLegs(draftLegs),
+      workspace.provider_id,
+      controller.signal,
+    )
+      .then(setAnalysis)
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        setAnalysis(null);
+        setAnalysisError(
+          reason instanceof Error ? reason.message : "Unable to analyze the draft.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setAnalysisLoading(false);
+      });
+    return () => controller.abort();
+  }, [draftLegs, workspace]);
 
   const rows = useMemo(() => {
     const filters: ChainFilters = {
@@ -271,22 +321,38 @@ function App() {
   function toggleContract(contract: Quote | undefined) {
     if (!contract) return;
     const symbol = contract.instrument.provider_symbol;
+    setStrategyId("custom");
     setDraftLegs((current) =>
       current.some((leg) => leg.quote.instrument.provider_symbol === symbol)
         ? current.filter((leg) => leg.quote.instrument.provider_symbol !== symbol)
-        : [...current, { quote: contract, action: "buy", quantity: 1 }],
+        : [...current, draftFromQuote(contract)],
     );
   }
 
   function updateDraftLeg(
     symbol: string,
-    update: Partial<Pick<DraftLeg, "action" | "quantity">>,
+    update: Partial<Pick<DraftLeg, "action" | "quantity" | "entryPrice">>,
   ) {
     setDraftLegs((current) =>
       current.map((leg) =>
         leg.quote.instrument.provider_symbol === symbol ? { ...leg, ...update } : leg,
       ),
     );
+  }
+
+  function selectStrategy(template: StrategyTemplate) {
+    setStrategyId(template.template_id);
+    setAnalysisError(null);
+    if (!workspace) return;
+    try {
+      setDraftLegs(buildTemplateDraft(template, workspace, draftLegs));
+    } catch (reason) {
+      setAnalysisError(
+        reason instanceof StrategyBuildError || reason instanceof Error
+          ? reason.message
+          : "Unable to build this strategy from the loaded chain.",
+      );
+    }
   }
 
   const quote = workspace?.quote;
@@ -308,6 +374,9 @@ function App() {
       : quote
         ? `${Math.max(0, Math.round((Date.now() - Date.parse(quote.as_of)) / 1000))}s old`
         : "Waiting for data";
+  const selectedStrategy = strategies.find(
+    (template) => template.template_id === strategyId,
+  );
 
   return (
     <div className="app-shell">
@@ -588,13 +657,17 @@ function App() {
               <span className="coming-soon">{draftLegs.length} legs</span>
             </div>
             <div className="strategy-list">
-              {strategyNames.map((name) => (
+              {strategies.map((template) => (
                 <button
-                  className={strategy === name ? "active" : ""}
-                  key={name}
-                  onClick={() => setStrategy(name)}
+                  className={strategyId === template.template_id ? "active" : ""}
+                  key={template.template_id}
+                  onClick={() => selectStrategy(template)}
                 >
-                  <span>{name}</span><span>→</span>
+                  <span>
+                    <strong>{template.display_name}</strong>
+                    <small>{template.outlook} · {template.legs.length || "any"} legs</small>
+                  </span>
+                  <span>→</span>
                 </button>
               ))}
             </div>
@@ -602,12 +675,20 @@ function App() {
               <div className="draft-heading">
                 <span className="eyebrow">Selected contracts</span>
                 {draftLegs.length ? (
-                  <button onClick={() => setDraftLegs([])}>Clear</button>
+                  <button
+                    onClick={() => {
+                      setDraftLegs([]);
+                      setStrategyId("custom");
+                    }}
+                  >Clear</button>
                 ) : null}
               </div>
+              {selectedStrategy ? (
+                <p className="strategy-description">{selectedStrategy.description}</p>
+              ) : null}
               {draftLegs.length === 0 ? (
                 <p className="draft-empty">
-                  Select contracts with the + buttons in the chain.
+                  Choose a template or select contracts with the + buttons.
                 </p>
               ) : (
                 draftLegs.map((leg) => {
@@ -645,6 +726,18 @@ function App() {
                         type="number"
                         value={leg.quantity}
                       />
+                      <input
+                        aria-label={`Entry price for ${symbol}`}
+                        min="0"
+                        onChange={(event) =>
+                          updateDraftLeg(symbol, {
+                            entryPrice: Math.max(0, Number(event.target.value) || 0),
+                          })
+                        }
+                        step="0.01"
+                        type="number"
+                        value={leg.entryPrice}
+                      />
                       <button
                         aria-label={`Remove ${symbol} from draft`}
                         className="leg-remove"
@@ -655,19 +748,11 @@ function App() {
                 })
               )}
             </div>
-            <div className="analysis-preview">
-              <span className="eyebrow">Selected template</span>
-              <h3>{strategy}</h3>
-              <p>
-                Selected contracts are now retained as editable draft legs.
-                Combined Greeks, debit/credit, break-even, and payoff arrive in
-                the strategy-builder milestone.
-              </p>
-              <div className="metric-row">
-                <div><span>Loaded</span><strong>{workspace?.chain.contracts.length ?? 0}</strong></div>
-                <div><span>Selected</span><strong>{draftLegs.length}</strong></div>
-              </div>
-            </div>
+            <AnalysisPanel
+              analysis={analysis}
+              error={analysisError}
+              loading={analysisLoading}
+            />
           </div>
         </section>
       </main>

@@ -22,7 +22,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.2",
+        "version": "0.6.3",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -141,3 +141,38 @@ async def test_watchlist_rejects_invalid_symbol(app) -> None:  # type: ignore[no
     assert response.status_code == 400
     assert response.json()["error"]["category"] == "validation"
     assert "at most 12" in response.json()["error"]["message"]
+
+
+@pytest.mark.asyncio
+async def test_strategy_catalog_and_position_analysis(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        catalog = await client.get("/api/v1/strategies")
+        analysis = await client.post(
+            "/api/v1/analyses/positions",
+            json={
+                "legs": [
+                    {
+                        "symbol": "SPY300118C00095000",
+                        "asset_type": "option",
+                        "quantity": "1",
+                        "average_open_price": "6",
+                    },
+                    {
+                        "symbol": "SPY300118C00100000",
+                        "asset_type": "option",
+                        "quantity": "-1",
+                        "average_open_price": "3",
+                    },
+                ],
+                "scenario_moves": ["-0.10", "0", "0.10"],
+            },
+        )
+
+    assert catalog.status_code == 200
+    assert len(catalog.json()["strategies"]) == 8
+    assert catalog.json()["strategies"][0]["template_id"] == "long_call"
+    assert analysis.status_code == 200
+    assert analysis.json()["analysis"]["max_profit"] == "200"
+    assert analysis.json()["analysis"]["break_even_prices"] == ["98"]
