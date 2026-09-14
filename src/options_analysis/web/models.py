@@ -1,6 +1,6 @@
 """Provider-neutral HTTP response models."""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,6 +10,7 @@ from options_analysis.domain import (
     OptionChain,
     PositionAnalysis,
     PositionRequestLeg,
+    PriceBar,
     Quote,
     StrategyDraft,
     StrategyTemplate,
@@ -63,6 +64,21 @@ class WorkspaceSnapshot(WebModel):
 
 class WorkspaceResult(WebModel):
     workspace: WorkspaceSnapshot | None = None
+    error: ErrorDetail | None = None
+
+
+class PriceHistorySnapshot(WebModel):
+    provider_id: str
+    symbol: str
+    resolution: str
+    start: datetime
+    end: datetime
+    bars: tuple[PriceBar, ...] = Field(max_length=500)
+    truncated: bool = False
+
+
+class PriceHistoryResult(WebModel):
+    history: PriceHistorySnapshot | None = None
     error: ErrorDetail | None = None
 
 

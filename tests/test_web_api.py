@@ -25,7 +25,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.8",
+        "version": "0.6.9",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -82,6 +82,50 @@ async def test_workspace_errors_are_stable_and_secret_safe(app) -> None:  # type
     assert invalid.status_code == 422
     assert invalid.json()["error"]["category"] == "validation"
     assert invalid.json()["error"]["field_paths"] == ["limit"]
+
+
+@pytest.mark.parametrize(
+    ("resolution", "expected_count"),
+    (("1m", 390), ("5m", 390), ("1d", 252), ("1w", 260), ("1mo", 236)),
+)
+@pytest.mark.asyncio
+async def test_price_history_is_bounded_ordered_and_provider_neutral(  # type: ignore[no-untyped-def]
+    app, resolution: str, expected_count: int
+) -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/price-history/spy",
+            params={
+                "resolution": resolution,
+                "end": "2026-09-14T12:00:00Z",
+            },
+        )
+
+    assert response.status_code == 200
+    history = response.json()["history"]
+    assert history["provider_id"] == "fake"
+    assert history["symbol"] == "SPY"
+    assert history["resolution"] == resolution
+    assert history["end"] == "2026-09-14T12:00:00Z"
+    assert len(history["bars"]) == expected_count
+    assert history["truncated"] is False
+    assert history["bars"][0]["start"] < history["bars"][-1]["start"]
+    assert history["bars"][-1]["close"] == "100.000"
+
+
+@pytest.mark.asyncio
+async def test_price_history_rejects_unsupported_resolution(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/price-history/SPY", params={"resolution": "2m"}
+        )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["field_paths"] == ["resolution"]
 
 
 @pytest.mark.asyncio

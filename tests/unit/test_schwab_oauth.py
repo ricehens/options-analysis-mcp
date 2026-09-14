@@ -84,6 +84,17 @@ def test_callback_rejects_changed_redirect_and_state(tmp_path: Path) -> None:
             "https://127.0.0.1/callback?code=code&state=wrong", "expected"
         )
 
+    root_config = config(tmp_path / "root-token.json").model_copy(
+        update={"redirect_uri": "https://127.0.0.1"}
+    )
+    root_oauth = SchwabOAuthClient(root_config, client)
+    assert (
+        root_oauth.validate_callback(
+            "https://127.0.0.1/?code=code&state=expected", "expected"
+        )
+        == "code"
+    )
+
 
 @pytest.mark.asyncio
 async def test_expired_access_token_refreshes_and_preserves_refresh_token(

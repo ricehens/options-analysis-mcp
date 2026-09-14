@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.9 — 2026-09-14
+
+- Added a bounded provider-neutral price-history HTTP endpoint with one-minute,
+  five-minute, daily, weekly, and monthly windows.
+- Added a responsive accessible underlying-price chart with interval controls,
+  close series, range, net change, dates, provider, and loading/error states.
+- Expanded deterministic fake history to realistic multi-bar series and added
+  five-resolution API, geometry, and server-rendering tests.
+- Documented Schwab portal app registration and safely canonicalized equivalent
+  root callback URL forms without weakening host, path, or OAuth-state checks.
+
 ## 0.6.8 — 2026-09-14
 
 - Added keyboard-operable interface text-size controls for 90%, 100%, 115%,

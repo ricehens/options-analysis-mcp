@@ -1,10 +1,10 @@
 """FastAPI facade over the reusable application services."""
 
 import asyncio
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import FastAPI, Query, Request
@@ -21,12 +21,14 @@ from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
 from options_analysis.domain import PutCall, StrategyDraftDefinition
 from options_analysis.errors import ErrorCategory, ErrorDetail, error_detail
-from options_analysis.providers import OptionChainQuery
+from options_analysis.providers import OptionChainQuery, PriceHistoryQuery
 from options_analysis.providers.errors import ProviderError
 from options_analysis.web.models import (
     AddWatchlistItemRequest,
     AnalyzePositionsRequest,
     PositionAnalysisResult,
+    PriceHistoryResult,
+    PriceHistorySnapshot,
     ProviderListResult,
     ProviderSummary,
     ServerInfo,
@@ -43,6 +45,16 @@ _LOCAL_ORIGINS = (
     "http://127.0.0.1:5173",
     "http://localhost:5173",
 )
+
+HistoryResolution = Literal["1m", "5m", "1d", "1w", "1mo"]
+_HISTORY_WINDOWS: dict[str, timedelta] = {
+    "1m": timedelta(days=1),
+    "5m": timedelta(days=7),
+    "1d": timedelta(days=365),
+    "1w": timedelta(days=365 * 5),
+    "1mo": timedelta(days=365 * 20),
+}
+_HISTORY_RESPONSE_LIMIT = 500
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -241,6 +253,45 @@ def create_app(
     def delete_watchlist_item(symbol: str) -> WatchlistResult:
         return WatchlistResult(
             items=resolved_application.watchlist_service.remove(symbol)
+        )
+
+    @app.get("/api/v1/price-history/{symbol}", response_model=PriceHistoryResult)
+    async def price_history(
+        symbol: str,
+        resolution: HistoryResolution = "1d",
+        provider: str | None = None,
+        end: datetime | None = None,
+    ) -> PriceHistoryResult:
+        range_end = end or datetime.now(UTC)
+        query = PriceHistoryQuery(
+            symbol=symbol,
+            start=range_end - _HISTORY_WINDOWS[resolution],
+            end=range_end,
+            resolution=resolution,
+        )
+        provider_bars = (
+            await resolved_application.market_data_service.get_price_history(
+                query, provider
+            )
+        )
+        ordered = tuple(sorted(provider_bars, key=lambda bar: bar.start))
+        truncated = len(ordered) > _HISTORY_RESPONSE_LIMIT
+        bars = ordered[-_HISTORY_RESPONSE_LIMIT:]
+        default_provider = (
+            resolved_application.settings.public_view().default_market_data_provider
+        )
+        return PriceHistoryResult(
+            history=PriceHistorySnapshot(
+                provider_id=(
+                    bars[0].provider_id if bars else (provider or default_provider)
+                ),
+                symbol=query.symbol,
+                resolution=resolution,
+                start=query.start,
+                end=query.end,
+                bars=bars,
+                truncated=truncated,
+            )
         )
 
     @app.get("/api/v1/strategies", response_model=StrategyCatalogResult)

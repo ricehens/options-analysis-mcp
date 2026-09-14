@@ -60,10 +60,10 @@ class SchwabOAuthClient:
         callback = urlsplit(callback_url.strip())
         configured = urlsplit(self._config.redirect_uri)
         callback_base = urlunsplit(
-            (callback.scheme, callback.netloc, callback.path, "", "")
+            (callback.scheme, callback.netloc, callback.path or "/", "", "")
         )
         configured_base = urlunsplit(
-            (configured.scheme, configured.netloc, configured.path, "", "")
+            (configured.scheme, configured.netloc, configured.path or "/", "", "")
         )
         if callback_base != configured_base or callback.fragment:
             raise ProviderAuthorizationError(

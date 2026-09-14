@@ -4,12 +4,12 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6I adjustable typography is complete on `codex/milestone-6i`.
-Keyboard-operable sidebar controls scale interface text through four bounded
-levels and persist the preference only in the local browser. FastAPI and MCP
-continue to reuse the same provider-neutral services and routing. Live Schwab
-activation still requires owner credentials. Milestone 6J underlying price
-history charting is next.
+Milestone 6J underlying price charting is complete on `codex/milestone-6j`.
+The browser can request bounded 1-minute, 5-minute, daily, weekly, and monthly
+history through the provider-neutral service and HTTP facade. A responsive,
+accessible SVG chart shows the close series, range, net change, dates, provider,
+and bar count. Live Schwab activation still requires the owner-created portal
+application to reach ready-for-use status and be configured locally.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -36,7 +36,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6G — Persistent named strategy drafts
 - [x] Milestone 6H — Expandable warning and provenance details
 - [x] Milestone 6I — Adjustable, browser-persisted interface typography
-- [ ] Milestone 6J — Underlying price charts and interval selection
+- [x] Milestone 6J — Underlying price charts and interval selection
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -45,6 +45,8 @@ milestone; do not rely on chat history as the backlog.
 - `GET /api/v1/providers` returns enabled provider capabilities.
 - `GET /api/v1/workspaces/{symbol}` combines the normalized quote, expiration
   list, and bounded filtered option chain.
+- `GET /api/v1/price-history/{symbol}` returns an ordered, maximum-500-bar
+  underlying series at one of five bounded resolutions.
 - `make web-api` serves the bundled UI and API at `http://127.0.0.1:8000`.
 - `make web-ui` starts the development-only Vite UI at
   `http://127.0.0.1:5173`.
@@ -63,6 +65,8 @@ milestone; do not rely on chat history as the backlog.
   context instead of reducing quality signals to a count.
 - Text-size controls offer 90%, 100%, 115%, and 130% modes, preserve native
   browser zoom, and keep the preference in browser-local storage.
+- The underlying chart separates interval selection from provider logic and
+  handles loading, no-data, and provider-error states without blocking options.
 - Production assets are packaged under `options_analysis.web.static`, use
   same-origin API calls, and receive a restrictive content security policy.
 
@@ -96,10 +100,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6I release checks pass: mypy strict reports no issues across 55 source
-files, all 70 Python tests and 19 TypeScript tests pass, and the React production
+Milestone 6J release checks pass: mypy strict reports no issues across 55 source
+files, all 76 Python tests and 23 TypeScript tests pass, and the React production
 bundle and Python distributions build successfully. Detailed evidence is
-recorded in `docs/MILESTONE_6I.md`.
+recorded in `docs/MILESTONE_6J.md`.
 
 ## Required owner activation
 

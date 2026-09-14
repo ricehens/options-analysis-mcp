@@ -88,7 +88,10 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         )
         assert history.is_error is False
         assert history.structured_content is not None
-        assert len(history.structured_content["bars"]) == 1
+        history_bars = history.structured_content["bars"]
+        assert len(history_bars) == 2
+        assert history_bars[0]["start"] < history_bars[1]["start"]
+        assert history_bars[-1]["close"] == "100.000"
 
         analysis = await client.call_tool(
             "options_analyze_positions",

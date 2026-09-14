@@ -49,19 +49,34 @@ the watchlist on a narrow screen) to select 90%, 100%, 115%, or 130%. The middle
 button resets to 100%. This preference is stored only in browser-local storage;
 native browser zoom remains available independently.
 
+The **Underlying history** panel requests one bounded view at a time. `1m`
+shows one-minute bars over one day, `5m` covers one week, `1D` covers one year,
+`1W` covers five years, and `1M` covers twenty years. The API returns at most
+500 ordered bars. Availability and retention still depend on the selected
+provider.
+
 ## 3. Enable Schwab
 
-1. Confirm the developer application is approved and its callback URI.
-2. In the ignored `.env`, set client ID, client secret, and the exact callback.
-3. Set `OPTIONS_ANALYSIS_ENABLED_PROVIDERS=["fake","schwab"]`.
-4. Keep `fake` as the default until live validation is complete.
-5. Run `uv run options-analysis-schwab-auth` in a private terminal.
-6. Complete provider login yourself and paste the full callback into the hidden
+1. In the Schwab Developer Portal, select **Create App**.
+2. Register `https://127.0.0.1` as the callback URL so it matches the project
+   default. If you choose another callback, use the identical scheme, host,
+   port, and path in local configuration.
+3. Select **Market Data Production** for quotes, option chains, Greeks, and
+   underlying history. Trader/account access is optional and is not required
+   for caller-supplied position analysis.
+4. Wait until the application is approved and shown as ready for use.
+5. In the ignored `.env`, set the portal App Key as the client ID, the App
+   Secret as the client secret, and the exact registered callback. Never place
+   these values in chat, screenshots, logs, or Git.
+6. Set `OPTIONS_ANALYSIS_ENABLED_PROVIDERS=["fake","schwab"]`.
+7. Keep `fake` as the default until live validation is complete.
+8. Run `uv run options-analysis-schwab-auth` in a private terminal.
+9. Complete provider login yourself and paste the full callback into the hidden
    prompt.
-7. Temporarily opt in and run
+10. Temporarily opt in and run
    `OPTIONS_ANALYSIS_ALLOW_LIVE_SMOKE_TESTS=true uv run options-analysis-schwab-smoke --symbol SPY`.
-8. Validate mappings listed in `docs/MILESTONE_3.md`; do not save a live body.
-9. Set `OPTIONS_ANALYSIS_DEFAULT_MARKET_DATA_PROVIDER=schwab` when satisfied.
+11. Validate mappings listed in `docs/MILESTONE_3.md`; do not save a live body.
+12. Set `OPTIONS_ANALYSIS_DEFAULT_MARKET_DATA_PROVIDER=schwab` when satisfied.
 
 Restart the HTTP API after changing provider configuration. The browser needs
 no Schwab-specific setting and must never receive a client secret or token.

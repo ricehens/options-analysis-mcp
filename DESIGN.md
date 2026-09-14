@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser strategy-analysis workflow implemented through Milestone 6I
+Status: Browser strategy-analysis workflow implemented through Milestone 6J
 
 Last updated: 2026-09-14
 
@@ -721,7 +721,7 @@ Acceptance:
 - Fake-provider workspace works end to end through the Vite proxy.
 - Python checks and frontend production build pass.
 
-### Milestone 6B–6I — Browser analysis workflow
+### Milestone 6B–6J — Browser analysis workflow
 
 - 6B: SQLite-backed watchlist persistence. (complete)
 - 6C: rich option-chain filters and contract selection. (complete)
@@ -737,6 +737,8 @@ Acceptance:
   affected-field provenance. (complete)
 - 6I: keyboard-operable, browser-persisted typography scaling from 90% through
   130%, without replacing native browser zoom. (complete)
+- 6J: bounded provider-neutral underlying history over HTTP with responsive
+  one-minute, five-minute, daily, weekly, and monthly chart views. (complete)
 
 Owner-driven live Schwab validation is tracked independently as `LIVE-010`
 through `LIVE-030` in `TODO.md` so UI packaging does not depend on credentials.

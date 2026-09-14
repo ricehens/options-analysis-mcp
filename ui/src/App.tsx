@@ -6,6 +6,7 @@ import {
   ApiError,
   deleteStrategyDraft,
   deleteWatchlistSymbol,
+  loadPriceHistory,
   loadStrategyDrafts,
   loadWatchlist,
   loadStrategies,
@@ -13,6 +14,7 @@ import {
   saveStrategyDraft,
 } from "./api";
 import AnalysisPanel from "./AnalysisPanel";
+import PriceHistoryChart from "./PriceHistoryChart";
 import {
   buildChainRows,
   daysToExpiration,
@@ -41,7 +43,9 @@ import {
 import type { DraftLeg } from "./strategies";
 import type {
   DecimalValue,
+  HistoryResolution,
   PositionAnalysis,
+  PriceHistorySnapshot,
   PutCall,
   Quote,
   StrategyDraft,
@@ -111,6 +115,12 @@ function App() {
   const [workspace, setWorkspace] = useState<WorkspaceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [historyResolution, setHistoryResolution] =
+    useState<HistoryResolution>("1d");
+  const [priceHistory, setPriceHistory] =
+    useState<PriceHistorySnapshot | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [watchlistBusy, setWatchlistBusy] = useState(true);
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
   const [strikeFromInput, setStrikeFromInput] = useState("");
@@ -238,6 +248,31 @@ function App() {
       });
     return () => controller.abort();
   }, [expiration, putCall, selectedSymbol, strikeRange.from, strikeRange.to]);
+
+  useEffect(() => {
+    if (!selectedSymbol) {
+      setPriceHistory(null);
+      setHistoryLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setHistoryLoading(true);
+    setHistoryError(null);
+    setPriceHistory(null);
+    loadPriceHistory(selectedSymbol, historyResolution, controller.signal)
+      .then(setPriceHistory)
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        setPriceHistory(null);
+        setHistoryError(
+          reason instanceof Error ? reason.message : "Unable to load price history.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setHistoryLoading(false);
+      });
+    return () => controller.abort();
+  }, [historyResolution, selectedSymbol]);
 
   useEffect(() => {
     if (!draftLegs.length) {
@@ -656,7 +691,7 @@ function App() {
       </aside>
 
       <main
-        aria-busy={loading || analysisLoading || strategyLoading}
+        aria-busy={loading || historyLoading || analysisLoading || strategyLoading}
         id="main-content"
         tabIndex={-1}
       >
@@ -695,6 +730,15 @@ function App() {
             <div><span>Volume</span><strong>{compact(quote?.volume)}</strong></div>
           </div>
         </section>
+
+        <PriceHistoryChart
+          error={historyError}
+          history={priceHistory}
+          loading={historyLoading}
+          onResolutionChange={setHistoryResolution}
+          resolution={historyResolution}
+          symbol={selectedSymbol}
+        />
 
         <section className="workspace-grid">
           <div className="panel chain-panel">

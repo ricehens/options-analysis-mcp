@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6I is complete. A responsive React workspace is bundled into the
+Milestone 6J is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -24,8 +24,9 @@ break-evens, expiration payoff, and delta-gamma scenarios. Calendar and
 diagonal workflows automatically load the next available expiration. Named
 strategy drafts persist locally and reopen with current provider quotes. The
 interface text can be adjusted from 90% through 130% and persists in the local
-browser. Live Schwab activation remains a local step requiring your developer
-application.
+browser. A responsive underlying-price chart provides one-minute, five-minute,
+daily, weekly, and monthly views. Live Schwab activation remains a local step
+requiring your developer application.
 
 Read these documents first:
 
@@ -54,6 +55,8 @@ Read these documents first:
 - The MCP server runs locally over stdio.
 - The production browser workspace and HTTP API run together on
   `127.0.0.1:8000`; OpenAPI remains available at `/api/docs`.
+- A bounded provider-neutral price-history endpoint powers an underlying chart
+  with 1-minute, 5-minute, daily, weekly, and monthly interval tabs.
 - Vite runs separately on `127.0.0.1:5173` only for frontend development and
   proxies `/api` to the local API.
 - Watchlist add/remove changes persist in a private local SQLite database.
@@ -209,6 +212,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6G.md` — persistent named strategy drafts.
 - `docs/MILESTONE_6H.md` — expandable data-quality and analysis warnings.
 - `docs/MILESTONE_6I.md` — adjustable, locally persisted interface typography.
+- `docs/MILESTONE_6J.md` — underlying price history API and responsive chart.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

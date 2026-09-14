@@ -85,6 +85,35 @@ export interface WorkspaceResult {
   error: ErrorDetail | null;
 }
 
+export type HistoryResolution = "1m" | "5m" | "1d" | "1w" | "1mo";
+
+export interface PriceBar {
+  provider_id: string;
+  instrument: Instrument;
+  start: string;
+  end: string;
+  open: DecimalValue;
+  high: DecimalValue;
+  low: DecimalValue;
+  close: DecimalValue;
+  volume: number | null;
+}
+
+export interface PriceHistorySnapshot {
+  provider_id: string;
+  symbol: string;
+  resolution: HistoryResolution;
+  start: string;
+  end: string;
+  bars: PriceBar[];
+  truncated: boolean;
+}
+
+export interface PriceHistoryResult {
+  history: PriceHistorySnapshot | null;
+  error: ErrorDetail | null;
+}
+
 export interface WatchlistItem {
   symbol: string;
   created_at: string;

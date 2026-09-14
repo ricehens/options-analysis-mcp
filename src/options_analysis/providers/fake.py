@@ -1,5 +1,6 @@
 """Deterministic offline provider used to prove the adapter boundary."""
 
+import math
 import re
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -27,11 +28,31 @@ from options_analysis.providers.contracts import (
 )
 from options_analysis.providers.errors import InstrumentNotFoundError
 
-_AS_OF = datetime(2026, 1, 2, 15, 30, tzinfo=UTC)
+_AS_OF = datetime(2026, 9, 14, 20, 0, tzinfo=UTC)
 _EXPIRATIONS = (date(2030, 1, 18), date(2030, 2, 15))
 _OPTION_PATTERN = re.compile(
     r"^(?P<underlying>[A-Z.]+)(?P<expiry>\d{6})(?P<side>[CP])(?P<strike>\d{8})$"
 )
+_HISTORY_DURATIONS = {
+    "1m": timedelta(minutes=1),
+    "5m": timedelta(minutes=5),
+    "10m": timedelta(minutes=10),
+    "15m": timedelta(minutes=15),
+    "30m": timedelta(minutes=30),
+    "1d": timedelta(days=1),
+    "1w": timedelta(weeks=1),
+    "1mo": timedelta(days=31),
+}
+_HISTORY_BAR_LIMITS = {
+    "1m": 390,
+    "5m": 390,
+    "10m": 240,
+    "15m": 240,
+    "30m": 240,
+    "1d": 252,
+    "1w": 260,
+    "1mo": 240,
+}
 
 
 class FakeProvider:
@@ -144,20 +165,46 @@ class FakeProvider:
 
     async def get_price_history(self, query: PriceHistoryQuery) -> tuple[PriceBar, ...]:
         quote = await self.get_underlying_quote(query.symbol)
-        bar_end = min(query.end, query.start + timedelta(days=1))
-        return (
-            PriceBar(
-                provider_id="fake",
-                instrument=quote.instrument,
-                start=query.start,
-                end=bar_end,
-                open=Decimal("99"),
-                high=Decimal("101"),
-                low=Decimal("98"),
-                close=Decimal("100"),
-                volume=1_000_000,
+        try:
+            duration = _HISTORY_DURATIONS[query.resolution.lower()]
+            maximum = _HISTORY_BAR_LIMITS[query.resolution.lower()]
+        except KeyError as error:
+            raise ValueError(
+                "resolution must be one of 1m, 5m, 10m, 15m, 30m, 1d, 1w, 1mo"
+            ) from error
+        available = max(
+            1,
+            math.ceil(
+                (query.end - query.start).total_seconds() / duration.total_seconds()
             ),
         )
+        count = min(available, maximum)
+        first_start = max(query.start, query.end - duration * count)
+        last_phase = (count - 1) % 18
+        bars: list[PriceBar] = []
+        for index in range(count):
+            bar_start = first_start + duration * index
+            bar_end = min(query.end, bar_start + duration)
+            trend = Decimal(index - (count - 1)) * Decimal("0.015")
+            wave = Decimal(index % 18 - last_phase) * Decimal("0.03")
+            close = Decimal("100") + trend + wave
+            open_price = close + (Decimal("0.12") if index % 2 else Decimal("-0.12"))
+            high = max(open_price, close) + Decimal("0.35")
+            low = min(open_price, close) - Decimal("0.35")
+            bars.append(
+                PriceBar(
+                    provider_id="fake",
+                    instrument=quote.instrument,
+                    start=bar_start,
+                    end=bar_end,
+                    open=open_price,
+                    high=high,
+                    low=low,
+                    close=close,
+                    volume=900_000 + index * 1_000,
+                )
+            )
+        return tuple(bars)
 
     @staticmethod
     def _normalize_symbol(symbol: str) -> str:

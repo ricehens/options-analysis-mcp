@@ -6,7 +6,8 @@ Completed in code: 2026-09-14
 
 - Secret-safe Schwab configuration sourced from ignored local environment data.
 - Authorization URL creation and constant-time state validation.
-- Exact callback scheme, authority, and path validation.
+- Exact callback scheme, authority, and non-root path validation; equivalent
+  empty and slash root paths are safely canonicalized.
 - Authorization-code exchange and access-token refresh.
 - Atomic token replacement with `0700` directory and `0600` file permissions on
   POSIX systems; token paths that are links or insecure files are rejected.

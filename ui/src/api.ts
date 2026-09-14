@@ -2,6 +2,9 @@ import type {
   AnalysisRequestLeg,
   PositionAnalysis,
   PositionAnalysisResult,
+  PriceHistoryResult,
+  PriceHistorySnapshot,
+  HistoryResolution,
   PutCall,
   StrategyCatalogResult,
   StrategyDraft,
@@ -59,6 +62,27 @@ export async function loadWorkspace(
   }
   if (!result.workspace) throw new ApiError("The API returned no workspace data.");
   return result.workspace;
+}
+
+export async function loadPriceHistory(
+  symbol: string,
+  resolution: HistoryResolution,
+  signal?: AbortSignal,
+): Promise<PriceHistorySnapshot> {
+  const params = new URLSearchParams({ resolution });
+  const response = await fetch(
+    `/api/v1/price-history/${encodeURIComponent(symbol)}?${params}`,
+    { signal },
+  );
+  const result = (await response.json()) as PriceHistoryResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  if (!result.history) throw new ApiError("The API returned no price history.");
+  return result.history;
 }
 
 async function watchlistRequest(

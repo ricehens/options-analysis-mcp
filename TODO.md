@@ -36,7 +36,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-051 | done | Milestone 6G: persist named strategy drafts separately from watchlists | UI-040 | Provider-neutral domain/service, SQLite restart CRUD, HTTP/UI save-load-delete tests |
 | UI-052 | done | Milestone 6H: add expandable chain, per-contract, and analysis warning details | UI-040 | Accessible disclosures with field provenance and server-rendered component tests |
 | UI-053 | done | Milestone 6I: adjustable, browser-persisted interface font size | Owner desktop feedback | Keyboard-operable 90–130% controls, persistence unit tests, production build |
-| UI-054 | ready | Milestone 6J: underlying price chart with 1-minute, 5-minute, daily, weekly, and monthly views | UI-053, provider history capability | Provider-neutral HTTP history contract, responsive chart, interval tests |
+| UI-054 | done | Milestone 6J: underlying price chart with 1-minute, 5-minute, daily, weekly, and monthly views | UI-053, provider history capability | Bounded HTTP history contract, responsive SVG chart, five-resolution API and rendering tests |
 
 ## Schwab activation
 
