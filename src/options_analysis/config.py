@@ -50,6 +50,7 @@ class AppSettings(BaseSettings):
     schwab_market_data_base_url: str = "https://api.schwabapi.com/marketdata/v1"
     schwab_http_timeout_seconds: float = 10.0
     schwab_http_max_attempts: int = 3
+    schwab_http_max_response_bytes: int = 5_000_000
 
     @field_validator("enabled_providers")
     @classmethod
@@ -99,6 +100,13 @@ class AppSettings(BaseSettings):
     def validate_attempts(cls, value: int) -> int:
         if not 1 <= value <= 5:
             raise ValueError("Schwab HTTP attempts must be between 1 and 5")
+        return value
+
+    @field_validator("schwab_http_max_response_bytes")
+    @classmethod
+    def validate_response_limit(cls, value: int) -> int:
+        if not 1_024 <= value <= 50_000_000:
+            raise ValueError("Schwab response limit must be between 1 KiB and 50 MB")
         return value
 
     def public_view(self) -> PublicSettings:

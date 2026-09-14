@@ -16,6 +16,11 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         listed = await client.list_tools()
         names = {tool.name for tool in listed.tools}
         assert names == {
+            "options_get_option_chain",
+            "options_get_option_expirations",
+            "options_get_option_quotes",
+            "options_get_price_history",
+            "options_get_underlying_quote",
             "options_list_providers",
             "options_provider_auth_status",
             "options_server_info",
@@ -42,6 +47,48 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert auth.structured_content["state"] == "not_required"
         assert auth.structured_content["authorized"] is True
 
+        quote = await client.call_tool(
+            "options_get_underlying_quote", {"symbol": "SPY"}
+        )
+        assert quote.is_error is False
+        assert quote.structured_content is not None
+        assert quote.structured_content["quote"]["instrument"]["symbol"] == "SPY"
+
+        expirations = await client.call_tool(
+            "options_get_option_expirations", {"underlying_symbol": "SPY"}
+        )
+        assert expirations.is_error is False
+        assert expirations.structured_content is not None
+        assert len(expirations.structured_content["expirations"]) == 2
+
+        chain = await client.call_tool(
+            "options_get_option_chain",
+            {"underlying_symbol": "SPY", "put_call": "call", "limit": 2},
+        )
+        assert chain.is_error is False
+        assert chain.structured_content is not None
+        assert len(chain.structured_content["chain"]["contracts"]) == 2
+
+        option_quotes = await client.call_tool(
+            "options_get_option_quotes",
+            {"symbols": ["SPY300118C00095000", "SPY300118P00095000"]},
+        )
+        assert option_quotes.is_error is False
+        assert option_quotes.structured_content is not None
+        assert len(option_quotes.structured_content["quotes"]) == 2
+
+        history = await client.call_tool(
+            "options_get_price_history",
+            {
+                "symbol": "SPY",
+                "start": "2026-01-01T00:00:00Z",
+                "end": "2026-01-03T00:00:00Z",
+            },
+        )
+        assert history.is_error is False
+        assert history.structured_content is not None
+        assert len(history.structured_content["bars"]) == 1
+
 
 @pytest.mark.asyncio
 async def test_foundation_tools_over_stdio_subprocess() -> None:
@@ -55,6 +102,11 @@ async def test_foundation_tools_over_stdio_subprocess() -> None:
     async with Client(parameters, read_timeout_seconds=10) as client:
         listed = await client.list_tools()
         assert {tool.name for tool in listed.tools} == {
+            "options_get_option_chain",
+            "options_get_option_expirations",
+            "options_get_option_quotes",
+            "options_get_price_history",
+            "options_get_underlying_quote",
             "options_list_providers",
             "options_provider_auth_status",
             "options_server_info",

@@ -1,0 +1,29 @@
+{
+  "symbol": "SPY",
+  "status": "PARTIAL",
+  "underlyingPrice": 100.00,
+  "callExpDateMap": {
+    "2030-01-18:1222": {
+      "95.0": [
+        {
+          "ask": 7.10,
+          "bid": 7.20,
+          "expirationDate": 1894924800000,
+          "mark": 8.00,
+          "putCall": "CALL",
+          "quoteTime": 1789387200000,
+          "strikePrice": 95,
+          "symbol": "SPY   300118C00095000"
+        },
+        {
+          "ask": 5.10,
+          "bid": 4.90,
+          "expirationDate": 1894924800000,
+          "putCall": "CALL",
+          "strikePrice": 100
+        }
+      ]
+    }
+  },
+  "putExpDateMap": {}
+}

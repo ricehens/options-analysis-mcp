@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Offline implementation complete through Milestone 2
+Status: Offline implementation complete through Milestone 3
 
 Last updated: 2026-09-14
 

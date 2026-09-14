@@ -1,0 +1,21 @@
+{
+  "status": "SUCCESS",
+  "expirationList": [
+    {
+      "daysToExpiration": 1222,
+      "expirationDate": "2030-01-18",
+      "expirationType": "S",
+      "optionRoots": "SPY",
+      "settlementType": "P",
+      "standard": true
+    },
+    {
+      "daysToExpiration": 1250,
+      "expirationDate": "2030-02-15",
+      "expirationType": "S",
+      "optionRoots": "SPY",
+      "settlementType": "P",
+      "standard": true
+    }
+  ]
+}

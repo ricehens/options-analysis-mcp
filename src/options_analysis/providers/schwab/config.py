@@ -19,6 +19,7 @@ class SchwabConfig(BaseModel):
     token_path: Path
     http_timeout_seconds: float
     http_max_attempts: int
+    http_max_response_bytes: int = 5_000_000
 
     @property
     def configured(self) -> bool:
@@ -36,6 +37,7 @@ class SchwabConfig(BaseModel):
             token_path=settings.schwab_token_path or default_token_path(),
             http_timeout_seconds=settings.schwab_http_timeout_seconds,
             http_max_attempts=settings.schwab_http_max_attempts,
+            http_max_response_bytes=settings.schwab_http_max_response_bytes,
         )
 
 

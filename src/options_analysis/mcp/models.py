@@ -1,8 +1,11 @@
-"""Structured, secret-safe MCP foundation-tool results."""
+"""Structured, secret-safe MCP results."""
+
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
 from options_analysis.config import EnvironmentName
+from options_analysis.domain import OptionChain, PriceBar, Quote
 
 
 class MCPResult(BaseModel):
@@ -45,3 +48,30 @@ class ProviderAuthStatusResult(MCPResult):
     expires_at: str | None
     reauthorization_required: bool
     message: str | None
+
+
+class QuoteResult(MCPResult):
+    quote: Quote
+
+
+class ExpirationSummary(MCPResult):
+    expiration_date: date
+    days_to_expiration: int
+
+
+class ExpirationListResult(MCPResult):
+    provider_id: str
+    underlying_symbol: str
+    expirations: tuple[ExpirationSummary, ...]
+
+
+class OptionChainResult(MCPResult):
+    chain: OptionChain
+
+
+class OptionQuoteListResult(MCPResult):
+    quotes: tuple[Quote, ...]
+
+
+class PriceHistoryResult(MCPResult):
+    bars: tuple[PriceBar, ...]

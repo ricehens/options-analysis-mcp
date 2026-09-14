@@ -1,0 +1,98 @@
+{
+  "SPY": {
+    "assetMainType": "EQUITY",
+    "assetSubType": "ETF",
+    "quoteType": "NBBO",
+    "realtime": true,
+    "symbol": "SPY",
+    "quote": {
+      "askPrice": 100.05,
+      "askSize": 12,
+      "bidPrice": 99.95,
+      "bidSize": 10,
+      "lastPrice": 100.00,
+      "lastSize": 2,
+      "mark": 100.00,
+      "quoteTime": 1789387200000,
+      "securityStatus": "Normal",
+      "totalVolume": 1000000,
+      "tradeTime": 1789387195000
+    },
+    "reference": {}
+  },
+  "SPY   300118C00095000": {
+    "assetMainType": "OPTION",
+    "quoteType": "NBBO",
+    "realtime": true,
+    "symbol": "SPY   300118C00095000",
+    "quote": {
+      "askPrice": 7.10,
+      "askSize": 8,
+      "bidPrice": 6.90,
+      "bidSize": 7,
+      "delta": 0.62,
+      "gamma": 0.03,
+      "lastPrice": 7.00,
+      "mark": 7.00,
+      "openInterest": 1200,
+      "quoteTime": 1789387200000,
+      "rho": 0.04,
+      "theoreticalOptionValue": 6.98,
+      "theta": -0.02,
+      "totalVolume": 300,
+      "underlyingPrice": 100.00,
+      "vega": 0.11,
+      "volatility": 24.00
+    },
+    "reference": {
+      "contractType": "C",
+      "expirationDay": 18,
+      "expirationMonth": 1,
+      "expirationYear": 2030,
+      "exerciseType": "A",
+      "isNonStandard": false,
+      "lastTradingDay": 1894914000000,
+      "multiplier": 100,
+      "settlementType": "P",
+      "strikePrice": 95,
+      "underlying": "SPY"
+    }
+  },
+  "SPY   300118P00095000": {
+    "assetMainType": "OPTION",
+    "quoteType": "NBBO",
+    "realtime": true,
+    "symbol": "SPY   300118P00095000",
+    "quote": {
+      "askPrice": 2.10,
+      "askSize": 11,
+      "bidPrice": 1.90,
+      "bidSize": 9,
+      "delta": -0.38,
+      "gamma": 0.03,
+      "lastPrice": 2.00,
+      "mark": 2.00,
+      "openInterest": 900,
+      "quoteTime": 1789387200000,
+      "rho": -0.03,
+      "theta": -0.02,
+      "totalVolume": 200,
+      "underlyingPrice": 100.00,
+      "vega": 0.10,
+      "volatility": 25.00
+    },
+    "reference": {
+      "contractType": "P",
+      "expirationDay": 18,
+      "expirationMonth": 1,
+      "expirationYear": 2030,
+      "exerciseType": "A",
+      "isNonStandard": false,
+      "lastTradingDay": 1894914000000,
+      "multiplier": 100,
+      "settlementType": "P",
+      "strikePrice": 95,
+      "underlying": "SPY"
+    }
+  }
+}

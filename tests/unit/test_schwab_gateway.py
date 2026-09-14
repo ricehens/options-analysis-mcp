@@ -101,3 +101,20 @@ async def test_gateway_rejects_absolute_and_traversing_paths() -> None:
             await gateway.get_json("https://other.test/private")
         with pytest.raises(ProviderValidationError):
             await gateway.get_json("../trader/accounts")
+
+
+@pytest.mark.asyncio
+async def test_gateway_rejects_oversized_response() -> None:
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json={"payload": "too-large"})
+        )
+    ) as client:
+        gateway = SchwabGateway(
+            "https://example.test/v1",
+            StubTokens(),
+            client,
+            max_response_bytes=5,
+        )
+        with pytest.raises(ProviderResponseSchemaError, match="size limit"):
+            await gateway.get_json("quotes")

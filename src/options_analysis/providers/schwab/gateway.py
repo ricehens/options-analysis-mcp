@@ -33,12 +33,14 @@ class SchwabGateway:
         client: httpx.AsyncClient,
         *,
         max_attempts: int = 3,
+        max_response_bytes: int = 5_000_000,
         sleeper: Sleeper = asyncio.sleep,
     ) -> None:
         self._base_url = base_url.rstrip("/") + "/"
         self._token_source = token_source
         self._client = client
         self._max_attempts = max_attempts
+        self._max_response_bytes = max_response_bytes
         self._sleeper = sleeper
 
     async def get_json(
@@ -100,6 +102,10 @@ class SchwabGateway:
             if response.status_code >= 400:
                 raise ProviderValidationError(
                     f"Schwab rejected the read request (HTTP {response.status_code})."
+                )
+            if len(response.content) > self._max_response_bytes:
+                raise ProviderResponseSchemaError(
+                    "Schwab response exceeded the configured size limit."
                 )
             try:
                 payload: Any = response.json()

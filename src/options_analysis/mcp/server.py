@@ -1,16 +1,29 @@
-"""Local stdio MCP server exposing provider-neutral foundation tools."""
+"""Local stdio MCP server exposing provider-neutral read-only tools."""
+
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from typing import Annotated, Literal
 
 from mcp.server import MCPServer
+from pydantic import Field
 
 from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
+from options_analysis.domain import PutCall
 from options_analysis.mcp.models import (
+    ExpirationListResult,
+    ExpirationSummary,
+    OptionChainResult,
+    OptionQuoteListResult,
+    PriceHistoryResult,
     ProviderAuthStatusResult,
     ProviderListResult,
     ProviderSummary,
+    QuoteResult,
     ServerInfoResult,
 )
+from options_analysis.providers import OptionChainQuery, PriceHistoryQuery
 
 SERVER_NAME = "options-analysis"
 
@@ -46,7 +59,7 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             transport="stdio",
             read_only=True,
             allow_live_smoke_tests=public.allow_live_smoke_tests,
-            feature_groups=("foundation",),
+            feature_groups=("foundation", "market_data"),
         )
 
     @server.tool(name="options_list_providers")
@@ -96,6 +109,92 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             reauthorization_required=status.reauthorization_required,
             message=status.message,
         )
+
+    @server.tool(name="options_get_underlying_quote")
+    async def options_get_underlying_quote(
+        symbol: str, provider: str | None = None
+    ) -> QuoteResult:
+        """Get one normalized stock, ETF, or index quote."""
+
+        quote = await application.market_data_service.get_underlying_quote(
+            symbol, provider
+        )
+        return QuoteResult(quote=quote)
+
+    @server.tool(name="options_get_option_expirations")
+    async def options_get_option_expirations(
+        underlying_symbol: str, provider: str | None = None
+    ) -> ExpirationListResult:
+        """List available option expirations for an underlying symbol."""
+
+        expirations = await application.market_data_service.get_option_expirations(
+            underlying_symbol, provider
+        )
+        today = datetime.now(UTC).date()
+        return ExpirationListResult(
+            provider_id=provider or application.settings.default_market_data_provider,
+            underlying_symbol=underlying_symbol.strip().upper(),
+            expirations=tuple(
+                ExpirationSummary(
+                    expiration_date=expiration,
+                    days_to_expiration=(expiration - today).days,
+                )
+                for expiration in expirations
+            ),
+        )
+
+    @server.tool(name="options_get_option_chain")
+    async def options_get_option_chain(
+        underlying_symbol: str,
+        provider: str | None = None,
+        put_call: PutCall | None = None,
+        expiration_from: date | None = None,
+        expiration_to: date | None = None,
+        strike_from: Decimal | None = None,
+        strike_to: Decimal | None = None,
+        limit: Annotated[int, Field(ge=1, le=100)] = 40,
+    ) -> OptionChainResult:
+        """Get a narrow normalized option chain with explicit filters."""
+
+        query = OptionChainQuery(
+            underlying_symbol=underlying_symbol,
+            expiration_from=expiration_from,
+            expiration_to=expiration_to,
+            put_call=put_call,
+            strike_from=strike_from,
+            strike_to=strike_to,
+            limit=limit,
+        )
+        chain = await application.market_data_service.get_option_chain(query, provider)
+        return OptionChainResult(chain=chain)
+
+    @server.tool(name="options_get_option_quotes")
+    async def options_get_option_quotes(
+        symbols: Annotated[tuple[str, ...], Field(min_length=1, max_length=100)],
+        provider: str | None = None,
+    ) -> OptionQuoteListResult:
+        """Get normalized detailed quotes for selected option symbols."""
+
+        quotes = await application.market_data_service.get_option_quotes(
+            symbols, provider
+        )
+        return OptionQuoteListResult(quotes=quotes)
+
+    @server.tool(name="options_get_price_history")
+    async def options_get_price_history(
+        symbol: str,
+        start: datetime,
+        end: datetime,
+        resolution: Literal["1m", "5m", "10m", "15m", "30m", "1d", "1w", "1mo"] = "1d",
+        provider: str | None = None,
+    ) -> PriceHistoryResult:
+        """Get underlying price history; this is not option-chain history."""
+
+        query = PriceHistoryQuery(
+            symbol=symbol, start=start, end=end, resolution=resolution
+        )
+        bars = await application.market_data_service.get_price_history(query, provider)
+        return PriceHistoryResult(bars=bars)
 
 
 mcp = create_server()

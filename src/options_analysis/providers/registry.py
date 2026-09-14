@@ -6,6 +6,7 @@ from typing import cast
 
 from options_analysis.providers.contracts import (
     Capability,
+    HistoricalDataProvider,
     MarketDataProvider,
     Provider,
     ProviderStatus,
@@ -97,14 +98,26 @@ class ProviderRouter:
         self._registry = registry
         self._default_market_data_provider = default_market_data_provider
 
-    def market_data(self, provider_id: str | None = None) -> MarketDataProvider:
+    def market_data(
+        self,
+        provider_id: str | None = None,
+        *,
+        capability: Capability = Capability.UNDERLYING_QUOTES,
+    ) -> MarketDataProvider:
         selected = provider_id or self._default_market_data_provider
-        provider = self._registry.require_capability(
-            selected, Capability.UNDERLYING_QUOTES
-        )
+        provider = self._registry.require_capability(selected, capability)
         if not isinstance(provider, MarketDataProvider):
             raise ProviderRegistrationError(
                 f"provider {selected!r} advertises market data but "
                 "violates its contract"
+            )
+        return provider
+
+    def historical(self, provider_id: str | None = None) -> HistoricalDataProvider:
+        selected = provider_id or self._default_market_data_provider
+        provider = self._registry.require_capability(selected, Capability.PRICE_HISTORY)
+        if not isinstance(provider, HistoricalDataProvider):
+            raise ProviderRegistrationError(
+                f"provider {selected!r} advertises history but violates its contract"
             )
         return provider

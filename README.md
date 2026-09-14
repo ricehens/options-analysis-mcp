@@ -14,12 +14,11 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 2's code is complete. In addition to the offline skeleton, the project
-has a Schwab adapter with OAuth callback validation, private atomic token
-storage, refresh coordination, a GET-only HTTP gateway, typed provider errors,
-and a third generic MCP tool, `options_provider_auth_status`. The live OAuth and
-single-read check remain a local operational step requiring your approved
-Schwab application.
+Milestone 3's offline code is complete. The reusable services and MCP server now
+provide normalized stock quotes, expirations, filtered option chains, selected
+option quotes, and underlying price history through either the fake provider or
+the Schwab adapter. The live OAuth and market-data check remain a local
+operational step requiring your approved Schwab application.
 
 Read these documents first:
 
@@ -32,6 +31,14 @@ Read these documents first:
 - `options_list_providers` returns enabled providers and capabilities.
 - `options_provider_auth_status` reports safe provider authorization state
   without exposing credentials or token values.
+- `options_get_underlying_quote` returns a normalized quote with provenance and
+  quality warnings.
+- `options_get_option_expirations` lists available expiration dates and DTE.
+- `options_get_option_chain` returns at most 100 locally re-filtered contracts;
+  its default is 40 contracts and a 45-day Schwab request window.
+- `options_get_option_quotes` retrieves 1–100 explicitly selected contracts.
+- `options_get_price_history` retrieves underlying bars, not historical option
+  chains.
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
 - The MCP server runs locally over stdio.
@@ -101,6 +108,6 @@ or captured Schwab response containing private account data.
 
 ## Resume
 
-Read `STATUS.md` for the exact checkpoint. Milestone 3 adds normalized quote,
-expiration, filtered-chain, option-quote, and underlying-history MCP tools while
-preserving the provider-neutral interfaces.
+Read `STATUS.md` for the exact checkpoint. Milestone 4 adds caller-supplied
+position enrichment, signed Greek aggregation, expiration payoff, break-even,
+and a bounded scenario grid.

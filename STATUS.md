@@ -4,20 +4,19 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 2 implementation is complete on `codex/milestone-2`. Its live OAuth
-and one-read verification require the repository owner's local Schwab
-credentials and remain pending by design. Development proceeds to Milestone 3
-without weakening that user-controlled security boundary.
+Milestone 3 implementation is complete on `codex/milestone-3`. The project has
+an offline-tested provider-neutral options market-data surface and Schwab
+adapter. Live OAuth and market-data verification require the repository owner's
+local developer credentials and remain an explicit operational gate.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Goal
 
-Create reusable, read-only market and brokerage data access for applications
-that analyze stock-option positions with detailed current data. Schwab is the
-first provider plug-in, while domain models, services, analytics, and MCP tool
-schemas remain portable to other providers and future desktop, web, mobile, or
-notebook clients.
+Create reusable, read-only data and analytics for applications that analyze
+stock-option positions. Schwab is the first plug-in; the same domain, services,
+analytics, and MCP interfaces must support other providers and later desktop,
+web, mobile, or notebook clients.
 
 ## Milestone checklist
 
@@ -25,64 +24,70 @@ notebook clients.
 - [x] Milestone 1 — Offline project skeleton
 - [x] Milestone 2 — OAuth and Schwab read-only gateway (offline code)
 - [ ] Milestone 2 operational activation — owner OAuth and one live read
-- [ ] Milestone 3 — Option market-data tools
+- [x] Milestone 3 — Option market-data tools (offline code)
+- [ ] Milestone 3 operational activation — owner live mapping check
 - [ ] Milestone 4 — Position enrichment and first analytics
 - [ ] Milestone 5 — Hardening and packaging
 - [ ] Milestone 6 — Optional streaming
 
-## Milestone 2 contents
+## Available MCP tools
 
-- `options_analysis.providers.schwab.config` owns all adapter configuration.
-- `oauth` creates authorization URLs, validates the exact callback and state,
-  exchanges codes, and refreshes tokens.
-- `tokens` persists redacted token models atomically outside the repository with
-  user-only POSIX permissions.
-- `manager` serializes refresh and produces safe generic authentication status.
-- `gateway` exposes GET only, attaches bearer authorization internally, bounds
-  retries, and maps failures to stable provider errors.
-- `provider` composes the adapter but advertises no market-data capabilities
-  until Milestone 3 response mapping exists.
-- `cli` keeps credentials and OAuth codes outside model-visible MCP arguments.
-- MCP now exposes `options_provider_auth_status` alongside the two original
-  foundation tools.
-- `docs/MILESTONE_2.md` is the durable activation and verification note.
+- `options_server_info`
+- `options_list_providers`
+- `options_provider_auth_status`
+- `options_get_underlying_quote`
+- `options_get_option_expirations`
+- `options_get_option_chain`
+- `options_get_option_quotes`
+- `options_get_price_history`
+
+## Milestone 3 architecture
+
+- The provider router selects a provider by capability and separately validates
+  market-data and historical-data contracts.
+- The service layer exposes every read operation without importing Schwab.
+- Schwab source models and mapping live only in
+  `options_analysis.providers.schwab`.
+- Provider fields are normalized to the existing domain models with provenance,
+  namespaced extensions, and quality warnings.
+- Chain request dates, strike count, local filters, symbol count, output count,
+  and response bytes are bounded.
+- Synthetic fixtures are identified in `tests/fixtures/schwab/README.md`.
+- `docs/MILESTONE_3.md` records mapping assumptions that need one live check.
 
 ## Verification evidence
 
-`make check UV=.uv-bootstrap/bin/uv` passes: 46 files are formatted, Ruff lint
-reports no errors, mypy strict reports no issues across 29 source files, and all
-31 pytest tests pass. The MCP tests exercise both in-memory and real stdio
-protocol connections.
+`make check UV=.uv-bootstrap/bin/uv` passes: all 53 files are formatted, Ruff
+lint reports no errors, mypy strict reports no issues across 32 source files,
+and all 38 pytest tests pass. The MCP suite exercises every one of the eight
+tools over the in-memory protocol and starts the server over real stdio.
 
-## Live activation gate
+## Operational gate
 
-The repository contains no credential, token, callback capture, account data,
-or private provider response. The owner must follow `docs/MILESTONE_2.md` to
-perform OAuth and the opt-in smoke read locally. Default endpoint URLs are
-configurable because the public portal could not be independently inspected in
-this build session; confirm them against the application's current official
-portal documentation during activation.
+Follow `docs/MILESTONE_2.md` to authorize locally. Then use the read-only MCP
+tools on one liquid symbol and compare the normalized values to the current
+official Schwab schema. In particular verify volatility units, settlement and
+exercise codes, timestamp units, endpoint paths, and option-symbol spacing.
+Never commit the resulting live response.
 
 ## Next milestone
 
-Milestone 3 implements provider-neutral MCP tools and Schwab mappings for:
+Milestone 4 adds:
 
-- Stock quote.
-- Option expirations.
-- Narrow, filtered option chain.
-- Detailed quotes for selected option contracts.
-- Underlying price history.
-- Data-quality warnings for partial, stale, crossed, or missing fields.
-
-All Schwab response fixtures must be synthetic/sanitized. Existing domain and
-service contracts must remain unchanged except for backward-compatible query
-or result refinements that are genuinely provider-neutral.
+- Caller-supplied equity and option position inputs.
+- Quote enrichment using the selected market-data provider.
+- Signed multiplier-aware aggregate delta, gamma, theta, vega, and rho.
+- Net current value and premium/cost inputs.
+- Expiration payoff points, break-even roots, bounded max-profit/max-loss where
+  mathematically supported, and a bounded underlying-price scenario grid.
+- Optional Schwab account positions only if read-only Trader API access is
+  available; account mode must remain separately feature-gated.
 
 ## Resume prompt for another session
 
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `DESIGN.md`,
-`STATUS.md`, and the latest `docs/MILESTONE_*.md`. Inspect Git status and the
-remote branches before editing. Continue the first incomplete milestone, run
-the full offline quality suite, update this handoff, and push a GitHub
-checkpoint. Do not commit secrets or add any order capability.
+`STATUS.md`, and `docs/MILESTONE_*.md`. Inspect Git status and remote branches.
+Continue the first incomplete milestone, run the full offline suite, update the
+handoff, and push a GitHub checkpoint. Never commit secrets, private provider
+responses, or any order capability.
