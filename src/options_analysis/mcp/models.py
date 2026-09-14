@@ -1,36 +1,19 @@
 """Structured, secret-safe MCP results."""
 
 from datetime import date
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
 from options_analysis.config import EnvironmentName
 from options_analysis.domain import OptionChain, PositionAnalysis, PriceBar, Quote
+from options_analysis.errors import ErrorDetail
 
 
 class _StrictResultModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
-class ErrorCategory(StrEnum):
-    CONFIGURATION = "configuration"
-    AUTHORIZATION = "authorization"
-    ENTITLEMENT = "entitlement"
-    NOT_FOUND = "not_found"
-    UNSUPPORTED_CAPABILITY = "unsupported_capability"
-    VALIDATION = "validation"
-    RATE_LIMIT = "rate_limit"
-    UPSTREAM_UNAVAILABLE = "upstream_unavailable"
-    UPSTREAM_SCHEMA = "upstream_schema"
-
-
-class ToolErrorDetail(_StrictResultModel):
-    category: ErrorCategory
-    message: str
-    retryable: bool
-    reauthorization_required: bool = False
-    field_paths: tuple[str, ...] = ()
+ToolErrorDetail = ErrorDetail
 
 
 class MCPResult(_StrictResultModel):

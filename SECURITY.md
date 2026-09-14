@@ -27,6 +27,12 @@ timeout, bounds attempts and response bytes, retries only transient reads, and
 never includes upstream response bodies in errors. OAuth token POSTs exist only
 inside the authorization component.
 
+The browser never receives Schwab client credentials or OAuth tokens. Its
+FastAPI facade binds to `127.0.0.1`, is read-only, and allows development CORS
+requests only from `127.0.0.1:5173` and `localhost:5173`. Do not expose the API
+on a LAN or public interface without adding TLS, authentication, origin/host
+validation, and a separate deployment threat model.
+
 ## Reporting a vulnerability
 
 Report security concerns privately to the repository owner. Do not open a

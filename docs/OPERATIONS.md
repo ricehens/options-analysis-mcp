@@ -26,6 +26,19 @@ Use the fake provider first to validate the host and these tools:
 - `options_get_option_chain` with `SPY` and a small limit
 - `options_analyze_positions` with the example in `README.md`
 
+### Browser workspace
+
+Install the locked frontend dependencies once:
+
+```console
+make web-sync
+```
+
+Then start `make web-api` and `make web-ui` in separate terminals and open
+`http://127.0.0.1:5173`. The browser uses the same configured default provider
+as MCP. The committed default is `fake`, so this path works fully offline after
+dependencies are installed.
+
 ## 3. Enable Schwab
 
 1. Confirm the developer application is approved and its callback URI.
@@ -39,6 +52,9 @@ Use the fake provider first to validate the host and these tools:
    `OPTIONS_ANALYSIS_ALLOW_LIVE_SMOKE_TESTS=true uv run options-analysis-schwab-smoke --symbol SPY`.
 8. Validate mappings listed in `docs/MILESTONE_3.md`; do not save a live body.
 9. Set `OPTIONS_ANALYSIS_DEFAULT_MARKET_DATA_PROVIDER=schwab` when satisfied.
+
+Restart the HTTP API after changing provider configuration. The browser needs
+no Schwab-specific setting and must never receive a client secret or token.
 
 ## 4. Routine checks
 

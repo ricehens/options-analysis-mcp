@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — 2026-09-14
+
+- Added a local-only FastAPI interface beside MCP using the same application
+  services and provider routing.
+- Added a responsive React/TypeScript/Vite research workspace with an editable
+  in-memory watchlist, quote summary, expiration filters, and option-chain view.
+- Added transport-neutral structured errors shared by MCP and HTTP.
+- Added HTTP contract tests and frontend production-build verification.
+
 ## 0.5.0 — 2026-09-14
 
 - Added stable structured MCP error details and sanitized schema paths.

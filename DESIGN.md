@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Local release implemented through Milestone 5
+Status: Browser foundation implemented through Milestone 6A
 
 Last updated: 2026-09-14
 
@@ -25,7 +25,8 @@ without forcing application code to understand any provider's response shapes.
 
 Provider portability is a first-class design goal and release criterion:
 
-- Domain models, analytics, services, and MCP schemas are provider-neutral.
+- Domain models, analytics, services, MCP schemas, and HTTP endpoints are
+  provider-neutral.
 - A provider is integrated behind small, capability-based contracts.
 - Adding a comparable source should normally add an adapter package,
   configuration, fixtures, and contract tests only.
@@ -62,7 +63,7 @@ The initial project is an analysis data service. It is not a trading system.
 
 - Python 3.12 or newer.
 - Official Model Context Protocol Python SDK 2.x.
-- Local stdio MCP transport.
+- Local stdio MCP transport and loopback HTTP interface.
 - Schwab OAuth authorization-code flow.
 - Secure local token persistence.
 - Schwab Market Data Production endpoints.
@@ -83,7 +84,7 @@ The initial project is an analysis data service. It is not a trading system.
 - Redistributing provider market data contrary to its license or entitlements.
 - Historical option-chain storage or options backtesting.
 - Treating provider-supplied Greeks as an authoritative independent risk model.
-- A graphical interface in the first milestones.
+- Order-entry or account-mutation controls in the graphical interface.
 - Running an always-on streaming service in the first release.
 - A lowest-common-denominator abstraction that hides useful provider data.
 - Automatic cross-provider fallback that silently mixes inconsistent snapshots.
@@ -103,8 +104,12 @@ The initial project is an analysis data service. It is not a trading system.
 MCP must remain a thin adapter. Business logic and concrete provider integration
 logic must not live inside MCP tool functions.
 
-    MCP stdio adapter
-            |
+    MCP stdio adapter       React browser
+            |                    |
+            |             FastAPI HTTP adapter
+            |                    |
+            +--------------------+
+                     |
     Application services
        |           |
     Analytics   Provider router
@@ -126,6 +131,8 @@ The packages are planned as:
   use cases.
 - options_analysis.analytics — aggregation, payoff, and scenario calculations.
 - options_analysis.mcp — provider-neutral MCP schemas and tool handlers.
+- options_analysis.web — local-only provider-neutral HTTP endpoints.
+- ui — responsive React/TypeScript client containing no provider credentials.
 
 This split allows a later application to import the services directly or put an
 HTTP interface beside MCP without copying provider logic. Imports point inward:
@@ -696,7 +703,30 @@ Acceptance:
 - All offline quality checks pass from one documented command.
 - Failure and reauthorization workflows are documented and tested.
 
-### Milestone 6 — Optional streaming
+### Milestone 6A — Browser foundation
+
+Deliverables:
+
+- Loopback FastAPI interface beside MCP.
+- Combined selected-symbol workspace endpoint.
+- Responsive React/Vite shell with session watchlist, quotes, and option chain.
+- HTTP contract tests and frontend production build.
+
+Acceptance:
+
+- MCP and HTTP reuse application services without provider-specific UI logic.
+- Browser receives no provider credentials or tokens.
+- Fake-provider workspace works end to end through the Vite proxy.
+- Python checks and frontend production build pass.
+
+### Milestone 6B–6E — Browser analysis workflow
+
+- 6B: SQLite-backed watchlist persistence.
+- 6C: rich option-chain filters and contract selection.
+- 6D: strategy templates, leg editing, payoff, and combined analytics.
+- 6E: owner-driven live Schwab validation and responsive hardening.
+
+### Milestone 7 — Optional streaming
 
 Deliverables:
 
@@ -718,12 +748,10 @@ application.
 
 These do not block the first three milestones:
 
-- Whether the future UI is desktop-first or browser-based.
 - Whether account positions should be fetched or always supplied by the app.
 - Which provider should be implemented second as a portability proof.
 - Which local valuation model to use beyond provider-supplied Greeks.
 - Whether normalized snapshots need persistent storage.
-- Whether a local HTTP interface should be added beside MCP.
 - Whether streaming is necessary.
 
 ## 16. Definition of the first useful release

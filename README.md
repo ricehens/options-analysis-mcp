@@ -6,19 +6,21 @@ first provider adapter. MCP is the first delivery interface, not the core
 architecture.
 
 Provider portability is a primary design goal. Domain models, analytics,
-application services, and MCP tool schemas remain provider-neutral. A new data
-source should normally require only a provider plug-in, configuration, and
-provider contract tests—not changes to analysis logic or MCP clients.
+application services, MCP tool schemas, and HTTP endpoints remain
+provider-neutral. A new data source should normally require only a provider
+plug-in, configuration, and provider contract tests—not changes to analysis
+logic or clients.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 5's local release is complete. The reusable service and MCP server
-provide normalized option market data and caller-supplied position analytics,
-with secure Schwab OAuth, bounded reads/cache, structured error results, a
-packaged provider-conformance helper, and full operating documentation. Live
-Schwab activation remains a local step requiring your developer application.
+Milestone 6A's browser foundation is complete. A responsive React workspace and
+local-only FastAPI facade now sit beside the MCP server and reuse the same
+provider-neutral services. The UI provides an editable session watchlist,
+selected-symbol quote summary, expiration/side filters, and an option-chain
+view. Live Schwab activation remains a local step requiring your developer
+application.
 
 Read these documents first:
 
@@ -44,6 +46,11 @@ Read these documents first:
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
 - The MCP server runs locally over stdio.
+- The HTTP API runs locally on `127.0.0.1:8000` and publishes OpenAPI at
+  `/api/docs`.
+- The React UI runs on `127.0.0.1:5173` and proxies `/api` to the local API.
+- The current watchlist is intentionally in memory; SQLite persistence follows
+  in Milestone 6B.
 - Provider-neutral models enforce instrument identity, timezone-aware data,
   Decimal values, provenance, namespaced extensions, and position invariants.
 
@@ -86,6 +93,8 @@ Install `uv`, then run:
 ```console
 uv sync --all-groups
 make check
+make web-sync
+make web-build
 ```
 
 This workspace also has an ignored local `uv` bootstrap, so the same verification
@@ -103,6 +112,20 @@ uv run options-analysis-mcp
 
 The process waits for MCP messages on standard input and does not print a normal
 interactive prompt.
+
+## Browser UI
+
+Start the local API and UI in two terminals:
+
+```console
+make web-api
+make web-ui
+```
+
+Open `http://127.0.0.1:5173`. The committed default uses deterministic fake
+data, requires no credentials, and makes no external font or data request. The
+API binds only to loopback and accepts development cross-origin reads only from
+the two local Vite origins.
 
 ## Schwab local authorization
 
@@ -147,6 +170,7 @@ or captured Schwab response containing private account data.
 - `docs/MCP_HOSTS.md` — generic local stdio host configuration.
 - `docs/PROVIDERS.md` — adapter API, entry points, mapping rules, and conformance.
 - `docs/RELEASE.md` — quality, build, version, Git, and tag checklist.
+- `docs/MILESTONE_6A.md` — browser foundation contract and next UI work.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 
 ## Resume

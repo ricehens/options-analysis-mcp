@@ -4,11 +4,11 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 5 local-release hardening is complete on `codex/milestone-5`. The
-project provides a secure, provider-pluggable Schwab/fake market-data MCP and
-caller-supplied option-position analytics with durable documentation and build
-checks. Live Schwab activation still requires the repository owner's local
-developer credentials.
+Milestone 6A browser foundation is complete on `codex/milestone-6a`. The project
+now provides a responsive React workspace and a local-only FastAPI interface in
+addition to the secure, provider-pluggable MCP. Both interfaces reuse the same
+application services and provider routing. Live Schwab activation still
+requires the repository owner's local developer credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -23,7 +23,22 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 - [x] Milestone 4 — Caller-supplied position enrichment and analytics
 - [ ] Optional Schwab account positions — requires Trader API entitlement
 - [x] Milestone 5 — Hardening, documentation, and packaging
-- [ ] Milestone 6 — Optional streaming; decision gate not met
+- [x] Milestone 6A — FastAPI and responsive React browser foundation
+- [ ] Milestone 6B — SQLite-backed persistent watchlists
+- [ ] Milestone 6C — Rich option-chain explorer
+- [ ] Milestone 6D — Strategy builder and combined analytics
+- [ ] Milestone 6E — Live Schwab UI verification and responsive hardening
+- [ ] Milestone 7 — Optional streaming; decision gate not met
+
+## Browser interface
+
+- `GET /api/v1/info` returns safe local runtime metadata.
+- `GET /api/v1/providers` returns enabled provider capabilities.
+- `GET /api/v1/workspaces/{symbol}` combines the normalized quote, expiration
+  list, and bounded filtered option chain.
+- `make web-api` starts the loopback FastAPI service.
+- `make web-ui` starts the Vite UI at `http://127.0.0.1:5173`.
+- Watchlist changes are currently session-only; Milestone 6B persists them.
 
 ## Available MCP tools
 
@@ -55,11 +70,11 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-`make release-check UV=.uv-bootstrap/bin/uv` passes: all 70 files are formatted,
-Ruff lint reports no errors, mypy strict reports no issues across 39 source
-files, and all 49 pytest tests pass. It built the 0.5.0 source distribution and
-wheel; inspection confirmed the wheel contains all runtime layers and the
-packaged `options_analysis.testing` conformance helper.
+Milestone 6A checks pass: Python formatting and Ruff lint are clean, mypy strict
+reports no issues across 44 source files, all 53 pytest tests pass, the React
+TypeScript production build succeeds, and a request through the Vite proxy
+returned the combined fake-provider workspace. Run the final `make
+release-check UV=.uv-bootstrap/bin/uv` before tagging.
 
 ## Required owner activation
 
@@ -76,7 +91,7 @@ captured live responses.
 
 ## Streaming decision gate
 
-Milestone 6 is deliberately optional. Do not implement it until live use shows
+Milestone 7 is deliberately optional. Do not implement it until live use shows
 that snapshot latency is inadequate. If needed, implement the existing
 `StreamingProvider` contract with bounded symbol subscriptions, bounded cache,
 freshness timestamps, reconnect/resubscribe tests, and no order functionality.
@@ -85,8 +100,8 @@ freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
-`STATUS.md`, and `docs/`. Inspect Git and the latest milestone tag. First perform
-any owner-approved live activation checks; otherwise work only on the first
-explicitly requested enhancement. Preserve the provider-neutral, read-only,
+`STATUS.md`, and `docs/MILESTONE_6A.md`. Inspect Git and the latest milestone
+tag. Continue with Milestone 6B unless the owner requests live activation or a
+different feature. Preserve the provider-neutral, local-only, read-only,
 bounded, and secret-safe boundaries. Run `make release-check` and push a new
 checkpoint. Never commit secrets or private responses.
