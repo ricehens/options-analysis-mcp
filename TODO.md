@@ -23,10 +23,10 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | ID | Status | Work item | Depends on | Completion evidence |
 | --- | --- | --- | --- | --- |
 | UI-010 | done | Milestone 6B: SQLite-backed watchlist service, CRUD API, and persistent React controls | UI-001 code | CRUD/restart tests, proxy CRUD check, release check |
-| UI-011 | ready | Manually inspect the responsive Milestone 6A/6B UI in a browser and record defects | UI-010 | Desktop and narrow viewport screenshots or inspection notes |
-| UI-020 | ready | Milestone 6C: chain explorer with strike range, expiration/DTE, side, liquidity, and moneyness filters | UI-010 | Filter contract tests and UI interaction tests |
-| UI-021 | backlog | Add sortable chain columns and clear stale/missing-data indicators | UI-020 | Sorting tests and warning-state inspection |
-| UI-022 | backlog | Add contract selection from calls/puts into a draft leg tray | UI-020 | Selection/replacement tests |
+| UI-011 | blocked | Manually inspect the responsive Milestone 6A–6C UI in a browser and record defects | Browser-control availability or owner inspection | Desktop and narrow viewport screenshots or inspection notes |
+| UI-020 | done | Milestone 6C: chain explorer with strike range, expiration/DTE, side, liquidity, and moneyness filters | UI-010 | API filter and TypeScript view-model tests |
+| UI-021 | done | Add sortable chain columns and clear stale/missing-data indicators | UI-020 | Sort tests and visible freshness/warning summary |
+| UI-022 | done | Add contract selection from calls/puts into a draft leg tray | UI-020 | Buy/sell/quantity/remove UI with production build |
 | UI-030 | ready | Milestone 6D: canonical strategy-template catalog | UI-022 | Unit tests for template-to-leg generation |
 | UI-031 | backlog | Add editable signed legs for long call/put, covered call, verticals, butterflies, and iron condors | UI-030 | Hand-calculated strategy fixtures |
 | UI-032 | backlog | Add combined debit/credit, Greeks, max profit/loss, and break-even results | UI-031 | Service/API/UI tests against existing analyzer |

@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser and persistent watchlists implemented through Milestone 6B
+Status: Browser option-chain workflow implemented through Milestone 6C
 
 Last updated: 2026-09-14
 
@@ -724,7 +724,7 @@ Acceptance:
 ### Milestone 6B–6E — Browser analysis workflow
 
 - 6B: SQLite-backed watchlist persistence. (complete)
-- 6C: rich option-chain filters and contract selection.
+- 6C: rich option-chain filters and contract selection. (complete)
 - 6D: strategy templates, leg editing, payoff, and combined analytics.
 - 6E: owner-driven live Schwab validation and responsive hardening.
 

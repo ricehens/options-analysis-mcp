@@ -22,7 +22,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.1",
+        "version": "0.6.2",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -39,7 +39,12 @@ async def test_workspace_combines_quote_expirations_and_filtered_chain(app) -> N
     ) as client:
         response = await client.get(
             "/api/v1/workspaces/spy",
-            params={"put_call": "call", "expiration": "2030-01-18", "limit": 2},
+            params={
+                "expiration": "2030-01-18",
+                "strike_from": 100,
+                "strike_to": 100,
+                "limit": 2,
+            },
         )
 
     assert response.status_code == 200
@@ -50,7 +55,11 @@ async def test_workspace_combines_quote_expirations_and_filtered_chain(app) -> N
     assert result["workspace"]["expirations"] == ["2030-01-18", "2030-02-15"]
     contracts = result["workspace"]["chain"]["contracts"]
     assert len(contracts) == 2
-    assert {item["instrument"]["option"]["put_call"] for item in contracts} == {"call"}
+    assert {item["instrument"]["option"]["strike"] for item in contracts} == {"100"}
+    assert {item["instrument"]["option"]["put_call"] for item in contracts} == {
+        "call",
+        "put",
+    }
 
 
 @pytest.mark.asyncio

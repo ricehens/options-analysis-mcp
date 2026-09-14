@@ -15,11 +15,12 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6B is complete. A responsive React workspace and local-only FastAPI
+Milestone 6C is complete. A responsive React workspace and local-only FastAPI
 facade sit beside the MCP server and reuse the same provider-neutral services.
 The UI provides a persistent SQLite-backed watchlist, selected-symbol quote
-summary, expiration/side filters, and an option-chain view. Live Schwab
-activation remains a local step requiring your developer application.
+summary, a sortable and filterable detailed option chain, and contract
+selection into editable draft legs. Live Schwab activation remains a local step
+requiring your developer application.
 
 Read these documents first:
 
@@ -50,6 +51,12 @@ Read these documents first:
   `/api/docs`.
 - The React UI runs on `127.0.0.1:5173` and proxies `/api` to the local API.
 - Watchlist add/remove changes persist in a private local SQLite database.
+- The option chain supports expiration/side/strike, near-money,
+  open-interest, and maximum bid/ask-spread filters.
+- Calls and puts show delta, IV, bid, ask, spread, open interest, moneyness,
+  freshness, and warning counts.
+- Selected contracts form an editable buy/sell draft; strategy calculations
+  follow in Milestone 6D.
 - Provider-neutral models enforce instrument identity, timezone-aware data,
   Decimal values, provenance, namespaced extensions, and position invariants.
 
@@ -175,6 +182,7 @@ or captured Schwab response containing private account data.
 - `docs/RELEASE.md` — quality, build, version, Git, and tag checklist.
 - `docs/MILESTONE_6A.md` — browser foundation contract and next UI work.
 - `docs/MILESTONE_6B.md` — persistent watchlist design and verification.
+- `docs/MILESTONE_6C.md` — chain exploration and contract-selection contract.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

@@ -1,4 +1,4 @@
-.PHONY: sync web-sync format lint type test check build release-check run web-api web-ui web-build
+.PHONY: sync web-sync format lint type test check build release-check run web-api web-ui web-test web-build
 
 UV ?= uv
 
@@ -29,7 +29,7 @@ check:
 build:
 	$(UV) build
 
-release-check: check web-build build
+release-check: check web-test web-build build
 
 run:
 	$(UV) run options-analysis-mcp
@@ -39,6 +39,9 @@ web-api:
 
 web-ui:
 	cd ui && npm run dev
+
+web-test:
+	cd ui && npm test
 
 web-build:
 	cd ui && npm run build

@@ -8,6 +8,8 @@ import type {
 interface WorkspaceQuery {
   expiration?: string;
   putCall?: PutCall | "all";
+  strikeFrom?: number;
+  strikeTo?: number;
 }
 
 export class ApiError extends Error {
@@ -28,6 +30,12 @@ export async function loadWorkspace(
   if (query.expiration) params.set("expiration", query.expiration);
   if (query.putCall && query.putCall !== "all") {
     params.set("put_call", query.putCall);
+  }
+  if (query.strikeFrom !== undefined) {
+    params.set("strike_from", String(query.strikeFrom));
+  }
+  if (query.strikeTo !== undefined) {
+    params.set("strike_to", String(query.strikeTo));
   }
   const response = await fetch(
     `/api/v1/workspaces/${encodeURIComponent(symbol)}?${params}`,

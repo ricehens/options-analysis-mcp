@@ -7,6 +7,21 @@ import {
   loadWatchlist,
   loadWorkspace,
 } from "./api";
+import {
+  buildChainRows,
+  daysToExpiration,
+  decimal,
+  filterChainRows,
+  moneynessPercent,
+  sortChainRows,
+  spreadPercent,
+} from "./chain";
+import type {
+  ChainFilters,
+  MoneynessRange,
+  SortDirection,
+  SortKey,
+} from "./chain";
 import type { DecimalValue, PutCall, Quote, WorkspaceSnapshot } from "./types";
 
 const strategyNames = [
@@ -16,12 +31,6 @@ const strategyNames = [
   "Butterfly",
   "Iron condor",
 ];
-
-function decimal(value: DecimalValue | null | undefined): number | null {
-  if (value === null || value === undefined) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function money(value: DecimalValue | null | undefined): string {
   const parsed = decimal(value);
@@ -49,10 +58,20 @@ function quoteCell(quote: Quote | undefined, field: "bid" | "ask" | "mark") {
   return quote ? money(quote[field]) : "—";
 }
 
-interface ChainRow {
-  strike: number;
-  call?: Quote;
-  put?: Quote;
+function spread(quote: Quote | undefined): string {
+  const value = spreadPercent(quote);
+  return value === null ? "—" : `${value.toFixed(1)}%`;
+}
+
+function percent(value: DecimalValue | null | undefined, digits = 1): string {
+  const parsed = decimal(value);
+  return parsed === null ? "—" : `${(parsed * 100).toFixed(digits)}%`;
+}
+
+interface DraftLeg {
+  quote: Quote;
+  action: "buy" | "sell";
+  quantity: number;
 }
 
 function App() {
@@ -67,6 +86,19 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [watchlistBusy, setWatchlistBusy] = useState(true);
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
+  const [strikeFromInput, setStrikeFromInput] = useState("");
+  const [strikeToInput, setStrikeToInput] = useState("");
+  const [strikeRange, setStrikeRange] = useState<{
+    from?: number;
+    to?: number;
+  }>({});
+  const [moneynessRange, setMoneynessRange] = useState<MoneynessRange>("all");
+  const [minOpenInterest, setMinOpenInterest] = useState(0);
+  const [maxSpreadPercent, setMaxSpreadPercent] = useState<number | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("strike");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [filterError, setFilterError] = useState<string | null>(null);
+  const [draftLegs, setDraftLegs] = useState<DraftLeg[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -100,7 +132,12 @@ function App() {
     setError(null);
     loadWorkspace(
       selectedSymbol,
-      { expiration: expiration || undefined, putCall },
+      {
+        expiration: expiration || undefined,
+        putCall,
+        strikeFrom: strikeRange.from,
+        strikeTo: strikeRange.to,
+      },
       controller.signal,
     )
       .then((snapshot) => {
@@ -121,20 +158,33 @@ function App() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [expiration, putCall, selectedSymbol]);
+  }, [expiration, putCall, selectedSymbol, strikeRange.from, strikeRange.to]);
 
   const rows = useMemo(() => {
-    const indexed = new Map<number, ChainRow>();
-    for (const contract of workspace?.chain.contracts ?? []) {
-      const terms = contract.instrument.option;
-      if (!terms) continue;
-      const strike = Number(terms.strike);
-      const row = indexed.get(strike) ?? { strike };
-      row[terms.put_call] = contract;
-      indexed.set(strike, row);
-    }
-    return [...indexed.values()].sort((left, right) => left.strike - right.strike);
-  }, [workspace]);
+    const filters: ChainFilters = {
+      moneynessRange,
+      minOpenInterest,
+      maxSpreadPercent,
+    };
+    const paired = buildChainRows(workspace?.chain.contracts ?? []);
+    return sortChainRows(
+      filterChainRows(paired, decimal(workspace?.quote.mark), filters),
+      sortKey,
+      sortDirection,
+    );
+  }, [
+    maxSpreadPercent,
+    minOpenInterest,
+    moneynessRange,
+    sortDirection,
+    sortKey,
+    workspace,
+  ]);
+
+  const selectedContracts = useMemo(
+    () => new Set(draftLegs.map((leg) => leg.quote.instrument.provider_symbol)),
+    [draftLegs],
+  );
 
   async function addSymbol(event: FormEvent) {
     event.preventDefault();
@@ -145,7 +195,7 @@ function App() {
     try {
       setSymbols(await addWatchlistSymbol(normalized));
       setSelectedSymbol(normalized);
-      setExpiration("");
+      resetSymbolWorkspace();
       setSymbolInput("");
     } catch (reason) {
       setWatchlistError(
@@ -164,7 +214,7 @@ function App() {
       setSymbols(remaining);
       if (selectedSymbol === symbol) {
         setSelectedSymbol(remaining[0] ?? "");
-        setExpiration("");
+        resetSymbolWorkspace();
       }
     } catch (reason) {
       setWatchlistError(
@@ -177,7 +227,66 @@ function App() {
 
   function selectSymbol(symbol: string) {
     setSelectedSymbol(symbol);
+    resetSymbolWorkspace();
+  }
+
+  function resetSymbolWorkspace() {
     setExpiration("");
+    setDraftLegs([]);
+    setStrikeFromInput("");
+    setStrikeToInput("");
+    setStrikeRange({});
+    setFilterError(null);
+  }
+
+  function applyStrikeRange(event: FormEvent) {
+    event.preventDefault();
+    const from = strikeFromInput ? Number(strikeFromInput) : undefined;
+    const to = strikeToInput ? Number(strikeToInput) : undefined;
+    if (
+      (from !== undefined && (!Number.isFinite(from) || from <= 0)) ||
+      (to !== undefined && (!Number.isFinite(to) || to <= 0)) ||
+      (from !== undefined && to !== undefined && from > to)
+    ) {
+      setFilterError("Enter a valid strike range with the lower value first.");
+      return;
+    }
+    setFilterError(null);
+    setStrikeRange({ from, to });
+  }
+
+  function changeSort(next: SortKey) {
+    if (sortKey === next) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(next);
+      setSortDirection("asc");
+    }
+  }
+
+  function sortLabel(key: SortKey): string {
+    return sortKey === key ? (sortDirection === "asc" ? " ↑" : " ↓") : "";
+  }
+
+  function toggleContract(contract: Quote | undefined) {
+    if (!contract) return;
+    const symbol = contract.instrument.provider_symbol;
+    setDraftLegs((current) =>
+      current.some((leg) => leg.quote.instrument.provider_symbol === symbol)
+        ? current.filter((leg) => leg.quote.instrument.provider_symbol !== symbol)
+        : [...current, { quote: contract, action: "buy", quantity: 1 }],
+    );
+  }
+
+  function updateDraftLeg(
+    symbol: string,
+    update: Partial<Pick<DraftLeg, "action" | "quantity">>,
+  ) {
+    setDraftLegs((current) =>
+      current.map((leg) =>
+        leg.quote.instrument.provider_symbol === symbol ? { ...leg, ...update } : leg,
+      ),
+    );
   }
 
   const quote = workspace?.quote;
@@ -187,6 +296,18 @@ function App() {
         timeStyle: "short",
       }).format(new Date(quote.as_of))
     : "—";
+  const warningCount =
+    (workspace?.chain.warnings.length ?? 0) +
+    (workspace?.chain.contracts.reduce(
+      (total, contract) => total + contract.warnings.length,
+      0,
+    ) ?? 0);
+  const freshness =
+    workspace?.provider_id === "fake"
+      ? "Deterministic fixture"
+      : quote
+        ? `${Math.max(0, Math.round((Date.now() - Date.parse(quote.as_of)) / 1000))}s old`
+        : "Waiting for data";
 
   return (
     <div className="app-shell">
@@ -207,7 +328,7 @@ function App() {
           <input
             aria-label="Add a stock symbol"
             autoComplete="off"
-            maxLength={8}
+            maxLength={12}
             onChange={(event) => setSymbolInput(event.target.value)}
             placeholder="Add symbol"
             value={symbolInput}
@@ -256,12 +377,13 @@ function App() {
             <h1>{selectedSymbol || "No symbol"}</h1>
           </div>
           <div className="market-status">
-            <span className="status-dot" /> Offline-safe data
+            <span className={`status-dot ${warningCount ? "warning" : ""}`} />
+            {freshness} · {warningCount} warning{warningCount === 1 ? "" : "s"}
           </div>
         </header>
 
-        {error || watchlistError ? (
-          <div className="error-banner">{error ?? watchlistError}</div>
+        {error || watchlistError || filterError ? (
+          <div className="error-banner">{error ?? watchlistError ?? filterError}</div>
         ) : null}
 
         <section className={`quote-hero ${loading ? "loading" : ""}`}>
@@ -292,7 +414,9 @@ function App() {
                   value={expiration}
                 >
                   {(workspace?.expirations ?? []).map((date) => (
-                    <option key={date} value={date}>{date}</option>
+                    <option key={date} value={date}>
+                      {date} · {daysToExpiration(date)} DTE
+                    </option>
                   ))}
                 </select>
                 <div className="segmented" aria-label="Option side">
@@ -309,29 +433,142 @@ function App() {
               </div>
             </div>
 
+            <div className="filter-bar">
+              <form className="strike-range" onSubmit={applyStrikeRange}>
+                <label>
+                  <span>Strike from</span>
+                  <input
+                    min="0"
+                    onChange={(event) => setStrikeFromInput(event.target.value)}
+                    placeholder="Any"
+                    step="0.5"
+                    type="number"
+                    value={strikeFromInput}
+                  />
+                </label>
+                <label>
+                  <span>Strike to</span>
+                  <input
+                    min="0"
+                    onChange={(event) => setStrikeToInput(event.target.value)}
+                    placeholder="Any"
+                    step="0.5"
+                    type="number"
+                    value={strikeToInput}
+                  />
+                </label>
+                <button type="submit">Apply</button>
+              </form>
+              <label>
+                <span>Moneyness</span>
+                <select
+                  onChange={(event) =>
+                    setMoneynessRange(event.target.value as MoneynessRange)
+                  }
+                  value={moneynessRange}
+                >
+                  <option value="all">All strikes</option>
+                  <option value="2.5">Within 2.5%</option>
+                  <option value="5">Within 5%</option>
+                  <option value="10">Within 10%</option>
+                </select>
+              </label>
+              <label>
+                <span>Minimum OI</span>
+                <select
+                  onChange={(event) => setMinOpenInterest(Number(event.target.value))}
+                  value={minOpenInterest}
+                >
+                  <option value="0">Any</option>
+                  <option value="100">100+</option>
+                  <option value="500">500+</option>
+                  <option value="1000">1,000+</option>
+                </select>
+              </label>
+              <label>
+                <span>Maximum spread</span>
+                <select
+                  onChange={(event) =>
+                    setMaxSpreadPercent(
+                      event.target.value ? Number(event.target.value) : null,
+                    )
+                  }
+                  value={maxSpreadPercent ?? ""}
+                >
+                  <option value="">Any</option>
+                  <option value="5">5%</option>
+                  <option value="10">10%</option>
+                  <option value="25">25%</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="chain-meta">
+              <span>{rows.length} strikes shown</span>
+              <span>Click + to add a contract to the draft</span>
+            </div>
+
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th colSpan={3}>Calls</th>
+                    <th colSpan={7}>Calls</th>
                     <th className="strike-heading">Strike</th>
-                    <th colSpan={3}>Puts</th>
+                    <th colSpan={7}>Puts</th>
                   </tr>
                   <tr className="subhead">
-                    <th>Bid</th><th>Mark</th><th>Ask</th><th />
-                    <th>Bid</th><th>Mark</th><th>Ask</th>
+                    <th /><th>Delta</th>
+                    <th><button className="sort-button" onClick={() => changeSort("call_iv")}>IV{sortLabel("call_iv")}</button></th>
+                    <th>Bid</th><th>Ask</th><th>Spread</th>
+                    <th><button className="sort-button" onClick={() => changeSort("call_open_interest")}>OI{sortLabel("call_open_interest")}</button></th>
+                    <th><button className="sort-button" onClick={() => changeSort("strike")}>Price{sortLabel("strike")}</button></th>
+                    <th /><th>Delta</th>
+                    <th><button className="sort-button" onClick={() => changeSort("put_iv")}>IV{sortLabel("put_iv")}</button></th>
+                    <th>Bid</th><th>Ask</th><th>Spread</th>
+                    <th><button className="sort-button" onClick={() => changeSort("put_open_interest")}>OI{sortLabel("put_open_interest")}</button></th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.strike}>
+                      <td>
+                        {row.call ? (
+                          <button
+                            aria-label={`Toggle call at ${row.strike}`}
+                            aria-pressed={selectedContracts.has(row.call.instrument.provider_symbol)}
+                            className={`contract-picker ${selectedContracts.has(row.call.instrument.provider_symbol) ? "selected" : ""}`}
+                            onClick={() => toggleContract(row.call)}
+                          >+</button>
+                        ) : null}
+                      </td>
+                      <td>{number(row.call?.greeks?.delta)}</td>
+                      <td>{percent(row.call?.implied_volatility)}</td>
                       <td>{quoteCell(row.call, "bid")}</td>
-                      <td>{quoteCell(row.call, "mark")}</td>
                       <td>{quoteCell(row.call, "ask")}</td>
-                      <td className="strike">{money(row.strike)}</td>
+                      <td>{spread(row.call)}</td>
+                      <td>{compact(row.call?.open_interest)}</td>
+                      <td className="strike">
+                        <strong>{money(row.strike)}</strong>
+                        <small>
+                          {moneynessPercent(row.strike, decimal(quote?.mark))?.toFixed(1) ?? "—"}%
+                        </small>
+                      </td>
+                      <td>
+                        {row.put ? (
+                          <button
+                            aria-label={`Toggle put at ${row.strike}`}
+                            aria-pressed={selectedContracts.has(row.put.instrument.provider_symbol)}
+                            className={`contract-picker ${selectedContracts.has(row.put.instrument.provider_symbol) ? "selected" : ""}`}
+                            onClick={() => toggleContract(row.put)}
+                          >+</button>
+                        ) : null}
+                      </td>
+                      <td>{number(row.put?.greeks?.delta)}</td>
+                      <td>{percent(row.put?.implied_volatility)}</td>
                       <td>{quoteCell(row.put, "bid")}</td>
-                      <td>{quoteCell(row.put, "mark")}</td>
                       <td>{quoteCell(row.put, "ask")}</td>
+                      <td>{spread(row.put)}</td>
+                      <td>{compact(row.put?.open_interest)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -348,7 +585,7 @@ function App() {
                 <span className="eyebrow">Position lab</span>
                 <h2>Strategy setup</h2>
               </div>
-              <span className="coming-soon">Preview</span>
+              <span className="coming-soon">{draftLegs.length} legs</span>
             </div>
             <div className="strategy-list">
               {strategyNames.map((name) => (
@@ -361,16 +598,74 @@ function App() {
                 </button>
               ))}
             </div>
+            <div className="draft-tray">
+              <div className="draft-heading">
+                <span className="eyebrow">Selected contracts</span>
+                {draftLegs.length ? (
+                  <button onClick={() => setDraftLegs([])}>Clear</button>
+                ) : null}
+              </div>
+              {draftLegs.length === 0 ? (
+                <p className="draft-empty">
+                  Select contracts with the + buttons in the chain.
+                </p>
+              ) : (
+                draftLegs.map((leg) => {
+                  const terms = leg.quote.instrument.option;
+                  const symbol = leg.quote.instrument.provider_symbol;
+                  return (
+                    <div className="draft-leg" key={symbol}>
+                      <div className="leg-contract">
+                        <strong>{terms ? money(terms.strike) : symbol}</strong>
+                        <small>
+                          {terms?.expiration_date} {terms?.put_call}
+                        </small>
+                      </div>
+                      <select
+                        aria-label={`Action for ${symbol}`}
+                        onChange={(event) =>
+                          updateDraftLeg(symbol, {
+                            action: event.target.value as "buy" | "sell",
+                          })
+                        }
+                        value={leg.action}
+                      >
+                        <option value="buy">Buy</option>
+                        <option value="sell">Sell</option>
+                      </select>
+                      <input
+                        aria-label={`Quantity for ${symbol}`}
+                        max="99"
+                        min="1"
+                        onChange={(event) =>
+                          updateDraftLeg(symbol, {
+                            quantity: Math.max(1, Number(event.target.value) || 1),
+                          })
+                        }
+                        type="number"
+                        value={leg.quantity}
+                      />
+                      <button
+                        aria-label={`Remove ${symbol} from draft`}
+                        className="leg-remove"
+                        onClick={() => toggleContract(leg.quote)}
+                      >×</button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
             <div className="analysis-preview">
               <span className="eyebrow">Selected template</span>
               <h3>{strategy}</h3>
               <p>
-                Contract selection, combined Greeks, debit/credit, break-even,
-                and payoff will appear here in the strategy-builder milestone.
+                Selected contracts are now retained as editable draft legs.
+                Combined Greeks, debit/credit, break-even, and payoff arrive in
+                the strategy-builder milestone.
               </p>
               <div className="metric-row">
-                <div><span>Contracts</span><strong>{workspace?.chain.contracts.length ?? 0}</strong></div>
-                <div><span>ATM IV</span><strong>{number(rows.find((row) => row.strike === 100)?.call?.implied_volatility, 2)}</strong></div>
+                <div><span>Loaded</span><strong>{workspace?.chain.contracts.length ?? 0}</strong></div>
+                <div><span>Selected</span><strong>{draftLegs.length}</strong></div>
               </div>
             </div>
           </div>

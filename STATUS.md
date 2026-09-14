@@ -4,12 +4,12 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6B persistent watchlists are complete on `codex/milestone-6b`. The
-responsive React workspace now stores watchlist changes through a
-provider-neutral service and private local SQLite database. The local FastAPI
-and MCP interfaces continue to reuse the same application services and provider
-routing. Live Schwab activation still requires the repository owner's local
-developer credentials.
+Milestone 6C option-chain exploration is complete on `codex/milestone-6c`. The
+responsive React workspace now provides persistent watchlists, detailed
+expiration/strike/moneyness/liquidity filters, sortable option metrics,
+freshness/warning visibility, and selection into editable draft legs. The local
+FastAPI and MCP interfaces continue to reuse the same provider-neutral services
+and routing. Live Schwab activation still requires owner credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -29,7 +29,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 5 — Hardening, documentation, and packaging
 - [x] Milestone 6A — FastAPI and responsive React browser foundation
 - [x] Milestone 6B — SQLite-backed persistent watchlists
-- [ ] Milestone 6C — Rich option-chain explorer
+- [x] Milestone 6C — Rich option-chain explorer
 - [ ] Milestone 6D — Strategy builder and combined analytics
 - [ ] Milestone 6E — Live Schwab UI verification and responsive hardening
 - [ ] Milestone 7 — Optional streaming; decision gate not met
@@ -44,6 +44,9 @@ milestone; do not rely on chat history as the backlog.
 - `make web-ui` starts the Vite UI at `http://127.0.0.1:5173`.
 - Watchlist changes persist through `/api/v1/watchlist` in a private local
   SQLite state file.
+- The chain explorer displays paired calls/puts with provider-side strike
+  bounds, local liquidity/moneyness filters, sortable detailed metrics, and a
+  selected-contract draft tray.
 
 ## Available MCP tools
 
@@ -75,11 +78,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6B pre-release checks pass: mypy strict reports no issues across 48
-source files, all 59 tests pass, the React production build succeeds, and a
-GET/POST/DELETE sequence through the Vite proxy persists to a temporary SQLite
-database. Run the final `make release-check UV=.uv-bootstrap/bin/uv` before
-tagging.
+Milestone 6C pre-release checks pass: mypy strict reports no issues across 48
+source files, all 59 Python tests and four TypeScript view-model tests pass, and
+the React production build succeeds. Run the final `make release-check
+UV=.uv-bootstrap/bin/uv` before tagging.
 
 ## Required owner activation
 
@@ -106,7 +108,7 @@ freshness timestamps, reconnect/resubscribe tests, and no order functionality.
 Continue the provider-pluggable options-analysis project at
 `/Users/xuemingshen/Workspaces/schwab`. Read `README.md`, `SECURITY.md`,
 `STATUS.md`, `TODO.md`, and the latest milestone note. Inspect Git and the latest milestone
-tag. Continue with Milestone 6C unless the owner requests live activation or a
+tag. Continue with Milestone 6D unless the owner requests live activation or a
 different feature. Preserve the provider-neutral, local-only, read-only,
 bounded, and secret-safe boundaries. Run `make release-check` and push a new
 checkpoint. Never commit secrets or private responses.

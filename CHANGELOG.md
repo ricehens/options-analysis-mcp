@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.2 — 2026-09-14
+
+- Added provider-side strike bounds and local moneyness, open-interest, and
+  bid/ask spread filters to the option-chain explorer.
+- Added sortable strike, IV, and open-interest columns with delta, liquidity,
+  freshness, and data-quality visibility.
+- Added contract selection into editable buy/sell draft legs.
+- Added Vitest coverage for chain pairing, filtering, sorting, spread, and DTE
+  calculations; frontend tests now run in the release check.
+
 ## 0.6.1 — 2026-09-14
 
 - Added a provider-neutral watchlist service and SQLite persistence adapter.
