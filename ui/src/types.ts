@@ -89,13 +89,14 @@ export interface StrategyLegRole {
   ratio: DecimalValue;
   put_call: PutCall | null;
   strike_order: number | null;
+  expiration_order: number | null;
 }
 
 export interface StrategyTemplate {
   template_id: string;
   display_name: string;
   description: string;
-  outlook: "bullish" | "bearish" | "neutral" | "custom";
+  outlook: "bullish" | "bearish" | "neutral" | "volatile" | "custom";
   same_expiration: boolean;
   legs: StrategyLegRole[];
 }

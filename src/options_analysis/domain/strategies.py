@@ -18,6 +18,7 @@ class StrategyOutlook(StrEnum):
     BULLISH = "bullish"
     BEARISH = "bearish"
     NEUTRAL = "neutral"
+    VOLATILE = "volatile"
     CUSTOM = "custom"
 
 
@@ -28,6 +29,7 @@ class StrategyLegRole(DomainModel):
     ratio: Decimal = Field(gt=Decimal("0"))
     put_call: PutCall | None = None
     strike_order: int | None = Field(default=None, ge=0)
+    expiration_order: int | None = Field(default=None, ge=0)
 
 
 class StrategyTemplate(DomainModel):

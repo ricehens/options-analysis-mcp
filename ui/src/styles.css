@@ -110,10 +110,11 @@ td.strike small { margin-top: 3px; color: var(--muted); font-size: 8px; }
 .contract-picker:hover, .contract-picker.selected { color: #0b1211; border-color: var(--accent); background: var(--accent); }
 .empty-state { padding: 32px; text-align: center; color: var(--muted); font-size: 12px; }
 .coming-soon { padding: 5px 8px; color: var(--warning); background: rgba(246, 193, 119, 0.08); border-radius: 6px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
-.strategy-list { padding: 10px; }
+.strategy-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px; }
 .strategy-list button { width: 100%; display: flex; justify-content: space-between; border: 0; border-radius: 8px; padding: 10px 11px; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; text-align: left; }
 .strategy-list button:hover { color: #e7efeb; background: rgba(255,255,255,0.025); }
 .strategy-list button.active { color: var(--accent); background: var(--accent-dark); }
+.strategy-list button:disabled { cursor: wait; }
 .strategy-list button > span:first-child { display: grid; gap: 2px; }
 .strategy-list button strong { font-size: 11px; font-weight: 600; }
 .strategy-list button small { color: var(--muted); font-size: 8px; text-transform: capitalize; }
@@ -178,6 +179,7 @@ td.strike small { margin-top: 3px; color: var(--muted); font-size: 8px; }
   .filters { width: 100%; flex-wrap: wrap; }
   .filter-bar { align-items: start; flex-wrap: wrap; overflow-x: visible; }
   .chain-meta { gap: 10px; flex-direction: column; }
+  .strategy-list { grid-template-columns: 1fr; }
   .symbol-form input, .filter-bar input, .filter-bar select, .filters select, .draft-leg input, .draft-leg select { font-size: 16px; }
   .contract-picker { width: 34px; height: 34px; }
 }

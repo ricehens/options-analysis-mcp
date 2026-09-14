@@ -25,7 +25,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.4",
+        "version": "0.6.5",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -175,8 +175,13 @@ async def test_strategy_catalog_and_position_analysis(app) -> None:  # type: ign
         )
 
     assert catalog.status_code == 200
-    assert len(catalog.json()["strategies"]) == 8
-    assert catalog.json()["strategies"][0]["template_id"] == "long_call"
+    catalog_items = catalog.json()["strategies"]
+    assert catalog_items[0]["template_id"] == "long_call"
+    assert len(catalog_items) == 15
+    calendar = next(
+        item for item in catalog_items if item["template_id"] == "call_calendar"
+    )
+    assert [leg["expiration_order"] for leg in calendar["legs"]] == [0, 1]
     assert analysis.status_code == 200
     assert analysis.json()["analysis"]["max_profit"] == "200"
     assert analysis.json()["analysis"]["break_even_prices"] == ["98"]

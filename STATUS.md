@@ -4,13 +4,13 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6E browser delivery is complete on `codex/milestone-6e`. The packaged
-Python application now serves the production React workspace and API from one
-loopback process. Keyboard semantics, visible focus, touch targets, narrow
-viewport behavior, reduced-motion handling, browser security headers, and a
-minimal web-app manifest are included. FastAPI and MCP continue to reuse the
-same provider-neutral services and routing. Live Schwab activation still
-requires owner credentials.
+Milestone 6F strategy expansion is complete on `codex/milestone-6f`. The
+catalog now contains fifteen provider-neutral templates, including stock
+hedges, volatility trades, and call calendar/diagonal workflows. Multi-date
+templates automatically load the next available expiration and retain the
+existing warning that exact expiration payoff is not meaningful across dates.
+FastAPI and MCP continue to reuse the same provider-neutral services and
+routing. Live Schwab activation still requires owner credentials.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -33,6 +33,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6C — Rich option-chain explorer
 - [x] Milestone 6D — Strategy builder and combined analytics
 - [x] Milestone 6E — Packaged browser delivery and responsive hardening
+- [x] Milestone 6F — Expanded strategy catalog and multi-expiration workflows
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -49,8 +50,10 @@ milestone; do not rely on chat history as the backlog.
 - The chain explorer displays paired calls/puts with provider-side strike
   bounds, local liquidity/moneyness filters, sortable detailed metrics, and a
   selected-contract draft tray.
-- The HTTP strategy catalog and position-analysis endpoint support eight
+- The HTTP strategy catalog and position-analysis endpoint support fifteen
   presets/custom legs without adding any order capability.
+- Call calendars and diagonals fetch the next available expiration through the
+  same normalized workspace endpoint; no provider-specific UI logic is added.
 - Production assets are packaged under `options_analysis.web.static`, use
   same-origin API calls, and receive a restrictive content security policy.
 
@@ -84,12 +87,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6E pre-release checks pass: mypy strict reports no issues across 52
-source files, all 63 Python tests and nine TypeScript tests pass, and the React
-production bundle builds into the Python package. An isolated install of the
-built wheel served the UI and API successfully, and the source runtime returned
-the expected security headers. Wheel contents and final release evidence are
-recorded in `docs/MILESTONE_6E.md`.
+Milestone 6F pre-release checks pass: mypy strict reports no issues across 52
+source files, all 66 Python tests and twelve TypeScript tests pass, and the
+React production bundle and Python distributions build successfully. Detailed
+template and payoff evidence is recorded in `docs/MILESTONE_6F.md`.
 
 ## Required owner activation
 

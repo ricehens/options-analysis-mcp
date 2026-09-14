@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.5 — 2026-09-14
+
+- Expanded the provider-neutral catalog from eight to fifteen templates with
+  protective puts, collars, cash-secured puts, straddles, strangles, call
+  calendars, and call diagonals.
+- Added explicit expiration-order metadata and a volatile strategy outlook.
+- Added automatic next-expiration loading for calendar and diagonal drafts
+  without provider-specific frontend logic.
+- Added hand-calculated payoff fixtures for protective puts, collars,
+  cash-secured puts, straddles, and strangles plus multi-date draft tests.
+
 ## 0.6.4 — 2026-09-14
 
 - Bundled the production React assets into the Python distribution so one

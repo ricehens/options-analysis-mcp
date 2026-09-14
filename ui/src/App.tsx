@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   addWatchlistSymbol,
@@ -28,6 +28,8 @@ import type {
 import {
   buildTemplateDraft,
   draftFromQuote,
+  nextExpiration,
+  requiresSecondaryExpiration,
   StrategyBuildError,
   toAnalysisRequestLegs,
 } from "./strategies";
@@ -106,6 +108,8 @@ function App() {
   const [analysis, setAnalysis] = useState<PositionAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [strategyLoading, setStrategyLoading] = useState(false);
+  const strategyRequest = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -144,6 +148,8 @@ function App() {
   }, []);
 
   useEffect(() => {
+    strategyRequest.current += 1;
+    setStrategyLoading(false);
     if (!selectedSymbol) {
       setWorkspace(null);
       setLoading(false);
@@ -340,18 +346,46 @@ function App() {
     );
   }
 
-  function selectStrategy(template: StrategyTemplate) {
+  async function selectStrategy(template: StrategyTemplate) {
+    const requestId = ++strategyRequest.current;
     setStrategyId(template.template_id);
     setAnalysisError(null);
     if (!workspace) return;
+    setStrategyLoading(true);
     try {
-      setDraftLegs(buildTemplateDraft(template, workspace, draftLegs));
+      let secondaryWorkspace: WorkspaceSnapshot | undefined;
+      if (requiresSecondaryExpiration(template)) {
+        const nearExpiration =
+          expiration || workspace.chain.contracts[0]?.instrument.option?.expiration_date;
+        const laterExpiration = nextExpiration(
+          workspace.expirations,
+          nearExpiration,
+        );
+        if (!laterExpiration) {
+          throw new StrategyBuildError(
+            "No later expiration is available for this strategy.",
+          );
+        }
+        secondaryWorkspace = await loadWorkspace(selectedSymbol, {
+          expiration: laterExpiration,
+          putCall: "call",
+          strikeFrom: strikeRange.from,
+          strikeTo: strikeRange.to,
+        });
+      }
+      if (requestId !== strategyRequest.current) return;
+      setDraftLegs(
+        buildTemplateDraft(template, workspace, draftLegs, secondaryWorkspace),
+      );
     } catch (reason) {
+      if (requestId !== strategyRequest.current) return;
       setAnalysisError(
         reason instanceof StrategyBuildError || reason instanceof Error
           ? reason.message
           : "Unable to build this strategy from the loaded chain.",
       );
+    } finally {
+      if (requestId === strategyRequest.current) setStrategyLoading(false);
     }
   }
 
@@ -445,7 +479,11 @@ function App() {
         </div>
       </aside>
 
-      <main aria-busy={loading || analysisLoading} id="main-content" tabIndex={-1}>
+      <main
+        aria-busy={loading || analysisLoading || strategyLoading}
+        id="main-content"
+        tabIndex={-1}
+      >
         <header className="topbar">
           <div>
             <span className="eyebrow">Market workspace</span>
@@ -668,12 +706,15 @@ function App() {
                 <span className="eyebrow">Position lab</span>
                 <h2>Strategy setup</h2>
               </div>
-              <span className="coming-soon">{draftLegs.length} legs</span>
+              <span className="coming-soon">
+                {strategyLoading ? "loading…" : `${draftLegs.length} legs`}
+              </span>
             </div>
             <div className="strategy-list">
               {strategies.map((template) => (
                 <button
                   className={strategyId === template.template_id ? "active" : ""}
+                  disabled={loading || strategyLoading}
                   key={template.template_id}
                   onClick={() => selectStrategy(template)}
                   type="button"

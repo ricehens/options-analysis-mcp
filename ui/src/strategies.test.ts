@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildTemplateDraft,
+  nextExpiration,
+  requiresSecondaryExpiration,
   StrategyBuildError,
   toAnalysisRequestLegs,
 } from "./strategies";
@@ -12,17 +14,21 @@ import type {
   WorkspaceSnapshot,
 } from "./types";
 
-function option(side: PutCall, strike: number): Quote {
+function option(
+  side: PutCall,
+  strike: number,
+  expiration = "2030-01-18",
+): Quote {
   const code = side === "call" ? "C" : "P";
   return {
     instrument: {
       asset_type: "option",
-      symbol: `SPY-${code}-${strike}`,
+      symbol: `SPY-${expiration}-${code}-${strike}`,
       provider_id: "fake",
-      provider_symbol: `SPY-${code}-${strike}`,
+      provider_symbol: `SPY-${expiration}-${code}-${strike}`,
       option: {
         underlying_symbol: "SPY",
-        expiration_date: "2030-01-18",
+        expiration_date: expiration,
         put_call: side,
         strike,
         multiplier: 100,
@@ -43,7 +49,7 @@ function option(side: PutCall, strike: number): Quote {
   };
 }
 
-function workspace(): WorkspaceSnapshot {
+function workspace(expiration = "2030-01-18"): WorkspaceSnapshot {
   const underlying: Quote = {
     ...option("call", 100),
     instrument: {
@@ -56,14 +62,14 @@ function workspace(): WorkspaceSnapshot {
     mark: 100,
   };
   const contracts = [90, 95, 100, 105, 110].flatMap((strike) => [
-    option("put", strike),
-    option("call", strike),
+    option("put", strike, expiration),
+    option("call", strike, expiration),
   ]);
   return {
     provider_id: "fake",
     symbol: "SPY",
     quote: underlying,
-    expirations: ["2030-01-18"],
+    expirations: ["2030-01-18", "2030-02-15"],
     chain: {
       provider_id: "fake",
       underlying_symbol: "SPY",
@@ -110,6 +116,88 @@ describe("strategy template generation", () => {
     expect(strikes("bear_put_spread")).toEqual([95, 100]);
     expect(strikes("long_call_butterfly")).toEqual([95, 100, 105]);
     expect(strikes("iron_condor")).toEqual([90, 95, 105, 110]);
+  });
+
+  it("builds stock hedges, short puts, and volatility strategies", () => {
+    const source = workspace();
+    const shape = (id: string) =>
+      buildTemplateDraft(template(id), source).map((leg) => [
+        leg.quote.instrument.option?.strike ?? "stock",
+        leg.action,
+        leg.quantity,
+      ]);
+
+    expect(shape("protective_put")).toEqual([
+      ["stock", "buy", 100],
+      [100, "buy", 1],
+    ]);
+    expect(shape("collar")).toEqual([
+      ["stock", "buy", 100],
+      [95, "buy", 1],
+      [105, "sell", 1],
+    ]);
+    expect(shape("cash_secured_put")).toEqual([[95, "sell", 1]]);
+    expect(shape("long_straddle")).toEqual([
+      [100, "buy", 1],
+      [100, "buy", 1],
+    ]);
+    expect(shape("long_strangle")).toEqual([
+      [95, "buy", 1],
+      [105, "buy", 1],
+    ]);
+  });
+
+  it("builds calendar and diagonal legs from the next expiration", () => {
+    const near = workspace();
+    const far = workspace("2030-02-15");
+    const shape = (id: string) =>
+      buildTemplateDraft(template(id), near, [], far).map((leg) => [
+        leg.quote.instrument.option?.expiration_date,
+        leg.quote.instrument.option?.strike,
+        leg.action,
+      ]);
+
+    expect(shape("call_calendar")).toEqual([
+      ["2030-01-18", 100, "sell"],
+      ["2030-02-15", 100, "buy"],
+    ]);
+    expect(shape("call_diagonal")).toEqual([
+      ["2030-01-18", 105, "sell"],
+      ["2030-02-15", 100, "buy"],
+    ]);
+    expect(() => buildTemplateDraft(template("call_calendar"), near)).toThrow(
+      "Load a second expiration",
+    );
+  });
+
+  it("identifies templates with multiple expiration roles", () => {
+    const source = template("call_calendar");
+    source.legs = [
+      {
+        label: "near",
+        asset_type: "option",
+        action: "sell",
+        ratio: 1,
+        put_call: "call",
+        strike_order: 0,
+        expiration_order: 0,
+      },
+      {
+        label: "far",
+        asset_type: "option",
+        action: "buy",
+        ratio: 1,
+        put_call: "call",
+        strike_order: 0,
+        expiration_order: 1,
+      },
+    ];
+
+    expect(requiresSecondaryExpiration(source)).toBe(true);
+    expect(requiresSecondaryExpiration(template("long_call"))).toBe(false);
+    expect(
+      nextExpiration(["2030-03-15", "2030-01-18", "2030-02-15"], "2030-01-18"),
+    ).toBe("2030-02-15");
   });
 
   it("explains when current chain filters omit required contracts", () => {

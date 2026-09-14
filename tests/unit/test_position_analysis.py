@@ -24,6 +24,15 @@ def option_leg(
     )
 
 
+def equity_leg(quantity: str, open_price: str) -> PositionRequestLeg:
+    return PositionRequestLeg(
+        symbol="SPY",
+        asset_type=AssetType.ETF,
+        quantity=Decimal(quantity),
+        average_open_price=Decimal(open_price),
+    )
+
+
 @pytest.mark.asyncio
 async def test_vertical_call_spread_matches_hand_calculation() -> None:
     service = build_application(AppSettings(_env_file=None)).position_analysis_service
@@ -167,3 +176,73 @@ async def test_iron_condor_matches_hand_calculated_credit_and_bounds() -> None:
     assert result.max_profit_bounded is True
     assert result.max_loss == Decimal("-200.0")
     assert result.max_loss_bounded is True
+
+
+@pytest.mark.asyncio
+async def test_protective_put_and_collar_match_hand_calculated_bounds() -> None:
+    service = build_application(AppSettings(_env_file=None)).position_analysis_service
+
+    protective_put = await service.analyze(
+        (
+            equity_leg("100", "100"),
+            option_leg("SPY300118P00095000", "1", "2"),
+        )
+    )
+    collar = await service.analyze(
+        (
+            equity_leg("100", "100"),
+            option_leg("SPY300118P00095000", "1", "2"),
+            option_leg("SPY300118C00105000", "-1", "2"),
+        )
+    )
+
+    assert protective_put.net_cost_basis == Decimal("10200")
+    assert protective_put.break_even_prices == (Decimal("102"),)
+    assert protective_put.max_profit_bounded is False
+    assert protective_put.max_loss == Decimal("-700")
+    assert protective_put.max_loss_bounded is True
+    assert collar.net_cost_basis == Decimal("10000")
+    assert collar.break_even_prices == (Decimal("100"),)
+    assert collar.max_profit == Decimal("500")
+    assert collar.max_loss == Decimal("-500")
+
+
+@pytest.mark.asyncio
+async def test_cash_secured_put_matches_hand_calculated_bounds() -> None:
+    service = build_application(AppSettings(_env_file=None)).position_analysis_service
+
+    result = await service.analyze((option_leg("SPY300118P00095000", "-1", "2"),))
+
+    assert result.net_cost_basis == Decimal("-200")
+    assert result.break_even_prices == (Decimal("93"),)
+    assert result.max_profit == Decimal("200")
+    assert result.max_profit_bounded is True
+    assert result.max_loss == Decimal("-9300")
+    assert result.max_loss_bounded is True
+
+
+@pytest.mark.asyncio
+async def test_straddle_and_strangle_match_hand_calculated_payoffs() -> None:
+    service = build_application(AppSettings(_env_file=None)).position_analysis_service
+
+    straddle = await service.analyze(
+        (
+            option_leg("SPY300118C00100000", "1", "4"),
+            option_leg("SPY300118P00100000", "1", "4"),
+        )
+    )
+    strangle = await service.analyze(
+        (
+            option_leg("SPY300118P00095000", "1", "2"),
+            option_leg("SPY300118C00105000", "1", "2"),
+        )
+    )
+
+    assert straddle.net_cost_basis == Decimal("800")
+    assert straddle.break_even_prices == (Decimal("92"), Decimal("108"))
+    assert straddle.max_profit_bounded is False
+    assert straddle.max_loss == Decimal("-800")
+    assert strangle.net_cost_basis == Decimal("400")
+    assert strangle.break_even_prices == (Decimal("91"), Decimal("109"))
+    assert strangle.max_profit_bounded is False
+    assert strangle.max_loss == Decimal("-400")
