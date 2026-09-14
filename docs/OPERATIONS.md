@@ -61,7 +61,7 @@ After a UI change, run `make web-build`; this replaces the packaged assets under
 Restart the HTTP API after changing provider configuration. The browser needs
 no Schwab-specific setting and must never receive a client secret or token.
 
-### Watchlist state
+### Local workspace state
 
 Watchlist changes persist at
 `~/Library/Application Support/options-analysis-mcp/state.sqlite3`. Set
@@ -70,6 +70,13 @@ fresh, stop the API and move that one database file to Trash; the next watchlist
 request creates a new database with `SPY`, `QQQ`, and `IWM`. Do not remove the
 application-support directory recursively because it may also contain the
 Schwab token file.
+
+Named strategy drafts use a separate table in the same state database. Saving
+the same name, ignoring case, updates that draft while preserving its ID and
+creation time. A saved definition contains symbols, signed quantities, entry
+prices, template identity, and the provider ID—not quote snapshots, tokens, or
+orders. Opening a draft requests current quotes from its saved provider, so it
+can fail visibly if that provider is disabled or needs reauthorization.
 
 ### Strategy analysis
 

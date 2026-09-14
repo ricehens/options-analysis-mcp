@@ -38,10 +38,12 @@ set a restrictive same-origin content security policy, deny framing, disable
 MIME sniffing, and omit referrer data. These headers reduce browser attack
 surface but do not turn the local single-user service into a safe hosted app.
 
-Watchlist symbols are stored in a separate SQLite state file outside the source
-repository. Its parent directory is created user-only and its file mode is
-forced to user read/write on POSIX systems. The state database contains no
-Schwab tokens and must never become a general credential store.
+Watchlist symbols and named strategy definitions are stored in a SQLite state
+file outside the source repository. Its parent directory is created user-only
+and its file mode is forced to user read/write on POSIX systems. Saved drafts
+contain symbols, quantities, entry prices, and provider identity, so treat the
+file as private financial research data. It contains no Schwab tokens and must
+never become a general credential store.
 
 ## Reporting a vulnerability
 

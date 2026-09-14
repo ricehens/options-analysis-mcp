@@ -11,10 +11,15 @@ from options_analysis.services import (
     PositionAnalysisService,
     ProviderService,
     StrategyCatalogService,
+    StrategyDraftService,
     WatchlistService,
 )
 from options_analysis.services.cache import TTLCache
-from options_analysis.storage import SQLiteWatchlistRepository, default_state_db_path
+from options_analysis.storage import (
+    SQLiteStrategyDraftRepository,
+    SQLiteWatchlistRepository,
+    default_state_db_path,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +31,7 @@ class Application:
     position_analysis_service: PositionAnalysisService
     watchlist_service: WatchlistService
     strategy_catalog_service: StrategyCatalogService
+    strategy_draft_service: StrategyDraftService
 
 
 def build_application(settings: AppSettings | None = None) -> Application:
@@ -47,16 +53,16 @@ def build_application(settings: AppSettings | None = None) -> Application:
             max_entries=resolved_settings.snapshot_cache_max_entries,
         ),
     )
+    state_db_path = resolved_settings.state_db_path or default_state_db_path()
     return Application(
         settings=resolved_settings,
         registry=registry,
         provider_service=ProviderService(registry),
         market_data_service=market_data,
         position_analysis_service=PositionAnalysisService(market_data),
-        watchlist_service=WatchlistService(
-            SQLiteWatchlistRepository(
-                resolved_settings.state_db_path or default_state_db_path()
-            )
-        ),
+        watchlist_service=WatchlistService(SQLiteWatchlistRepository(state_db_path)),
         strategy_catalog_service=StrategyCatalogService(),
+        strategy_draft_service=StrategyDraftService(
+            SQLiteStrategyDraftRepository(state_db_path)
+        ),
     )

@@ -5,6 +5,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import FastAPI, Query, Request
 from fastapi.encoders import jsonable_encoder
@@ -18,7 +19,7 @@ from starlette.responses import Response
 from options_analysis import __version__
 from options_analysis.bootstrap import Application, build_application
 from options_analysis.config import AppSettings
-from options_analysis.domain import PutCall
+from options_analysis.domain import PutCall, StrategyDraftDefinition
 from options_analysis.errors import ErrorCategory, ErrorDetail, error_detail
 from options_analysis.providers import OptionChainQuery
 from options_analysis.providers.errors import ProviderError
@@ -31,6 +32,8 @@ from options_analysis.web.models import (
     ServerInfo,
     ServerInfoResult,
     StrategyCatalogResult,
+    StrategyDraftListResult,
+    StrategyDraftResult,
     WatchlistResult,
     WorkspaceResult,
     WorkspaceSnapshot,
@@ -244,6 +247,29 @@ def create_app(
     def strategies() -> StrategyCatalogResult:
         return StrategyCatalogResult(
             strategies=resolved_application.strategy_catalog_service.list_templates()
+        )
+
+    @app.get("/api/v1/strategy-drafts", response_model=StrategyDraftListResult)
+    def strategy_drafts() -> StrategyDraftListResult:
+        return StrategyDraftListResult(
+            drafts=resolved_application.strategy_draft_service.list_drafts()
+        )
+
+    @app.post("/api/v1/strategy-drafts", response_model=StrategyDraftResult)
+    def save_strategy_draft(
+        request: StrategyDraftDefinition,
+    ) -> StrategyDraftResult:
+        return StrategyDraftResult(
+            draft=resolved_application.strategy_draft_service.save(request)
+        )
+
+    @app.delete(
+        "/api/v1/strategy-drafts/{draft_id}",
+        response_model=StrategyDraftListResult,
+    )
+    def delete_strategy_draft(draft_id: UUID) -> StrategyDraftListResult:
+        return StrategyDraftListResult(
+            drafts=resolved_application.strategy_draft_service.remove(draft_id)
         )
 
     @app.post("/api/v1/analyses/positions", response_model=PositionAnalysisResult)

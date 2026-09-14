@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildTemplateDraft,
+  draftFromAnalysis,
   nextExpiration,
   requiresSecondaryExpiration,
   StrategyBuildError,
   toAnalysisRequestLegs,
+  toStrategyDraftLegs,
 } from "./strategies";
 import type {
   PutCall,
+  PositionAnalysis,
   Quote,
   StrategyTemplate,
   WorkspaceSnapshot,
@@ -103,6 +106,10 @@ describe("strategy template generation", () => {
     expect(legs[1].quote.instrument.option?.strike).toBe(100);
     expect(legs[0].entryPrice).toBe(100);
     expect(toAnalysisRequestLegs(legs).map((leg) => leg.quantity)).toEqual([100, -1]);
+    expect(toStrategyDraftLegs(legs)).toMatchObject([
+      { symbol: "SPY", provider_symbol: "SPY", quantity: 100 },
+      { quantity: -1 },
+    ]);
   });
 
   it("builds ordered vertical, butterfly, and condor legs", () => {
@@ -198,6 +205,26 @@ describe("strategy template generation", () => {
     expect(
       nextExpiration(["2030-03-15", "2030-01-18", "2030-02-15"], "2030-01-18"),
     ).toBe("2030-02-15");
+  });
+
+  it("restores editable legs from enriched saved-draft analysis", () => {
+    const quote = option("put", 95);
+    const analysis = {
+      positions: [
+        {
+          instrument: quote.instrument,
+          quantity: -2,
+          average_open_price: 1.75,
+          current_quote: quote,
+          market_value: -400,
+          cost_basis: -350,
+        },
+      ],
+    } as PositionAnalysis;
+
+    expect(draftFromAnalysis(analysis)).toEqual([
+      { quote, action: "sell", quantity: 2, entryPrice: 1.75 },
+    ]);
   });
 
   it("explains when current chain filters omit required contracts", () => {

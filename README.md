@@ -15,13 +15,14 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6F is complete. A responsive React workspace is bundled into the
+Milestone 6G is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
 and a fifteen-template strategy builder with combined Greeks, risk bounds,
 break-evens, expiration payoff, and delta-gamma scenarios. Calendar and
-diagonal workflows automatically load the next available expiration. Live
+diagonal workflows automatically load the next available expiration. Named
+strategy drafts persist locally and reopen with current provider quotes. Live
 Schwab activation remains a local step requiring your developer application.
 
 Read these documents first:
@@ -62,6 +63,8 @@ Read these documents first:
   protective puts, collars, cash-secured puts, verticals, straddles, strangles,
   butterflies, iron condors, call calendars/diagonals, and custom legs.
 - Selected/template legs have editable buy/sell, quantity, and entry price.
+- Named drafts can be saved, updated by name, reopened with fresh normalized
+  quotes, and deleted without storing quote snapshots or credentials.
 - Combined results include debit/credit, Greeks, max profit/loss, break-evens,
   expiration payoff chart, scenario table, assumptions, and warnings.
 - Provider-neutral models enforce instrument identity, timezone-aware data,
@@ -197,6 +200,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6D.md` — strategy builder and combined-analysis contract.
 - `docs/MILESTONE_6E.md` — packaged browser delivery and accessibility hardening.
 - `docs/MILESTONE_6F.md` — expanded strategy catalog and calendar workflows.
+- `docs/MILESTONE_6G.md` — persistent named strategy drafts.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

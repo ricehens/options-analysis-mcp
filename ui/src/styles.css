@@ -118,6 +118,16 @@ td.strike small { margin-top: 3px; color: var(--muted); font-size: 8px; }
 .strategy-list button > span:first-child { display: grid; gap: 2px; }
 .strategy-list button strong { font-size: 11px; font-weight: 600; }
 .strategy-list button small { color: var(--muted); font-size: 8px; text-transform: capitalize; }
+.saved-drafts { margin: 0 10px 10px; padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: #0d1614; }
+.saved-drafts .draft-heading > span:last-child { color: var(--muted); font-size: 9px; }
+.draft-save-form { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin-top: 8px; }
+.draft-save-form input { min-width: 0; height: 32px; padding: 6px 8px; color: #e7efeb; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; font-size: 10px; }
+.draft-save-form button { padding: 0 11px; border: 1px solid rgba(141, 240, 189, 0.2); border-radius: 7px; background: var(--accent-dark); color: var(--accent); cursor: pointer; font-size: 10px; }
+.saved-draft-list { max-height: 180px; margin-top: 7px; overflow-y: auto; }
+.saved-draft-row { display: grid; grid-template-columns: 1fr 24px; align-items: center; border-top: 1px solid rgba(207, 226, 216, 0.065); }
+.saved-draft-row > button:first-child { display: grid; gap: 2px; padding: 8px 2px; border: 0; background: transparent; color: #e7efeb; cursor: pointer; text-align: left; }
+.saved-draft-row strong { overflow: hidden; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.saved-draft-row small { color: var(--muted); font-size: 8px; }
 .draft-tray { margin: 0 10px 10px; padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: #0d1614; }
 .draft-heading { min-height: 25px; display: flex; align-items: center; justify-content: space-between; }
 .draft-heading button { height: 25px; background: transparent; color: var(--muted); border-color: var(--border); }
@@ -180,7 +190,7 @@ td.strike small { margin-top: 3px; color: var(--muted); font-size: 8px; }
   .filter-bar { align-items: start; flex-wrap: wrap; overflow-x: visible; }
   .chain-meta { gap: 10px; flex-direction: column; }
   .strategy-list { grid-template-columns: 1fr; }
-  .symbol-form input, .filter-bar input, .filter-bar select, .filters select, .draft-leg input, .draft-leg select { font-size: 16px; }
+  .symbol-form input, .filter-bar input, .filter-bar select, .filters select, .draft-leg input, .draft-leg select, .draft-save-form input { font-size: 16px; }
   .contract-picker { width: 34px; height: 34px; }
 }
 

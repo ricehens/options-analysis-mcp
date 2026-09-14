@@ -33,6 +33,11 @@ from options_analysis.domain.strategies import (
     StrategyOutlook,
     StrategyTemplate,
 )
+from options_analysis.domain.strategy_drafts import (
+    StrategyDraft,
+    StrategyDraftDefinition,
+    StrategyDraftLeg,
+)
 from options_analysis.domain.watchlists import WatchlistItem
 
 __all__ = [
@@ -58,6 +63,9 @@ __all__ = [
     "ScenarioPoint",
     "SettlementType",
     "StrategyAction",
+    "StrategyDraft",
+    "StrategyDraftDefinition",
+    "StrategyDraftLeg",
     "StrategyLegRole",
     "StrategyOutlook",
     "StrategyTemplate",

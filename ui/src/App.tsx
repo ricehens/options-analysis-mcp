@@ -4,10 +4,13 @@ import {
   addWatchlistSymbol,
   analyzePositions,
   ApiError,
+  deleteStrategyDraft,
   deleteWatchlistSymbol,
+  loadStrategyDrafts,
   loadWatchlist,
   loadStrategies,
   loadWorkspace,
+  saveStrategyDraft,
 } from "./api";
 import AnalysisPanel from "./AnalysisPanel";
 import {
@@ -27,11 +30,13 @@ import type {
 } from "./chain";
 import {
   buildTemplateDraft,
+  draftFromAnalysis,
   draftFromQuote,
   nextExpiration,
   requiresSecondaryExpiration,
   StrategyBuildError,
   toAnalysisRequestLegs,
+  toStrategyDraftLegs,
 } from "./strategies";
 import type { DraftLeg } from "./strategies";
 import type {
@@ -39,6 +44,7 @@ import type {
   PositionAnalysis,
   PutCall,
   Quote,
+  StrategyDraft,
   StrategyTemplate,
   WorkspaceSnapshot,
 } from "./types";
@@ -109,7 +115,12 @@ function App() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [strategyLoading, setStrategyLoading] = useState(false);
+  const [savedDrafts, setSavedDrafts] = useState<StrategyDraft[]>([]);
+  const [draftName, setDraftName] = useState("");
+  const [draftsBusy, setDraftsBusy] = useState(true);
+  const [draftsError, setDraftsError] = useState<string | null>(null);
   const strategyRequest = useRef(0);
+  const hydratedAnalysis = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -128,6 +139,22 @@ function App() {
       })
       .finally(() => {
         if (!controller.signal.aborted) setWatchlistBusy(false);
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadStrategyDrafts(controller.signal)
+      .then(setSavedDrafts)
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        setDraftsError(
+          reason instanceof Error ? reason.message : "Unable to load saved drafts.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDraftsBusy(false);
       });
     return () => controller.abort();
   }, []);
@@ -189,8 +216,13 @@ function App() {
   }, [expiration, putCall, selectedSymbol, strikeRange.from, strikeRange.to]);
 
   useEffect(() => {
-    if (!draftLegs.length || !workspace) {
+    if (!draftLegs.length) {
       setAnalysis(null);
+      setAnalysisLoading(false);
+      return;
+    }
+    if (hydratedAnalysis.current) {
+      hydratedAnalysis.current = false;
       setAnalysisLoading(false);
       return;
     }
@@ -199,7 +231,7 @@ function App() {
     setAnalysisError(null);
     analyzePositions(
       toAnalysisRequestLegs(draftLegs),
-      workspace.provider_id,
+      draftLegs[0].quote.provider_id,
       controller.signal,
     )
       .then(setAnalysis)
@@ -214,7 +246,7 @@ function App() {
         if (!controller.signal.aborted) setAnalysisLoading(false);
       });
     return () => controller.abort();
-  }, [draftLegs, workspace]);
+  }, [draftLegs]);
 
   const rows = useMemo(() => {
     const filters: ChainFilters = {
@@ -287,8 +319,10 @@ function App() {
   }
 
   function resetSymbolWorkspace() {
+    hydratedAnalysis.current = false;
     setExpiration("");
     setDraftLegs([]);
+    setDraftName("");
     setStrikeFromInput("");
     setStrikeToInput("");
     setStrikeRange({});
@@ -328,6 +362,7 @@ function App() {
     if (!contract) return;
     const symbol = contract.instrument.provider_symbol;
     setStrategyId("custom");
+    setDraftName("");
     setDraftLegs((current) =>
       current.some((leg) => leg.quote.instrument.provider_symbol === symbol)
         ? current.filter((leg) => leg.quote.instrument.provider_symbol !== symbol)
@@ -349,6 +384,7 @@ function App() {
   async function selectStrategy(template: StrategyTemplate) {
     const requestId = ++strategyRequest.current;
     setStrategyId(template.template_id);
+    setDraftName("");
     setAnalysisError(null);
     if (!workspace) return;
     setStrategyLoading(true);
@@ -386,6 +422,92 @@ function App() {
       );
     } finally {
       if (requestId === strategyRequest.current) setStrategyLoading(false);
+    }
+  }
+
+  async function saveCurrentDraft(event: FormEvent) {
+    event.preventDefault();
+    if (!draftLegs.length) {
+      setDraftsError("Add at least one position leg before saving.");
+      return;
+    }
+    const normalizedName = draftName.trim();
+    if (!normalizedName) {
+      setDraftsError("Enter a name for this strategy draft.");
+      return;
+    }
+    const first = draftLegs[0].quote;
+    const underlyingSymbol =
+      first.instrument.option?.underlying_symbol ?? first.instrument.symbol;
+    setDraftsBusy(true);
+    setDraftsError(null);
+    try {
+      const saved = await saveStrategyDraft({
+        name: normalizedName,
+        underlying_symbol: underlyingSymbol,
+        provider_id: first.provider_id,
+        strategy_template_id: strategyId || null,
+        legs: toStrategyDraftLegs(draftLegs),
+      });
+      setDraftName(saved.name);
+      setSavedDrafts((current) => [
+        saved,
+        ...current.filter((item) => item.draft_id !== saved.draft_id),
+      ]);
+    } catch (reason) {
+      setDraftsError(
+        reason instanceof Error ? reason.message : "Unable to save the draft.",
+      );
+    } finally {
+      setDraftsBusy(false);
+    }
+  }
+
+  async function loadSavedDraft(draft: StrategyDraft) {
+    strategyRequest.current += 1;
+    setDraftsBusy(true);
+    setDraftsError(null);
+    try {
+      const restoredAnalysis = await analyzePositions(
+        draft.legs.map((leg) => ({
+          symbol: leg.provider_symbol,
+          asset_type: leg.asset_type,
+          quantity: leg.quantity,
+          average_open_price: leg.average_open_price,
+        })),
+        draft.provider_id,
+      );
+      const restoredLegs = draftFromAnalysis(restoredAnalysis);
+      resetSymbolWorkspace();
+      hydratedAnalysis.current = true;
+      setSelectedSymbol(draft.underlying_symbol);
+      setStrategyId(draft.strategy_template_id ?? "custom");
+      setDraftName(draft.name);
+      setAnalysis(restoredAnalysis);
+      setDraftLegs(restoredLegs);
+    } catch (reason) {
+      setDraftsError(
+        reason instanceof Error ? reason.message : "Unable to restore the draft.",
+      );
+    } finally {
+      setDraftsBusy(false);
+    }
+  }
+
+  async function removeSavedDraft(draft: StrategyDraft) {
+    setDraftsBusy(true);
+    setDraftsError(null);
+    try {
+      setSavedDrafts(await deleteStrategyDraft(draft.draft_id));
+      if (draftName.toLocaleLowerCase() === draft.name.toLocaleLowerCase()) {
+        setDraftName("");
+      }
+    } catch (reason) {
+      setDraftsError(
+        reason instanceof Error ? reason.message : "Unable to remove the draft.",
+      );
+    } finally {
+      setDraftsBusy(false);
     }
   }
 
@@ -495,9 +617,9 @@ function App() {
           </div>
         </header>
 
-        {error || watchlistError || filterError ? (
+        {error || watchlistError || filterError || draftsError ? (
           <div className="error-banner" role="alert">
-            {error ?? watchlistError ?? filterError}
+            {error ?? watchlistError ?? filterError ?? draftsError}
           </div>
         ) : null}
 
@@ -727,6 +849,50 @@ function App() {
                 </button>
               ))}
             </div>
+            <section className="saved-drafts" aria-labelledby="saved-drafts-heading">
+              <div className="draft-heading">
+                <span className="eyebrow" id="saved-drafts-heading">
+                  Saved setups
+                </span>
+                <span>{draftsBusy ? "…" : savedDrafts.length}</span>
+              </div>
+              <form className="draft-save-form" onSubmit={saveCurrentDraft}>
+                <input
+                  aria-label="Strategy draft name"
+                  maxLength={80}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  placeholder="Name this setup"
+                  value={draftName}
+                />
+                <button
+                  disabled={draftsBusy || !draftLegs.length}
+                  type="submit"
+                >Save</button>
+              </form>
+              <div className="saved-draft-list">
+                {savedDrafts.map((draft) => (
+                  <div className="saved-draft-row" key={draft.draft_id}>
+                    <button
+                      disabled={draftsBusy}
+                      onClick={() => loadSavedDraft(draft)}
+                      type="button"
+                    >
+                      <strong>{draft.name}</strong>
+                      <small>
+                        {draft.underlying_symbol} · {draft.legs.length} legs · {draft.provider_id}
+                      </small>
+                    </button>
+                    <button
+                      aria-label={`Delete saved draft ${draft.name}`}
+                      className="leg-remove"
+                      disabled={draftsBusy}
+                      onClick={() => removeSavedDraft(draft)}
+                      type="button"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            </section>
             <div className="draft-tray">
               <div className="draft-heading">
                 <span className="eyebrow">Selected contracts</span>
@@ -735,6 +901,7 @@ function App() {
                     onClick={() => {
                       setDraftLegs([]);
                       setStrategyId("custom");
+                      setDraftName("");
                     }}
                     type="button"
                   >Clear</button>

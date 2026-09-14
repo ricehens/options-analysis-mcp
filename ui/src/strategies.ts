@@ -1,7 +1,9 @@
 import { decimal } from "./chain";
 import type {
   AnalysisRequestLeg,
+  PositionAnalysis,
   Quote,
+  StrategyDraftLeg,
   StrategyTemplate,
   WorkspaceSnapshot,
 } from "./types";
@@ -22,6 +24,34 @@ export function toAnalysisRequestLegs(legs: DraftLeg[]): AnalysisRequestLeg[] {
     quantity: leg.action === "buy" ? leg.quantity : -leg.quantity,
     average_open_price: leg.entryPrice,
   }));
+}
+
+export function toStrategyDraftLegs(legs: DraftLeg[]): StrategyDraftLeg[] {
+  return legs.map((leg) => ({
+    symbol: leg.quote.instrument.symbol,
+    provider_symbol: leg.quote.instrument.provider_symbol,
+    asset_type: leg.quote.instrument.asset_type,
+    quantity: leg.action === "buy" ? leg.quantity : -leg.quantity,
+    average_open_price: leg.entryPrice,
+  }));
+}
+
+export function draftFromAnalysis(analysis: PositionAnalysis): DraftLeg[] {
+  return analysis.positions.map((position) => {
+    const quantity = decimal(position.quantity);
+    if (quantity === null || quantity === 0 || !position.current_quote) {
+      throw new StrategyBuildError(
+        `${position.instrument.provider_symbol} could not be restored from current data.`,
+      );
+    }
+    return {
+      quote: position.current_quote,
+      action: quantity > 0 ? "buy" : "sell",
+      quantity: Math.abs(quantity),
+      entryPrice:
+        decimal(position.average_open_price) ?? entryPrice(position.current_quote),
+    };
+  });
 }
 
 function entryPrice(quote: Quote): number {

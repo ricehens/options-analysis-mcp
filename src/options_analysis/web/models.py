@@ -11,6 +11,7 @@ from options_analysis.domain import (
     PositionAnalysis,
     PositionRequestLeg,
     Quote,
+    StrategyDraft,
     StrategyTemplate,
     ValuationMode,
     WatchlistItem,
@@ -76,6 +77,16 @@ class WatchlistResult(WebModel):
 
 class StrategyCatalogResult(WebModel):
     strategies: tuple[StrategyTemplate, ...] = ()
+    error: ErrorDetail | None = None
+
+
+class StrategyDraftResult(WebModel):
+    draft: StrategyDraft | None = None
+    error: ErrorDetail | None = None
+
+
+class StrategyDraftListResult(WebModel):
+    drafts: tuple[StrategyDraft, ...] = ()
     error: ErrorDetail | None = None
 
 

@@ -4,6 +4,10 @@ import type {
   PositionAnalysisResult,
   PutCall,
   StrategyCatalogResult,
+  StrategyDraft,
+  StrategyDraftDefinition,
+  StrategyDraftListResult,
+  StrategyDraftResult,
   StrategyTemplate,
   WatchlistResult,
   WorkspaceResult,
@@ -100,6 +104,56 @@ export async function loadStrategies(signal?: AbortSignal): Promise<StrategyTemp
     );
   }
   return result.strategies;
+}
+
+export async function loadStrategyDrafts(
+  signal?: AbortSignal,
+): Promise<StrategyDraft[]> {
+  const response = await fetch("/api/v1/strategy-drafts", { signal });
+  const result = (await response.json()) as StrategyDraftListResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  return result.drafts;
+}
+
+export async function saveStrategyDraft(
+  definition: StrategyDraftDefinition,
+): Promise<StrategyDraft> {
+  const response = await fetch("/api/v1/strategy-drafts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(definition),
+  });
+  const result = (await response.json()) as StrategyDraftResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  if (!result.draft) throw new ApiError("The API returned no saved draft.");
+  return result.draft;
+}
+
+export async function deleteStrategyDraft(
+  draftId: string,
+): Promise<StrategyDraft[]> {
+  const response = await fetch(
+    `/api/v1/strategy-drafts/${encodeURIComponent(draftId)}`,
+    { method: "DELETE" },
+  );
+  const result = (await response.json()) as StrategyDraftListResult;
+  if (!response.ok || result.error) {
+    throw new ApiError(
+      result.error?.message ?? `Request failed (${response.status})`,
+      result.error?.category,
+    );
+  }
+  return result.drafts;
 }
 
 export async function analyzePositions(

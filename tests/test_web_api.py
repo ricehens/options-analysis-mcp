@@ -25,7 +25,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.6.5",
+        "version": "0.6.6",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -212,3 +212,47 @@ async def test_bundled_frontend_and_security_headers_are_served(tmp_path) -> Non
     assert root.headers["x-content-type-options"] == "nosniff"
     assert "frame-ancestors 'none'" in root.headers["content-security-policy"]
     assert info.json()["info"]["frontend_available"] is True
+
+
+@pytest.mark.asyncio
+async def test_strategy_draft_crud_is_persistent_and_name_upserts(app) -> None:  # type: ignore[no-untyped-def]
+    request = {
+        "name": "SPY collar",
+        "underlying_symbol": "SPY",
+        "provider_id": "fake",
+        "strategy_template_id": "collar",
+        "legs": [
+            {
+                "symbol": "SPY",
+                "provider_symbol": "SPY",
+                "asset_type": "etf",
+                "quantity": "100",
+                "average_open_price": "100",
+            },
+            {
+                "symbol": "SPY300118P00095000",
+                "provider_symbol": "SPY300118P00095000",
+                "asset_type": "option",
+                "quantity": "1",
+                "average_open_price": "2",
+            },
+        ],
+    }
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        empty = await client.get("/api/v1/strategy-drafts")
+        created = await client.post("/api/v1/strategy-drafts", json=request)
+        request["name"] = "spy COLLAR"
+        request["legs"][1]["quantity"] = "2"
+        updated = await client.post("/api/v1/strategy-drafts", json=request)
+        listed = await client.get("/api/v1/strategy-drafts")
+        removed = await client.delete(
+            f"/api/v1/strategy-drafts/{created.json()['draft']['draft_id']}"
+        )
+
+    assert empty.json()["drafts"] == []
+    assert updated.json()["draft"]["draft_id"] == created.json()["draft"]["draft_id"]
+    assert updated.json()["draft"]["legs"][1]["quantity"] == "2"
+    assert listed.json()["drafts"] == [updated.json()["draft"]]
+    assert removed.json()["drafts"] == []

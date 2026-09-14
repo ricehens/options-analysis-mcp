@@ -106,6 +106,38 @@ export interface StrategyCatalogResult {
   error: ErrorDetail | null;
 }
 
+export interface StrategyDraftLeg {
+  symbol: string;
+  provider_symbol: string;
+  asset_type: string;
+  quantity: DecimalValue;
+  average_open_price: DecimalValue | null;
+}
+
+export interface StrategyDraftDefinition {
+  name: string;
+  underlying_symbol: string;
+  provider_id: string;
+  strategy_template_id: string | null;
+  legs: StrategyDraftLeg[];
+}
+
+export interface StrategyDraft extends StrategyDraftDefinition {
+  draft_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StrategyDraftResult {
+  draft: StrategyDraft | null;
+  error: ErrorDetail | null;
+}
+
+export interface StrategyDraftListResult {
+  drafts: StrategyDraft[];
+  error: ErrorDetail | null;
+}
+
 export interface AnalysisRequestLeg {
   symbol: string;
   asset_type: string;
@@ -126,6 +158,7 @@ export interface PositionAnalysis {
     instrument: Instrument;
     quantity: DecimalValue;
     average_open_price: DecimalValue | null;
+    current_quote: Quote | null;
     market_value: DecimalValue | null;
     cost_basis: DecimalValue | null;
   }>;

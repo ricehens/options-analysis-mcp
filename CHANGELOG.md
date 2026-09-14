@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.6 — 2026-09-14
+
+- Added provider-neutral saved-strategy definitions and a dedicated SQLite
+  repository/service alongside, but separate from, watchlist persistence.
+- Added list, case-insensitive save/update, and delete HTTP contracts with
+  stable draft IDs and bounded validated legs.
+- Added browser controls to name, save, reopen with current provider quotes,
+  update, and delete strategy setups.
+- Added restart, idempotency, validation, HTTP, and frontend rehydration tests.
+
 ## 0.6.5 — 2026-09-14
 
 - Expanded the provider-neutral catalog from eight to fifteen templates with
