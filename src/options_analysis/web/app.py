@@ -36,6 +36,7 @@ from options_analysis.web.models import (
     StrategyCatalogResult,
     StrategyDraftListResult,
     StrategyDraftResult,
+    TechnicalIndicatorCatalogResult,
     WatchlistResult,
     WorkspaceResult,
     WorkspaceSnapshot,
@@ -261,6 +262,7 @@ def create_app(
         resolution: HistoryResolution = "1d",
         provider: str | None = None,
         end: datetime | None = None,
+        indicator: Annotated[list[str] | None, Query()] = None,
     ) -> PriceHistoryResult:
         range_end = end or datetime.now(UTC)
         query = PriceHistoryQuery(
@@ -275,8 +277,24 @@ def create_app(
             )
         )
         ordered = tuple(sorted(provider_bars, key=lambda bar: bar.start))
+        calculated = resolved_application.technical_indicator_service.calculate(
+            ordered, tuple(indicator or ())
+        )
         truncated = len(ordered) > _HISTORY_RESPONSE_LIMIT
         bars = ordered[-_HISTORY_RESPONSE_LIMIT:]
+        visible_timestamps = {bar.start for bar in bars}
+        indicators = tuple(
+            series.model_copy(
+                update={
+                    "points": tuple(
+                        point
+                        for point in series.points
+                        if point.timestamp in visible_timestamps
+                    )
+                }
+            )
+            for series in calculated
+        )
         default_provider = (
             resolved_application.settings.public_view().default_market_data_provider
         )
@@ -290,7 +308,19 @@ def create_app(
                 start=query.start,
                 end=query.end,
                 bars=bars,
+                indicators=indicators,
                 truncated=truncated,
+            )
+        )
+
+    @app.get(
+        "/api/v1/technical-indicators",
+        response_model=TechnicalIndicatorCatalogResult,
+    )
+    def technical_indicators() -> TechnicalIndicatorCatalogResult:
+        return TechnicalIndicatorCatalogResult(
+            indicators=(
+                resolved_application.technical_indicator_service.list_definitions()
             )
         )
 

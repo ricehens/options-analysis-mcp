@@ -17,6 +17,13 @@ Implement `Provider` plus only the capability protocols you advertise:
 
 There is intentionally no execution provider.
 
+Technical indicators are not provider capabilities. Adapters return canonical
+price bars; `TechnicalIndicatorService` then runs registered calculators over
+those bars. Adding SMA, EMA, Bollinger Bands, RSI, or another derived indicator
+must not require a Schwab, replay, or future-provider adapter change. A source's
+proprietary signal may instead be preserved as a namespaced extension or modeled
+as a separately documented capability when it cannot be reproduced locally.
+
 ## Registration
 
 Expose a zero-argument factory through the entry-point group:

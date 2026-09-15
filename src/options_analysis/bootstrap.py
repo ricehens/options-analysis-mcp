@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from options_analysis.analytics.indicators import SimpleMovingAverageIndicator
 from options_analysis.config import AppSettings
 from options_analysis.providers import ProviderRegistry, ProviderRouter
 from options_analysis.providers.fake import FakeProvider
@@ -13,6 +14,8 @@ from options_analysis.services import (
     ProviderService,
     StrategyCatalogService,
     StrategyDraftService,
+    TechnicalIndicatorRegistry,
+    TechnicalIndicatorService,
     WatchlistService,
 )
 from options_analysis.services.cache import TTLCache
@@ -33,6 +36,7 @@ class Application:
     watchlist_service: WatchlistService
     strategy_catalog_service: StrategyCatalogService
     strategy_draft_service: StrategyDraftService
+    technical_indicator_service: TechnicalIndicatorService
 
 
 def build_application(settings: AppSettings | None = None) -> Application:
@@ -57,6 +61,8 @@ def build_application(settings: AppSettings | None = None) -> Application:
         ),
     )
     state_db_path = resolved_settings.state_db_path or default_state_db_path()
+    indicator_registry = TechnicalIndicatorRegistry()
+    indicator_registry.register(SimpleMovingAverageIndicator())
     return Application(
         settings=resolved_settings,
         registry=registry,
@@ -68,4 +74,5 @@ def build_application(settings: AppSettings | None = None) -> Application:
         strategy_draft_service=StrategyDraftService(
             SQLiteStrategyDraftRepository(state_db_path)
         ),
+        technical_indicator_service=TechnicalIndicatorService(indicator_registry),
     )

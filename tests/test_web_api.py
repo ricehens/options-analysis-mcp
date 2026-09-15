@@ -25,7 +25,7 @@ async def test_info_and_provider_endpoints_are_read_only(app) -> None:  # type: 
     assert info.status_code == 200
     assert info.json()["info"] == {
         "name": "options-analysis",
-        "version": "0.7.1",
+        "version": "0.8.0",
         "environment": "development",
         "read_only": True,
         "default_market_data_provider": "fake",
@@ -126,6 +126,52 @@ async def test_price_history_rejects_unsupported_resolution(app) -> None:  # typ
 
     assert response.status_code == 422
     assert response.json()["error"]["field_paths"] == ["resolution"]
+
+
+@pytest.mark.asyncio
+async def test_price_history_calculates_requested_moving_average_overlays(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/price-history/SPY",
+            params=[
+                ("resolution", "1d"),
+                ("end", "2026-09-14T12:00:00Z"),
+                ("indicator", "sma:20"),
+                ("indicator", "sma:50"),
+            ],
+        )
+        catalog = await client.get("/api/v1/technical-indicators")
+
+    assert response.status_code == 200
+    indicators = response.json()["history"]["indicators"]
+    assert [item["spec"] for item in indicators] == ["sma:20", "sma:50"]
+    assert [item["chart_role"] for item in indicators] == [
+        "price_overlay",
+        "price_overlay",
+    ]
+    assert [len(item["points"]) for item in indicators] == [233, 203]
+    assert indicators[0]["source_fields"] == ["close"]
+    assert catalog.status_code == 200
+    assert catalog.json()["indicators"][0]["example_specs"] == [
+        "sma:20",
+        "sma:50",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_price_history_rejects_invalid_indicator_spec(app) -> None:  # type: ignore[no-untyped-def]
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/price-history/SPY", params={"indicator": "sma:1"}
+        )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["category"] == "validation"
+    assert "between 2 and 500" in response.json()["error"]["message"]
 
 
 @pytest.mark.asyncio

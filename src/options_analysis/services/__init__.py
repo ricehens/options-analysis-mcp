@@ -8,6 +8,11 @@ from options_analysis.services.strategy_drafts import (
     StrategyDraftRepository,
     StrategyDraftService,
 )
+from options_analysis.services.technical import (
+    TechnicalIndicatorCalculator,
+    TechnicalIndicatorRegistry,
+    TechnicalIndicatorService,
+)
 from options_analysis.services.watchlists import WatchlistRepository, WatchlistService
 
 __all__ = [
@@ -17,6 +22,9 @@ __all__ = [
     "StrategyCatalogService",
     "StrategyDraftRepository",
     "StrategyDraftService",
+    "TechnicalIndicatorCalculator",
+    "TechnicalIndicatorRegistry",
+    "TechnicalIndicatorService",
     "WatchlistRepository",
     "WatchlistService",
 ]

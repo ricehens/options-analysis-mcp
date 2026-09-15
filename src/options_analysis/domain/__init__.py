@@ -38,6 +38,13 @@ from options_analysis.domain.strategy_drafts import (
     StrategyDraftDefinition,
     StrategyDraftLeg,
 )
+from options_analysis.domain.technical import (
+    IndicatorChartRole,
+    IndicatorValueUnit,
+    TechnicalIndicatorDefinition,
+    TechnicalIndicatorPoint,
+    TechnicalIndicatorSeries,
+)
 from options_analysis.domain.watchlists import WatchlistItem
 
 __all__ = [
@@ -47,6 +54,8 @@ __all__ = [
     "ExerciseStyle",
     "FieldProvenance",
     "GreekExposure",
+    "IndicatorChartRole",
+    "IndicatorValueUnit",
     "Instrument",
     "LongShort",
     "OptionChain",
@@ -69,6 +78,9 @@ __all__ = [
     "StrategyLegRole",
     "StrategyOutlook",
     "StrategyTemplate",
+    "TechnicalIndicatorDefinition",
+    "TechnicalIndicatorPoint",
+    "TechnicalIndicatorSeries",
     "ValuationMode",
     "WatchlistItem",
 ]

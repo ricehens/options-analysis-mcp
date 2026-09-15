@@ -5,7 +5,14 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from options_analysis.config import EnvironmentName
-from options_analysis.domain import OptionChain, PositionAnalysis, PriceBar, Quote
+from options_analysis.domain import (
+    OptionChain,
+    PositionAnalysis,
+    PriceBar,
+    Quote,
+    TechnicalIndicatorDefinition,
+    TechnicalIndicatorSeries,
+)
 from options_analysis.errors import ErrorDetail
 
 
@@ -83,6 +90,11 @@ class OptionQuoteListResult(MCPResult):
 
 class PriceHistoryResult(MCPResult):
     bars: tuple[PriceBar, ...] = ()
+    indicators: tuple[TechnicalIndicatorSeries, ...] = ()
+
+
+class TechnicalIndicatorListResult(MCPResult):
+    indicators: tuple[TechnicalIndicatorDefinition, ...] = ()
 
 
 class PositionAnalysisResult(MCPResult):

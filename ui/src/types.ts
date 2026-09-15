@@ -99,6 +99,27 @@ export interface PriceBar {
   volume: number | null;
 }
 
+export type IndicatorChartRole =
+  | "price_overlay"
+  | "lower_panel"
+  | "event_markers";
+
+export interface TechnicalIndicatorPoint {
+  timestamp: string;
+  value: DecimalValue;
+}
+
+export interface TechnicalIndicatorSeries {
+  indicator_id: string;
+  spec: string;
+  display_name: string;
+  chart_role: IndicatorChartRole;
+  value_unit: "price" | "percent" | "unitless";
+  parameters: Record<string, string | number | boolean | null>;
+  source_fields: string[];
+  points: TechnicalIndicatorPoint[];
+}
+
 export interface PriceHistorySnapshot {
   provider_id: string;
   symbol: string;
@@ -106,6 +127,7 @@ export interface PriceHistorySnapshot {
   start: string;
   end: string;
   bars: PriceBar[];
+  indicators: TechnicalIndicatorSeries[];
   truncated: boolean;
 }
 

@@ -67,12 +67,18 @@ export async function loadWorkspace(
 export async function loadPriceHistory(
   symbol: string,
   resolution: HistoryResolution,
-  signal?: AbortSignal,
+  options: {
+    indicators?: readonly string[];
+    signal?: AbortSignal;
+  } = {},
 ): Promise<PriceHistorySnapshot> {
   const params = new URLSearchParams({ resolution });
+  for (const indicator of options.indicators ?? []) {
+    params.append("indicator", indicator);
+  }
   const response = await fetch(
     `/api/v1/price-history/${encodeURIComponent(symbol)}?${params}`,
-    { signal },
+    { signal: options.signal },
   );
   const result = (await response.json()) as PriceHistoryResult;
   if (!response.ok || result.error) {

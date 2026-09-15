@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0 — 2026-09-14
+
+- Added provider-neutral technical-indicator definitions, series, calculator
+  protocol, registry, and bounded execution service.
+- Added exact Decimal-based simple moving averages and discoverable HTTP/MCP
+  catalog contracts, with optional indicator output on price-history requests.
+- Added independently selectable SMA 20 and SMA 50 overlays to every underlying
+  chart resolution, with warm-up data preserved before visible-bar truncation.
+- Reserved chart roles and units for later price overlays, lower panels, and
+  event markers without adding indicator logic to provider adapters.
+
 ## 0.7.1 — 2026-09-14
 
 - Added keyboard-operable system, light, and dark appearance controls with an

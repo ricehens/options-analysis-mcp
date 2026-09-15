@@ -23,6 +23,7 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
             "options_get_price_history",
             "options_get_underlying_quote",
             "options_list_providers",
+            "options_list_technical_indicators",
             "options_provider_auth_status",
             "options_server_info",
         }
@@ -39,6 +40,15 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert providers.structured_content is not None
         assert providers.structured_content["providers"][0]["provider_id"] == "fake"
         assert providers.structured_content["defaults"]["market_data"] == "fake"
+
+        indicators = await client.call_tool("options_list_technical_indicators", {})
+        assert indicators.is_error is False
+        assert indicators.structured_content is not None
+        assert indicators.structured_content["indicators"][0]["indicator_id"] == "sma"
+        assert indicators.structured_content["indicators"][0]["example_specs"] == [
+            "sma:20",
+            "sma:50",
+        ]
 
         auth = await client.call_tool(
             "options_provider_auth_status", {"provider": "fake"}
@@ -84,6 +94,7 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
                 "symbol": "SPY",
                 "start": "2026-01-01T00:00:00Z",
                 "end": "2026-01-03T00:00:00Z",
+                "indicators": ["sma:2"],
             },
         )
         assert history.is_error is False
@@ -92,6 +103,18 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert len(history_bars) == 2
         assert history_bars[0]["start"] < history_bars[1]["start"]
         assert history_bars[-1]["close"] == "100.000"
+        history_indicators = history.structured_content["indicators"]
+        assert len(history_indicators) == 1
+        assert history_indicators[0]["indicator_id"] == "sma"
+        assert history_indicators[0]["spec"] == "sma:2"
+        assert history_indicators[0]["display_name"] == "SMA 2"
+        assert history_indicators[0]["chart_role"] == "price_overlay"
+        assert history_indicators[0]["points"] == [
+            {
+                "timestamp": history_bars[-1]["start"],
+                "value": "99.9775",
+            }
+        ]
 
         analysis = await client.call_tool(
             "options_analyze_positions",
@@ -151,6 +174,7 @@ async def test_foundation_tools_over_stdio_subprocess() -> None:
             "options_get_price_history",
             "options_get_underlying_quote",
             "options_list_providers",
+            "options_list_technical_indicators",
             "options_provider_auth_status",
             "options_server_info",
         }

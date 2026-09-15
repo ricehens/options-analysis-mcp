@@ -1,7 +1,9 @@
-import { useId, useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 
 import {
+  buildIndicatorPath,
   buildPriceChart,
+  DEFAULT_PRICE_INDICATORS,
   HISTORY_VIEWS,
   PRICE_CHART_BOX,
   priceChange,
@@ -46,8 +48,50 @@ export default function PriceHistoryChart({
 }: PriceHistoryChartProps) {
   const titleId = useId();
   const descriptionId = useId();
+  const [visibleIndicators, setVisibleIndicators] = useState<Set<string>>(
+    () => new Set(DEFAULT_PRICE_INDICATORS.map((indicator) => indicator.spec)),
+  );
   const bars = history?.bars ?? [];
-  const geometry = useMemo(() => buildPriceChart(bars), [bars]);
+  const indicators = history?.indicators ?? [];
+  const geometry = useMemo(
+    () =>
+      buildPriceChart(
+        bars,
+        indicators.flatMap((indicator) => {
+          if (
+            indicator.chart_role !== "price_overlay" ||
+            !visibleIndicators.has(indicator.spec)
+          ) {
+            return [];
+          }
+          return indicator.points.map((point) => point.value);
+        }),
+      ),
+    [bars, indicators, visibleIndicators],
+  );
+  const overlayLines = useMemo(() => {
+    if (!geometry) return [];
+    return indicators.flatMap((indicator) => {
+      if (
+        indicator.chart_role !== "price_overlay" ||
+        !visibleIndicators.has(indicator.spec)
+      ) {
+        return [];
+      }
+      const path = buildIndicatorPath(
+        indicator.points,
+        bars,
+        geometry.minimum,
+        geometry.maximum,
+      );
+      if (!path) return [];
+      const styleIndex =
+        DEFAULT_PRICE_INDICATORS.find(
+          (candidate) => candidate.spec === indicator.spec,
+        )?.styleIndex ?? 1;
+      return [{ ...indicator, path, styleIndex }];
+    });
+  }, [bars, geometry, indicators, visibleIndicators]);
   const change = priceChange(bars);
   const last = geometry?.points.at(-1);
   const changeDirection = !change
@@ -59,6 +103,15 @@ export default function PriceHistoryChart({
         : "neutral";
   const firstTimestamp = timestamp(bars[0]?.start, resolution);
   const lastTimestamp = timestamp(bars.at(-1)?.start, resolution);
+
+  function toggleIndicator(spec: string) {
+    setVisibleIndicators((current) => {
+      const next = new Set(current);
+      if (next.has(spec)) next.delete(spec);
+      else next.add(spec);
+      return next;
+    });
+  }
 
   return (
     <section aria-busy={loading} className="panel price-history-panel">
@@ -80,19 +133,45 @@ export default function PriceHistoryChart({
             ) : null}
           </div>
         </div>
-        <div aria-label="Price interval" className="history-tabs" role="group">
-          {HISTORY_VIEWS.map((view) => (
-            <button
-              aria-label={view.description}
-              aria-pressed={resolution === view.resolution}
-              className={resolution === view.resolution ? "selected" : ""}
-              key={view.resolution}
-              onClick={() => onResolutionChange(view.resolution)}
-              type="button"
-            >
-              {view.label}
-            </button>
-          ))}
+        <div className="history-controls">
+          <div aria-label="Price interval" className="history-tabs" role="group">
+            {HISTORY_VIEWS.map((view) => (
+              <button
+                aria-label={view.description}
+                aria-pressed={resolution === view.resolution}
+                className={resolution === view.resolution ? "selected" : ""}
+                key={view.resolution}
+                onClick={() => onResolutionChange(view.resolution)}
+                type="button"
+              >
+                {view.label}
+              </button>
+            ))}
+          </div>
+          <div
+            aria-label="Moving average overlays"
+            className="indicator-toggles"
+            role="group"
+          >
+            {DEFAULT_PRICE_INDICATORS.map((indicator) => (
+              <button
+                aria-pressed={visibleIndicators.has(indicator.spec)}
+                className={
+                  visibleIndicators.has(indicator.spec) ? "selected" : ""
+                }
+                key={indicator.spec}
+                onClick={() => toggleIndicator(indicator.spec)}
+                title={`${indicator.label}, based on ${resolution} closing bars`}
+                type="button"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`indicator-swatch indicator-${indicator.styleIndex}`}
+                />
+                {indicator.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -115,6 +194,9 @@ export default function PriceHistoryChart({
             <desc id={descriptionId}>
               {bars.length} {resolution} price bars from {firstTimestamp} through {lastTimestamp}.
               {change ? ` Net change ${dollars(change.amount)}.` : ""}
+              {overlayLines.length
+                ? ` Overlays: ${overlayLines.map((line) => line.display_name).join(", ")}.`
+                : ""}
             </desc>
             <defs>
               <linearGradient id="price-history-area" x1="0" x2="0" y1="0" y2="1">
@@ -142,6 +224,13 @@ export default function PriceHistoryChart({
               </g>
             ))}
             <path className="history-area" d={geometry.areaPath} />
+            {overlayLines.map((line) => (
+              <path
+                className={`history-indicator indicator-${line.styleIndex}`}
+                d={line.path}
+                key={line.spec}
+              />
+            ))}
             <path className="history-line" d={geometry.linePath} />
             {last ? (
               <circle

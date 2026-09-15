@@ -14,6 +14,8 @@ from options_analysis.domain import (
     Quote,
     StrategyDraft,
     StrategyTemplate,
+    TechnicalIndicatorDefinition,
+    TechnicalIndicatorSeries,
     ValuationMode,
     WatchlistItem,
 )
@@ -74,11 +76,17 @@ class PriceHistorySnapshot(WebModel):
     start: datetime
     end: datetime
     bars: tuple[PriceBar, ...] = Field(max_length=500)
+    indicators: tuple[TechnicalIndicatorSeries, ...] = Field(default=(), max_length=8)
     truncated: bool = False
 
 
 class PriceHistoryResult(WebModel):
     history: PriceHistorySnapshot | None = None
+    error: ErrorDetail | None = None
+
+
+class TechnicalIndicatorCatalogResult(WebModel):
+    indicators: tuple[TechnicalIndicatorDefinition, ...] = ()
     error: ErrorDetail | None = None
 
 

@@ -2,8 +2,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import PriceHistoryChart from "./PriceHistoryChart";
-import { buildPriceChart, HISTORY_VIEWS, PRICE_CHART_BOX, priceChange } from "./history";
-import type { PriceBar, PriceHistorySnapshot } from "./types";
+import {
+  buildIndicatorPath,
+  buildPriceChart,
+  DEFAULT_PRICE_INDICATORS,
+  HISTORY_VIEWS,
+  PRICE_CHART_BOX,
+  priceChange,
+} from "./history";
+import type {
+  PriceBar,
+  PriceHistorySnapshot,
+  TechnicalIndicatorSeries,
+} from "./types";
 
 const instrument = {
   asset_type: "equity",
@@ -28,6 +39,19 @@ function bar(index: number, close: number): PriceBar {
 }
 
 const bars = [bar(0, 100), bar(1, 105), bar(2, 102)];
+const sma20: TechnicalIndicatorSeries = {
+  indicator_id: "sma",
+  spec: "sma:20",
+  display_name: "SMA 20",
+  chart_role: "price_overlay",
+  value_unit: "price",
+  parameters: { window: 20 },
+  source_fields: ["close"],
+  points: bars.map((item, index) => ({
+    timestamp: item.start,
+    value: [99, 101, 103][index],
+  })),
+};
 
 describe("price history chart", () => {
   it("provides all requested intervals and their bounded context", () => {
@@ -44,6 +68,10 @@ describe("price history chart", () => {
       "Daily bars, one year",
       "Weekly bars, five years",
       "Monthly bars, twenty years",
+    ]);
+    expect(DEFAULT_PRICE_INDICATORS.map((indicator) => indicator.spec)).toEqual([
+      "sma:20",
+      "sma:50",
     ]);
   });
 
@@ -68,6 +96,20 @@ describe("price history chart", () => {
     expect(priceChange(bars)).toEqual({ amount: 2, percent: 0.02 });
   });
 
+  it("aligns a generic indicator series to bar timestamps", () => {
+    const chart = buildPriceChart(bars, sma20.points.map((point) => point.value));
+    const path = buildIndicatorPath(
+      sma20.points,
+      bars,
+      chart?.minimum ?? 0,
+      chart?.maximum ?? 1,
+    );
+
+    expect(path).toMatch(/^M /);
+    expect(path.match(/ L /g)).toHaveLength(2);
+    expect(buildIndicatorPath([], bars, 90, 110)).toBe("");
+  });
+
   it("renders a labelled chart and pressed interval control", () => {
     const history: PriceHistorySnapshot = {
       provider_id: "fake",
@@ -76,6 +118,7 @@ describe("price history chart", () => {
       start: bars[0].start,
       end: bars.at(-1)?.end ?? bars[0].end,
       bars,
+      indicators: [sma20],
       truncated: false,
     };
     const markup = renderToStaticMarkup(
@@ -94,5 +137,9 @@ describe("price history chart", () => {
     expect(markup).toContain("aria-label=\"Daily bars, one year\"");
     expect(markup).toContain("aria-pressed=\"true\"");
     expect(markup).toContain("+$2.00 (+2.00%)");
+    expect(markup).toContain("Moving average overlays");
+    expect(markup).toContain("SMA 20");
+    expect(markup).toContain("history-indicator indicator-1");
+    expect(markup).toContain("Overlays: SMA 20");
   });
 });

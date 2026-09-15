@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6L is complete. A responsive React workspace is bundled into the
+Milestone 6M is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -30,7 +30,10 @@ can load validated canonical quote, chain, and history bundles into the same
 MCP, HTTP, UI, and analytics paths. The interface now follows system appearance
 by default or persists an explicit light/dark choice, with semantic color tokens
 across charts, tables, warnings, and controls. Live Schwab activation remains a
-local step requiring your developer application.
+local step requiring your developer application. The underlying chart now
+requests and renders independent SMA 20 and SMA 50 overlays. Indicator
+calculation, discovery, and result models are provider-neutral, so future
+technical signals reuse normalized bars instead of changing source adapters.
 
 Read these documents first:
 
@@ -51,7 +54,9 @@ Read these documents first:
   its default is 40 contracts and a 45-day Schwab request window.
 - `options_get_option_quotes` retrieves 1–100 explicitly selected contracts.
 - `options_get_price_history` retrieves underlying bars, not historical option
-  chains.
+  chains, and can calculate optional registered technical-indicator series.
+- `options_list_technical_indicators` describes available indicators and their
+  parameter syntax without coupling an MCP client to built-in implementations.
 - `options_analyze_positions` analyzes 1–100 signed equity, ETF, or option legs.
   Positive quantity is long and negative quantity is short.
 - The fake provider supplies deterministic quotes, expirations, chains, selected
@@ -62,7 +67,11 @@ Read these documents first:
 - The production browser workspace and HTTP API run together on
   `127.0.0.1:8000`; OpenAPI remains available at `/api/docs`.
 - A bounded provider-neutral price-history endpoint powers an underlying chart
-  with 1-minute, 5-minute, daily, weekly, and monthly interval tabs.
+  with 1-minute, 5-minute, daily, weekly, and monthly interval tabs, plus
+  independently selectable SMA 20 and SMA 50 price overlays.
+- A discoverable technical-indicator registry operates after provider
+  normalization; the HTTP catalog is available at
+  `/api/v1/technical-indicators`.
 - Vite runs separately on `127.0.0.1:5173` only for frontend development and
   proxies `/api` to the local API.
 - Watchlist add/remove changes persist in a private local SQLite database.
@@ -240,6 +249,8 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6J.md` — underlying price history API and responsive chart.
 - `docs/MILESTONE_6K.md` — validated local snapshot/replay provider.
 - `docs/MILESTONE_6L.md` — persistent system/light/dark appearance themes.
+- `docs/MILESTONE_6M.md` — extensible technical indicators and moving-average
+  chart overlays.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

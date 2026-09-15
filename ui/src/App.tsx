@@ -24,6 +24,7 @@ import {
   sortChainRows,
   spreadPercent,
 } from "./chain";
+import { DEFAULT_PRICE_INDICATORS } from "./history";
 import type {
   ChainFilters,
   MoneynessRange,
@@ -271,7 +272,10 @@ function App() {
     setHistoryLoading(true);
     setHistoryError(null);
     setPriceHistory(null);
-    loadPriceHistory(selectedSymbol, historyResolution, controller.signal)
+    loadPriceHistory(selectedSymbol, historyResolution, {
+      indicators: DEFAULT_PRICE_INDICATORS.map((indicator) => indicator.spec),
+      signal: controller.signal,
+    })
       .then(setPriceHistory)
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;

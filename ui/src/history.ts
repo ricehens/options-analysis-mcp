@@ -1,5 +1,15 @@
 import { decimal } from "./chain";
-import type { HistoryResolution, PriceBar } from "./types";
+import type {
+  DecimalValue,
+  HistoryResolution,
+  PriceBar,
+  TechnicalIndicatorPoint,
+} from "./types";
+
+export const DEFAULT_PRICE_INDICATORS = [
+  { spec: "sma:20", label: "SMA 20", styleIndex: 1 },
+  { spec: "sma:50", label: "SMA 50", styleIndex: 2 },
+] as const;
 
 export const HISTORY_VIEWS: ReadonlyArray<{
   resolution: HistoryResolution;
@@ -42,7 +52,10 @@ function rounded(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-export function buildPriceChart(bars: PriceBar[]): PriceChartGeometry | null {
+export function buildPriceChart(
+  bars: PriceBar[],
+  overlayValues: DecimalValue[] = [],
+): PriceChartGeometry | null {
   const usable = bars.flatMap((bar) => {
     const close = decimal(bar.close);
     const low = decimal(bar.low);
@@ -55,6 +68,14 @@ export function buildPriceChart(bars: PriceBar[]): PriceChartGeometry | null {
 
   let minimum = Math.min(...usable.map((point) => point.low));
   let maximum = Math.max(...usable.map((point) => point.high));
+  const overlayNumbers = overlayValues.flatMap((value) => {
+    const parsed = decimal(value);
+    return parsed === null ? [] : [parsed];
+  });
+  if (overlayNumbers.length) {
+    minimum = Math.min(minimum, ...overlayNumbers);
+    maximum = Math.max(maximum, ...overlayNumbers);
+  }
   if (maximum === minimum) {
     const padding = Math.max(Math.abs(maximum) * 0.005, 0.5);
     minimum -= padding;
@@ -89,6 +110,40 @@ export function buildPriceChart(bars: PriceBar[]): PriceChartGeometry | null {
   );
 
   return { points, linePath, areaPath, minimum, maximum, ticks };
+}
+
+export function buildIndicatorPath(
+  points: TechnicalIndicatorPoint[],
+  bars: PriceBar[],
+  minimum: number,
+  maximum: number,
+): string {
+  if (maximum <= minimum || !bars.length) return "";
+  const indexes = new Map(
+    bars.map((bar, index) => [Date.parse(bar.start), index] as const),
+  );
+  const horizontalSpan = PRICE_CHART_BOX.right - PRICE_CHART_BOX.left;
+  const verticalSpan = PRICE_CHART_BOX.bottom - PRICE_CHART_BOX.top;
+  return points
+    .flatMap((point) => {
+      const index = indexes.get(Date.parse(point.timestamp));
+      const value = decimal(point.value);
+      if (index === undefined || value === null) return [];
+      return [
+        {
+          x: rounded(
+            PRICE_CHART_BOX.left +
+              (horizontalSpan * index) / Math.max(bars.length - 1, 1),
+          ),
+          y: rounded(
+            PRICE_CHART_BOX.top +
+              ((maximum - value) / (maximum - minimum)) * verticalSpan,
+          ),
+        },
+      ];
+    })
+    .map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`)
+    .join(" ");
 }
 
 export function priceChange(bars: PriceBar[]): {

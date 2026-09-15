@@ -40,6 +40,21 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-055 | done | Milestone 6L: persistent light, dark, and system-selected themes with accessible semantic color tokens | UI-054 | 30 frontend tests, contrast/token checks, pre-paint initializer, production build |
 | UI-055A | blocked | Owner visual confirmation of light/dark/system modes at desktop and narrow widths | UI-055, working browser-control connection or owner inspection | Screenshots or inspection notes; functional milestone is complete |
 | UI-056 | backlog | Evaluate optional additional palettes/accent customization after using light/dark modes | UI-055A | Owner-selected palette and contrast specification |
+| UI-057 | done | Milestone 6M: provider-neutral SMA 20/50 overlays with independent chart controls | UI-054 | HTTP/MCP calculation contracts, UI rendering tests, production build |
+
+## Technical indicators and signals
+
+These remain separate from provider integration: calculators consume canonical
+bars after normalization. Stable chart-role metadata determines whether a
+future series belongs over price, in a lower panel, or as event markers.
+
+| ID | Status | Work item | Depends on | Completion evidence |
+| --- | --- | --- | --- | --- |
+| TECH-010 | done | Add indicator domain models, calculator protocol, discovery registry, bounded execution service, and Decimal SMA implementation | UI-054 | Exact arithmetic, ordering, validation, discovery, HTTP, and MCP tests |
+| TECH-020 | backlog | Add exponential moving average and Bollinger Bands as price overlays | TECH-010 | Hand-calculated fixtures and generic-renderer coverage |
+| TECH-030 | backlog | Add lower-panel layout and RSI, then MACD with independently scaled axes | TECH-010 | Exact fixtures, responsive/accessibility checks, no provider changes |
+| TECH-040 | backlog | Replace curated overlay controls with catalog-driven indicator selection and bounded parameter editing | TECH-020, TECH-030 | Invalid-parameter UX and persisted chart preference tests |
+| TECH-050 | backlog | Define event-marker/signal semantics, provenance, confidence, and non-advisory labels before adding crossover signals | TECH-020 | Design record and look-ahead-free deterministic tests |
 
 ## Schwab activation
 

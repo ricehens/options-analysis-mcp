@@ -4,13 +4,16 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6L persistent appearance themes are complete on
-`codex/milestone-6l`. The browser follows system appearance by default or saves
-an explicit light/dark override. Semantic color tokens cover the entire
-workspace, a same-origin initializer applies stored choices before mount, and
-automated contrast/token checks protect the palette boundary. Owner visual
-confirmation remains tracked separately because browser control could not
-attach in this session.
+Milestone 6M extensible technical indicators and moving-average overlays are
+complete on `codex/milestone-6m`. The browser requests SMA 20 and SMA 50 for
+each underlying-history resolution and lets the user show or hide either
+overlay. Pure calculators run over canonical bars behind a bounded discovery
+registry and are exposed consistently through HTTP and MCP. Provider adapters
+remain unchanged.
+
+Milestone 6L previously added persistent system/light/dark appearance themes.
+Owner visual confirmation remains tracked separately because browser control
+could not attach in that session.
 
 Milestone 6K also added the credential-free `replay` provider for strict,
 versioned, size-bounded canonical quote, chain, and history bundles.
@@ -50,6 +53,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6J — Underlying price charts and interval selection
 - [x] Milestone 6K — Validated canonical snapshot/replay provider
 - [x] Milestone 6L — Persistent light/dark/system visual themes
+- [x] Milestone 6M — Extensible indicators and SMA 20/50 chart overlays
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -59,7 +63,10 @@ milestone; do not rely on chat history as the backlog.
 - `GET /api/v1/workspaces/{symbol}` combines the normalized quote, expiration
   list, and bounded filtered option chain.
 - `GET /api/v1/price-history/{symbol}` returns an ordered, maximum-500-bar
-  underlying series at one of five bounded resolutions.
+  underlying series at one of five bounded resolutions and accepts up to eight
+  repeated `indicator` specifications.
+- `GET /api/v1/technical-indicators` exposes calculator metadata, syntax, chart
+  role, unit, and examples for client discovery.
 - `make web-api` serves the bundled UI and API at `http://127.0.0.1:8000`.
 - `make web-ui` starts the development-only Vite UI at
   `http://127.0.0.1:5173`.
@@ -82,6 +89,10 @@ milestone; do not rely on chat history as the backlog.
   pressed state and browser-local persistence.
 - The underlying chart separates interval selection from provider logic and
   handles loading, no-data, and provider-error states without blocking options.
+- SMA 20 and SMA 50 use complete close-price windows and can be shown or hidden
+  independently; a period always means one bar at the selected resolution.
+- Indicator definitions, result series, registry, and execution service reserve
+  price-overlay, lower-panel, and event-marker roles for future calculators.
 - The replay adapter supports the same quote, chain, selected-contract, and
   history capabilities using an immutable local canonical bundle.
 - Production assets are packaged under `options_analysis.web.static`, use
@@ -91,12 +102,13 @@ milestone; do not rely on chat history as the backlog.
 
 - `options_server_info`
 - `options_list_providers`
+- `options_list_technical_indicators`
 - `options_provider_auth_status`
 - `options_get_underlying_quote`
 - `options_get_option_expirations`
 - `options_get_option_chain`
 - `options_get_option_quotes`
-- `options_get_price_history`
+- `options_get_price_history` (optional registered indicator specifications)
 - `options_analyze_positions`
 
 Every tool result now includes `error`; it is null on success and contains a
@@ -117,10 +129,11 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6L release checks pass: mypy strict reports no issues across 60 source
-files, all 84 Python tests and 30 TypeScript tests pass, and the React production
-bundle and Python distributions build successfully. Detailed evidence is
-recorded in `docs/MILESTONE_6L.md`.
+Milestone 6M release checks pass: formatting and lint are clean, mypy strict
+reports no issues across 63 source files, all 94 Python tests and 31 TypeScript
+tests pass, and the React production bundle plus Python source/wheel
+distributions build successfully. Detailed design and limitations are recorded
+in `docs/MILESTONE_6M.md`.
 
 ## Required owner activation
 

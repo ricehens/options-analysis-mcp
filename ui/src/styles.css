@@ -41,6 +41,8 @@
   --zero-line: rgba(23, 34, 30, 0.22);
   --overlay-subtle: rgba(27, 58, 46, 0.025);
   --shadow: rgba(20, 40, 32, 0.2);
+  --indicator-one: #995c00;
+  --indicator-two: #3858b8;
 }
 
 :root[data-theme="dark"] {
@@ -80,6 +82,8 @@
   --zero-line: rgba(231, 239, 235, 0.18);
   --overlay-subtle: rgba(255, 255, 255, 0.025);
   --shadow: rgba(0, 0, 0, 0.45);
+  --indicator-one: #f6c177;
+  --indicator-two: #8aabff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -120,6 +124,8 @@
     --zero-line: rgba(231, 239, 235, 0.18);
     --overlay-subtle: rgba(255, 255, 255, 0.025);
     --shadow: rgba(0, 0, 0, 0.45);
+    --indicator-one: #f6c177;
+    --indicator-two: #8aabff;
   }
 }
 
@@ -211,10 +217,17 @@ main { min-width: 0; padding: 28px clamp(22px, 4vw, 56px) 52px; background: radi
 .history-change.positive { color: var(--accent); }
 .history-change.negative { color: var(--negative); }
 .history-change.neutral { color: var(--muted); }
+.history-controls { display: grid; justify-items: end; gap: 7px; }
 .history-tabs { display: flex; padding: 3px; border-radius: 8px; background: var(--surface-inset); }
 .history-tabs button { min-width: 43px; min-height: 34px; padding: 5px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.625rem; }
 .history-tabs button:hover { color: var(--text); }
 .history-tabs button.selected { color: var(--accent); background: var(--accent-soft); }
+.indicator-toggles { display: flex; align-items: center; gap: 5px; }
+.indicator-toggles button { display: inline-flex; min-height: 28px; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.5625rem; }
+.indicator-toggles button:hover, .indicator-toggles button.selected { color: var(--text); background: var(--surface-inset); }
+.indicator-swatch { width: 13px; height: 2px; border-radius: 2px; background: currentColor; }
+.indicator-swatch.indicator-1 { color: var(--indicator-one); }
+.indicator-swatch.indicator-2 { color: var(--indicator-two); }
 .history-chart { padding: 0 18px 14px; transition: opacity 160ms ease; }
 .history-chart.loading { opacity: 0.45; }
 .price-chart-svg { display: block; width: 100%; height: auto; max-height: 286px; overflow: visible; }
@@ -222,6 +235,9 @@ main { min-width: 0; padding: 28px clamp(22px, 4vw, 56px) 52px; background: radi
 .history-axis-label, .history-time-label { fill: var(--muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: max(0.6875rem, 11px); }
 .history-area { fill: url(#price-history-area); stroke: none; }
 .history-line { fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.history-indicator { fill: none; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.history-indicator.indicator-1 { stroke: var(--indicator-one); }
+.history-indicator.indicator-2 { stroke: var(--indicator-two); }
 .history-last-point { fill: var(--page); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
 .history-caption { display: flex; justify-content: space-between; gap: 12px; padding: 1px 4px 0 50px; color: var(--muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.5625rem; }
 .history-message { min-height: 170px; display: grid; place-items: center; padding: 24px; color: var(--muted); font-size: 0.75rem; text-align: center; }
@@ -357,6 +373,8 @@ td.strike small { margin-top: 3px; color: var(--muted); font-size: 0.5rem; }
   .price-history-header { align-items: start; flex-direction: column; }
   .history-tabs { width: 100%; }
   .history-tabs button { flex: 1; min-width: 0; }
+  .history-controls { width: 100%; justify-items: stretch; }
+  .indicator-toggles { justify-content: flex-end; }
   .history-chart { padding-right: 10px; padding-left: 8px; }
   .history-caption { padding-left: 58px; flex-direction: column; }
   .panel-header { align-items: start; flex-direction: column; }

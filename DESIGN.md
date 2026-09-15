@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser strategy-analysis workflow implemented through Milestone 6L
+Status: Browser strategy-analysis workflow implemented through Milestone 6M
 
 Last updated: 2026-09-14
 
@@ -111,9 +111,9 @@ logic must not live inside MCP tool functions.
             +--------------------+
                      |
     Application services
-       |           |
-    Analytics   Provider router
-       |           |
+       |           |           |
+    Analytics  Indicators   Provider router
+       |           |           |
     Domain models  Provider contracts
                    |      |       |
                 Schwab  Replay  Other plug-ins
@@ -129,9 +129,10 @@ The packages are planned as:
   models, and mapping for the first provider.
 - options_analysis.providers.replay — strict versioned local bundles and an
   immutable credential-free playback adapter.
-- options_analysis.services — chain, quote, position-enrichment, and analysis
-  use cases.
-- options_analysis.analytics — aggregation, payoff, and scenario calculations.
+- options_analysis.services — chain, quote, position-enrichment, analysis, and
+  registered technical-indicator use cases.
+- options_analysis.analytics — aggregation, payoff, scenario, and pure
+  indicator calculations over canonical domain values.
 - options_analysis.mcp — provider-neutral MCP schemas and tool handlers.
 - options_analysis.web — local-only provider-neutral HTTP endpoints.
 - options_analysis.storage — local persistence adapters behind service
@@ -315,6 +316,20 @@ Greeks are multiplied by signed contract quantity and contract multiplier.
 Every result identifies its provider and whether each derived value came from a
 provider field or was calculated locally.
 
+### 5.4 Technical indicators
+
+A `TechnicalIndicatorDefinition` describes a stable calculator family, argument
+syntax, display role, and value unit. A `TechnicalIndicatorSeries` records the
+concrete specification (for example `sma:20`), parameters, source fields, and
+time-ordered Decimal points.
+
+Indicators are calculated only after a provider has returned canonical
+`PriceBar` values. An explicit registry maps stable IDs to small calculator
+implementations. The service normalizes/deduplicates specifications, orders
+bars, and enforces bounds. Transport layers expose the same definitions and
+series without importing calculators. Chart roles currently include
+`price_overlay` and reserve `lower_panel` and `event_markers` for future work.
+
 ## 6. MCP tools
 
 Tool names are prefixed with `options_` to avoid collisions without coupling
@@ -338,6 +353,12 @@ and safe configuration status. It never returns secret configuration values.
 For a selected provider, returns configured, authorized, token-expiry, and
 reauthorization-required states when authentication applies. It may return
 instructions but never credentials or tokens.
+
+#### options_list_technical_indicators
+
+Returns registered indicator IDs, descriptions, argument syntax, example
+specifications, chart roles, and value units. Discovery lets clients add future
+calculators without hard-coding a provider or changing the history schema.
 
 ### 6.2 Market-data tools
 
@@ -406,7 +427,9 @@ Output:
 This is for the underlying stock or index context, not historical option-chain
 backtesting.
 
-Input includes symbol, time range, resolution, and optional provider.
+Input includes symbol, time range, resolution, optional provider, and up to
+eight optional indicator specifications such as `sma:20`. Output includes
+canonical bars plus the requested derived series.
 
 ### 6.3 Position-analysis tools
 
@@ -449,6 +472,16 @@ separately. No account tool can mutate provider state.
 - Probability estimates.
 - Early-exercise and dividend analysis.
 - Strategy grouping and automatic spread recognition.
+
+### 7.3 Technical-indicator extension boundary
+
+The first registered calculator is a simple moving average over canonical close
+prices. Adding another indicator normally requires a calculator implementing
+the registry protocol plus tests and catalog metadata. Provider contracts,
+history responses, and MCP/HTTP result envelopes remain unchanged. New
+`price_overlay` indicators can reuse the current chart renderer; lower-panel or
+event-marker roles require a corresponding presentation component but no
+provider change.
 
 Provider-supplied Greeks are convenient market-data fields, but model
 assumptions may not be completely specified. They must carry provider
@@ -733,7 +766,7 @@ Acceptance:
 - Fake-provider workspace works end to end through the Vite proxy.
 - Python checks and frontend production build pass.
 
-### Milestone 6B–6K — Browser analysis workflow and offline data replay
+### Milestone 6B–6M — Browser analysis workflow and offline data replay
 
 - 6B: SQLite-backed watchlist persistence. (complete)
 - 6C: rich option-chain filters and contract selection. (complete)
@@ -755,6 +788,8 @@ Acceptance:
   selected contracts, and multi-resolution history. (complete)
 - 6L: browser-persisted system, light, and dark appearance modes implemented
   with accessible semantic color tokens. (complete)
+- 6M: registered provider-neutral technical indicators, discoverable HTTP/MCP
+  contracts, and independently selectable SMA 20/50 chart overlays. (complete)
 
 Owner-driven live Schwab validation is tracked independently as `LIVE-010`
 through `LIVE-030` in `TODO.md` so UI packaging does not depend on credentials.

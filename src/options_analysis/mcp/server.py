@@ -24,6 +24,7 @@ from options_analysis.mcp.models import (
     ProviderSummary,
     QuoteResult,
     ServerInfoResult,
+    TechnicalIndicatorListResult,
 )
 from options_analysis.providers import OptionChainQuery, PriceHistoryQuery
 from options_analysis.providers.errors import ProviderError
@@ -62,7 +63,20 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             transport="stdio",
             read_only=True,
             allow_live_smoke_tests=public.allow_live_smoke_tests,
-            feature_groups=("foundation", "market_data", "position_analysis"),
+            feature_groups=(
+                "foundation",
+                "market_data",
+                "technical_analysis",
+                "position_analysis",
+            ),
+        )
+
+    @server.tool(name="options_list_technical_indicators")
+    def options_list_technical_indicators() -> TechnicalIndicatorListResult:
+        """List registered technical indicators and their specification syntax."""
+
+        return TechnicalIndicatorListResult(
+            indicators=application.technical_indicator_service.list_definitions()
         )
 
     @server.tool(name="options_list_providers")
@@ -213,8 +227,9 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
         end: datetime,
         resolution: Literal["1m", "5m", "10m", "15m", "30m", "1d", "1w", "1mo"] = "1d",
         provider: str | None = None,
+        indicators: Annotated[tuple[str, ...], Field(max_length=8)] = (),
     ) -> PriceHistoryResult:
-        """Get underlying price history; this is not option-chain history."""
+        """Get price history and optional registered indicators such as sma:20."""
 
         try:
             query = PriceHistoryQuery(
@@ -223,9 +238,12 @@ def _register_foundation_tools(server: MCPServer, application: Application) -> N
             bars = await application.market_data_service.get_price_history(
                 query, provider
             )
+            indicator_series = application.technical_indicator_service.calculate(
+                bars, indicators
+            )
         except (ProviderError, ValueError) as error:
             return PriceHistoryResult(error=tool_error(error))
-        return PriceHistoryResult(bars=bars)
+        return PriceHistoryResult(bars=bars, indicators=indicator_series)
 
     @server.tool(name="options_analyze_positions")
     async def options_analyze_positions(
