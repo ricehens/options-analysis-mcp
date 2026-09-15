@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser strategy-analysis workflow implemented through Milestone 6K
+Status: Browser strategy-analysis workflow implemented through Milestone 6L
 
 Last updated: 2026-09-14
 
@@ -753,6 +753,8 @@ Acceptance:
   one-minute, five-minute, daily, weekly, and monthly chart views. (complete)
 - 6K: versioned, size-bounded local replay bundles for quotes, option chains,
   selected contracts, and multi-resolution history. (complete)
+- 6L: browser-persisted system, light, and dark appearance modes implemented
+  with accessible semantic color tokens. (complete)
 
 Owner-driven live Schwab validation is tracked independently as `LIVE-010`
 through `LIVE-030` in `TODO.md` so UI packaging does not depend on credentials.

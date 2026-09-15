@@ -53,12 +53,16 @@ import type {
   WorkspaceSnapshot,
 } from "./types";
 import {
+  applyThemePreference,
   FONT_SCALE_OPTIONS,
   loadFontScale,
+  loadThemePreference,
   persistFontScale,
+  persistThemePreference,
   stepFontScale,
 } from "./preferences";
-import type { FontScale } from "./preferences";
+import type { FontScale, ThemePreference } from "./preferences";
+import ThemeControls from "./ThemeControls";
 import WarningDisclosure from "./WarningDisclosure";
 
 function money(value: DecimalValue | null | undefined): string {
@@ -98,6 +102,9 @@ function percent(value: DecimalValue | null | undefined, digits = 1): string {
 }
 
 function App() {
+  const [theme, setTheme] = useState<ThemePreference>(() =>
+    loadThemePreference(window.localStorage),
+  );
   const [fontScale, setFontScale] = useState<FontScale>(() => {
     try {
       return loadFontScale(window.localStorage);
@@ -146,6 +153,11 @@ function App() {
   const [draftsError, setDraftsError] = useState<string | null>(null);
   const strategyRequest = useRef(0);
   const hydratedAnalysis = useRef(false);
+
+  useEffect(() => {
+    applyThemePreference(document.documentElement, theme);
+    persistThemePreference(window.localStorage, theme);
+  }, [theme]);
 
   useEffect(() => {
     document.documentElement.dataset.fontScale = String(fontScale);
@@ -651,7 +663,9 @@ function App() {
           ))}
         </nav>
 
-        <div className="text-size-card">
+        <ThemeControls onChange={setTheme} theme={theme} />
+
+        <div className="preference-card text-size-card">
           <span>Text size</span>
           <div aria-label="Text size" className="text-size-controls" role="group">
             <button

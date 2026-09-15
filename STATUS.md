@@ -4,11 +4,16 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6K validated snapshot replay is complete on `codex/milestone-6k`.
-The credential-free `replay` provider loads a strict, versioned, size-bounded
-canonical bundle and drives the existing MCP, HTTP, browser, and analysis paths
-without network access. The synthetic generator includes option quotes/Greeks
-and 1-minute, 5-minute, daily, weekly, and monthly underlying history.
+Milestone 6L persistent appearance themes are complete on
+`codex/milestone-6l`. The browser follows system appearance by default or saves
+an explicit light/dark override. Semantic color tokens cover the entire
+workspace, a same-origin initializer applies stored choices before mount, and
+automated contrast/token checks protect the palette boundary. Owner visual
+confirmation remains tracked separately because browser control could not
+attach in this session.
+
+Milestone 6K also added the credential-free `replay` provider for strict,
+versioned, size-bounded canonical quote, chain, and history bundles.
 
 Live Schwab activation is paused. Credentials for the first developer app were
 exposed outside their intended secret store, that app was deactivated, the
@@ -44,7 +49,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6I — Adjustable, browser-persisted interface typography
 - [x] Milestone 6J — Underlying price charts and interval selection
 - [x] Milestone 6K — Validated canonical snapshot/replay provider
-- [ ] Milestone 6L — Persistent light/dark/system visual themes
+- [x] Milestone 6L — Persistent light/dark/system visual themes
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -73,6 +78,8 @@ milestone; do not rely on chat history as the backlog.
   context instead of reducing quality signals to a count.
 - Text-size controls offer 90%, 100%, 115%, and 130% modes, preserve native
   browser zoom, and keep the preference in browser-local storage.
+- Appearance controls offer system, light, and dark modes with accessible
+  pressed state and browser-local persistence.
 - The underlying chart separates interval selection from provider logic and
   handles loading, no-data, and provider-error states without blocking options.
 - The replay adapter supports the same quote, chain, selected-contract, and
@@ -110,10 +117,10 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6K release checks pass: mypy strict reports no issues across 60 source
-files, all 84 Python tests and 23 TypeScript tests pass, and the React production
+Milestone 6L release checks pass: mypy strict reports no issues across 60 source
+files, all 84 Python tests and 30 TypeScript tests pass, and the React production
 bundle and Python distributions build successfully. Detailed evidence is
-recorded in `docs/MILESTONE_6K.md`.
+recorded in `docs/MILESTONE_6L.md`.
 
 ## Required owner activation
 

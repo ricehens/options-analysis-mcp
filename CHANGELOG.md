@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1 — 2026-09-14
+
+- Added keyboard-operable system, light, and dark appearance controls with an
+  accessible pressed-state group and browser-local persistence.
+- Applied valid stored overrides before application mount while keeping system
+  mode responsive to device appearance changes.
+- Replaced component-level color literals with semantic palette tokens across
+  charts, tables, panels, warnings, forms, and focus states.
+- Added preference, accessible-markup, token-integrity, pre-paint initializer,
+  and WCAG contrast tests.
+
 ## 0.7.0 — 2026-09-14
 
 - Added a strict versioned replay bundle for canonical quote, option-chain, and

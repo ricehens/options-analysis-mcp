@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6K is complete. A responsive React workspace is bundled into the
+Milestone 6L is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -27,8 +27,10 @@ interface text can be adjusted from 90% through 130% and persists in the local
 browser. A responsive underlying-price chart provides one-minute, five-minute,
 daily, weekly, and monthly views. A versioned, credential-free replay provider
 can load validated canonical quote, chain, and history bundles into the same
-MCP, HTTP, UI, and analytics paths. Live Schwab activation remains a local step
-requiring your developer application.
+MCP, HTTP, UI, and analytics paths. The interface now follows system appearance
+by default or persists an explicit light/dark choice, with semantic color tokens
+across charts, tables, warnings, and controls. Live Schwab activation remains a
+local step requiring your developer application.
 
 Read these documents first:
 
@@ -72,6 +74,8 @@ Read these documents first:
   codes, messages, affected fields, and field provenance when available.
 - Sidebar text-size controls scale typography to 90%, 100%, 115%, or 130% and
   remember the preference in browser-local storage.
+- Appearance controls select system, light, or dark mode and remember an
+  explicit override in browser-local storage.
 - Fifteen canonical strategy presets include long calls/puts, covered calls,
   protective puts, collars, cash-secured puts, verticals, straddles, strangles,
   butterflies, iron condors, call calendars/diagonals, and custom legs.
@@ -235,6 +239,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6I.md` — adjustable, locally persisted interface typography.
 - `docs/MILESTONE_6J.md` — underlying price history API and responsive chart.
 - `docs/MILESTONE_6K.md` — validated local snapshot/replay provider.
+- `docs/MILESTONE_6L.md` — persistent system/light/dark appearance themes.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

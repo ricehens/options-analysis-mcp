@@ -49,6 +49,11 @@ the watchlist on a narrow screen) to select 90%, 100%, 115%, or 130%. The middle
 button resets to 100%. This preference is stored only in browser-local storage;
 native browser zoom remains available independently.
 
+Use **Appearance** to select `System`, `Light`, or `Dark`. System mode follows
+device appearance changes; explicit light/dark choices persist in browser-local
+storage. The stored choice contains no financial data and can be reset by
+selecting System. Native form controls receive the matching color scheme.
+
 The **Underlying history** panel requests one bounded view at a time. `1m`
 shows one-minute bars over one day, `5m` covers one week, `1D` covers one year,
 `1W` covers five years, and `1M` covers twenty years. The API returns at most

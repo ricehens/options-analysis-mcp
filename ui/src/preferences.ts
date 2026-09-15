@@ -3,6 +3,10 @@ export type FontScale = (typeof FONT_SCALE_OPTIONS)[number];
 
 export const FONT_SCALE_STORAGE_KEY = "option-atlas.font-scale";
 
+export const THEME_OPTIONS = ["system", "light", "dark"] as const;
+export type ThemePreference = (typeof THEME_OPTIONS)[number];
+export const THEME_STORAGE_KEY = "option-atlas.theme";
+
 export function normalizeFontScale(value: string | null): FontScale {
   const parsed = Number(value);
   return FONT_SCALE_OPTIONS.includes(parsed as FontScale)
@@ -40,5 +44,43 @@ export function persistFontScale(
     storage.setItem(FONT_SCALE_STORAGE_KEY, String(scale));
   } catch {
     // A blocked storage preference must not prevent the local app from working.
+  }
+}
+
+export function normalizeThemePreference(value: string | null): ThemePreference {
+  return THEME_OPTIONS.includes(value as ThemePreference)
+    ? (value as ThemePreference)
+    : "system";
+}
+
+export function loadThemePreference(
+  storage: Pick<Storage, "getItem">,
+): ThemePreference {
+  try {
+    return normalizeThemePreference(storage.getItem(THEME_STORAGE_KEY));
+  } catch {
+    return "system";
+  }
+}
+
+export function persistThemePreference(
+  storage: Pick<Storage, "setItem">,
+  theme: ThemePreference,
+): void {
+  try {
+    storage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // A blocked storage preference must not prevent the local app from working.
+  }
+}
+
+export function applyThemePreference(
+  target: Pick<HTMLElement, "dataset">,
+  theme: ThemePreference,
+): void {
+  if (theme === "system") {
+    delete target.dataset.theme;
+  } else {
+    target.dataset.theme = theme;
   }
 }
