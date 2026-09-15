@@ -41,6 +41,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-055A | blocked | Owner visual confirmation of light/dark/system modes at desktop and narrow widths | UI-055, working browser-control connection or owner inspection | Screenshots or inspection notes; functional milestone is complete |
 | UI-056 | backlog | Evaluate optional additional palettes/accent customization after using light/dark modes | UI-055A | Owner-selected palette and contrast specification |
 | UI-057 | done | Milestone 6M: provider-neutral SMA 20/50 overlays with independent chart controls | UI-054 | HTTP/MCP calculation contracts, UI rendering tests, production build |
+| UI-058 | done | Milestone 6N: add SMA 10 as a curated short-term overlay | UI-057 | Updated discovery metadata, accessible control, theme color, tests, and production build |
 
 ## Technical indicators and signals
 

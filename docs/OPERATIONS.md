@@ -60,13 +60,13 @@ shows one-minute bars over one day, `5m` covers one week, `1D` covers one year,
 500 ordered bars. Availability and retention still depend on the selected
 provider.
 
-Use the **SMA 20** and **SMA 50** controls above the chart to show or hide each
-simple-moving-average overlay independently. A period means one selected
-resolution bar: SMA 20 is twenty minutes in the `1m` view, twenty trading days
-in the `1D` view, and twenty weeks in the `1W` view. Moving averages use closing
-prices and begin only after a complete window is available. These calculations
-run locally over normalized provider bars and do not require another Schwab
-permission or request.
+Use the **SMA 10**, **SMA 20**, and **SMA 50** controls above the chart to show
+or hide each simple-moving-average overlay independently. A period means one
+selected resolution bar: SMA 10 is ten minutes in the `1m` view, ten trading
+days in the `1D` view, and ten weeks in the `1W` view. Moving averages use
+closing prices and begin only after a complete window is available. These
+calculations run locally over normalized provider bars and do not require
+another Schwab permission or request.
 
 ### Replay a local snapshot
 

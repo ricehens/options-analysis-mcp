@@ -1,3 +1,3 @@
 """Provider-pluggable options analysis services."""
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"

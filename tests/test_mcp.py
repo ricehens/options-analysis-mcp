@@ -46,6 +46,7 @@ async def test_foundation_tools_over_real_in_memory_mcp_protocol() -> None:
         assert indicators.structured_content is not None
         assert indicators.structured_content["indicators"][0]["indicator_id"] == "sma"
         assert indicators.structured_content["indicators"][0]["example_specs"] == [
+            "sma:10",
             "sma:20",
             "sma:50",
         ]

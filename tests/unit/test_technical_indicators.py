@@ -62,7 +62,7 @@ def test_registry_discovers_indicator_and_service_deduplicates_specs() -> None:
     results = technical.calculate(sample_bars(("1", "2", "3")), (" SMA:2 ", "sma:2"))
 
     assert definitions[0].indicator_id == "sma"
-    assert definitions[0].example_specs == ("sma:20", "sma:50")
+    assert definitions[0].example_specs == ("sma:10", "sma:20", "sma:50")
     assert len(results) == 1
 
 

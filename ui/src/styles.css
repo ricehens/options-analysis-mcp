@@ -43,6 +43,7 @@
   --shadow: rgba(20, 40, 32, 0.2);
   --indicator-one: #995c00;
   --indicator-two: #3858b8;
+  --indicator-three: #7552a3;
 }
 
 :root[data-theme="dark"] {
@@ -84,6 +85,7 @@
   --shadow: rgba(0, 0, 0, 0.45);
   --indicator-one: #f6c177;
   --indicator-two: #8aabff;
+  --indicator-three: #c4a7e7;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -126,6 +128,7 @@
     --shadow: rgba(0, 0, 0, 0.45);
     --indicator-one: #f6c177;
     --indicator-two: #8aabff;
+    --indicator-three: #c4a7e7;
   }
 }
 
@@ -228,6 +231,7 @@ main { min-width: 0; padding: 28px clamp(22px, 4vw, 56px) 52px; background: radi
 .indicator-swatch { width: 13px; height: 2px; border-radius: 2px; background: currentColor; }
 .indicator-swatch.indicator-1 { color: var(--indicator-one); }
 .indicator-swatch.indicator-2 { color: var(--indicator-two); }
+.indicator-swatch.indicator-3 { color: var(--indicator-three); }
 .history-chart { padding: 0 18px 14px; transition: opacity 160ms ease; }
 .history-chart.loading { opacity: 0.45; }
 .price-chart-svg { display: block; width: 100%; height: auto; max-height: 286px; overflow: visible; }
@@ -238,6 +242,7 @@ main { min-width: 0; padding: 28px clamp(22px, 4vw, 56px) 52px; background: radi
 .history-indicator { fill: none; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .history-indicator.indicator-1 { stroke: var(--indicator-one); }
 .history-indicator.indicator-2 { stroke: var(--indicator-two); }
+.history-indicator.indicator-3 { stroke: var(--indicator-three); }
 .history-last-point { fill: var(--page); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
 .history-caption { display: flex; justify-content: space-between; gap: 12px; padding: 1px 4px 0 50px; color: var(--muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.5625rem; }
 .history-message { min-height: 170px; display: grid; place-items: center; padding: 24px; color: var(--muted); font-size: 0.75rem; text-align: center; }

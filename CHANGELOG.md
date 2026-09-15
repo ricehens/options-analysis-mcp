@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.1 — 2026-09-14
+
+- Added SMA 10 as an independently selectable short-term price overlay beside
+  SMA 20 and SMA 50.
+- Added a theme-aware third indicator color and advertised SMA 10 through the
+  shared HTTP/MCP indicator catalog.
+
 ## 0.8.0 — 2026-09-14
 
 - Added provider-neutral technical-indicator definitions, series, calculator

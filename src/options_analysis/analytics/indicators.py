@@ -27,7 +27,7 @@ class SimpleMovingAverageIndicator:
             chart_role=IndicatorChartRole.PRICE_OVERLAY,
             value_unit=IndicatorValueUnit.PRICE,
             argument_syntax="sma:<window>, where window is 2 through 500",
-            example_specs=("sma:20", "sma:50"),
+            example_specs=("sma:10", "sma:20", "sma:50"),
         )
 
     def calculate(

@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6M is complete. A responsive React workspace is bundled into the
+Milestone 6N is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -31,7 +31,7 @@ MCP, HTTP, UI, and analytics paths. The interface now follows system appearance
 by default or persists an explicit light/dark choice, with semantic color tokens
 across charts, tables, warnings, and controls. Live Schwab activation remains a
 local step requiring your developer application. The underlying chart now
-requests and renders independent SMA 20 and SMA 50 overlays. Indicator
+requests and renders independent SMA 10, SMA 20, and SMA 50 overlays. Indicator
 calculation, discovery, and result models are provider-neutral, so future
 technical signals reuse normalized bars instead of changing source adapters.
 
@@ -68,7 +68,7 @@ Read these documents first:
   `127.0.0.1:8000`; OpenAPI remains available at `/api/docs`.
 - A bounded provider-neutral price-history endpoint powers an underlying chart
   with 1-minute, 5-minute, daily, weekly, and monthly interval tabs, plus
-  independently selectable SMA 20 and SMA 50 price overlays.
+  independently selectable SMA 10, SMA 20, and SMA 50 price overlays.
 - A discoverable technical-indicator registry operates after provider
   normalization; the HTTP catalog is available at
   `/api/v1/technical-indicators`.
@@ -251,6 +251,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6L.md` — persistent system/light/dark appearance themes.
 - `docs/MILESTONE_6M.md` — extensible technical indicators and moving-average
   chart overlays.
+- `docs/MILESTONE_6N.md` — short-term SMA 10 chart overlay.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

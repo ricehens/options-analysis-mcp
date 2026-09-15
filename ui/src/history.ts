@@ -7,6 +7,7 @@ import type {
 } from "./types";
 
 export const DEFAULT_PRICE_INDICATORS = [
+  { spec: "sma:10", label: "SMA 10", styleIndex: 3 },
   { spec: "sma:20", label: "SMA 20", styleIndex: 1 },
   { spec: "sma:50", label: "SMA 50", styleIndex: 2 },
 ] as const;

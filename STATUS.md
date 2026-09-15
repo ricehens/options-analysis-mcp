@@ -4,10 +4,10 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6M extensible technical indicators and moving-average overlays are
-complete on `codex/milestone-6m`. The browser requests SMA 20 and SMA 50 for
-each underlying-history resolution and lets the user show or hide either
-overlay. Pure calculators run over canonical bars behind a bounded discovery
+Milestone 6N short-term moving average is complete on `codex/milestone-6n`.
+The browser requests SMA 10, SMA 20, and SMA 50 for each underlying-history
+resolution and lets the user show or hide each overlay independently. Pure
+calculators run over canonical bars behind the Milestone 6M bounded discovery
 registry and are exposed consistently through HTTP and MCP. Provider adapters
 remain unchanged.
 
@@ -54,6 +54,7 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6K — Validated canonical snapshot/replay provider
 - [x] Milestone 6L — Persistent light/dark/system visual themes
 - [x] Milestone 6M — Extensible indicators and SMA 20/50 chart overlays
+- [x] Milestone 6N — Short-term SMA 10 chart overlay
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -89,8 +90,9 @@ milestone; do not rely on chat history as the backlog.
   pressed state and browser-local persistence.
 - The underlying chart separates interval selection from provider logic and
   handles loading, no-data, and provider-error states without blocking options.
-- SMA 20 and SMA 50 use complete close-price windows and can be shown or hidden
-  independently; a period always means one bar at the selected resolution.
+- SMA 10, SMA 20, and SMA 50 use complete close-price windows and can be shown
+  or hidden independently; a period always means one bar at the selected
+  resolution.
 - Indicator definitions, result series, registry, and execution service reserve
   price-overlay, lower-panel, and event-marker roles for future calculators.
 - The replay adapter supports the same quote, chain, selected-contract, and
@@ -129,11 +131,11 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6M release checks pass: formatting and lint are clean, mypy strict
+Milestone 6N release checks pass: formatting and lint are clean, mypy strict
 reports no issues across 63 source files, all 94 Python tests and 31 TypeScript
 tests pass, and the React production bundle plus Python source/wheel
 distributions build successfully. Detailed design and limitations are recorded
-in `docs/MILESTONE_6M.md`.
+in `docs/MILESTONE_6N.md`.
 
 ## Required owner activation
 

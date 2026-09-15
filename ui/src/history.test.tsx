@@ -70,6 +70,7 @@ describe("price history chart", () => {
       "Monthly bars, twenty years",
     ]);
     expect(DEFAULT_PRICE_INDICATORS.map((indicator) => indicator.spec)).toEqual([
+      "sma:10",
       "sma:20",
       "sma:50",
     ]);
@@ -138,6 +139,7 @@ describe("price history chart", () => {
     expect(markup).toContain("aria-pressed=\"true\"");
     expect(markup).toContain("+$2.00 (+2.00%)");
     expect(markup).toContain("Moving average overlays");
+    expect(markup).toContain("SMA 10");
     expect(markup).toContain("SMA 20");
     expect(markup).toContain("history-indicator indicator-1");
     expect(markup).toContain("Overlays: SMA 20");
