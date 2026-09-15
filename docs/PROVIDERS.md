@@ -30,6 +30,24 @@ The descriptor ID and entry-point name must match. Installation alone does not
 activate code: add the same ID to `OPTIONS_ANALYSIS_ENABLED_PROVIDERS`. The
 registry skips disabled entry points without importing them.
 
+## Built-in replay adapter
+
+`replay` implements the market-data and underlying-history contracts over an
+immutable local JSON bundle. It is useful for UI demonstrations, deterministic
+bug reproduction, contract development, and later authorized/sanitized data
+captures. It performs no network or authentication operation.
+
+The bundle schema is owned by `ReplayBundle` and begins at `schema_version: 1`.
+It records source label/provider/time/usage notes plus one or more canonical
+symbol snapshots. Loaded quotes are routed under provider ID `replay`; the
+original provider ID stays in field provenance and
+`replay.original_provider_id`.
+
+Configure only an absolute local path. The loader applies a 25 MB default bound,
+strict nested-model validation, unique identifiers, and ordered timestamps. It
+does not watch or mutate the file. Real data remains subject to its source terms
+and should normally stay outside Git.
+
 ## Canonical mapping requirements
 
 - Use `Decimal` at API boundaries for prices, strikes, quantities, and Greeks.

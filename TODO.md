@@ -37,6 +37,7 @@ Statuses are `in_progress`, `ready`, `blocked`, `backlog`, `deferred`, and
 | UI-052 | done | Milestone 6H: add expandable chain, per-contract, and analysis warning details | UI-040 | Accessible disclosures with field provenance and server-rendered component tests |
 | UI-053 | done | Milestone 6I: adjustable, browser-persisted interface font size | Owner desktop feedback | Keyboard-operable 90–130% controls, persistence unit tests, production build |
 | UI-054 | done | Milestone 6J: underlying price chart with 1-minute, 5-minute, daily, weekly, and monthly views | UI-053, provider history capability | Bounded HTTP history contract, responsive SVG chart, five-resolution API and rendering tests |
+| UI-055 | ready | Milestone 6L: persistent light, dark, and system-selected themes with accessible semantic color tokens | UI-054 | Theme preference/unit tests, dark/light visual inspection, production build |
 
 ## Schwab activation
 
@@ -46,7 +47,7 @@ Git or chat.
 
 | ID | Status | Work item | Depends on | Completion evidence |
 | --- | --- | --- | --- | --- |
-| LIVE-010 | blocked | Complete local Schwab OAuth authorization | Owner credentials/application | Safe auth-status summary only |
+| LIVE-010 | blocked | Obtain replacement Schwab app credentials and complete OAuth only on the retained machine; never reuse the exposed/deactivated app credentials | Developer Support or replacement application | Safe auth-status summary only |
 | LIVE-020 | blocked | Verify one stock quote, expirations, narrow chain, and selected option quotes | LIVE-010 | Shape/mapping checklist without response bodies |
 | LIVE-030 | blocked | Run the browser workspace against Schwab and check freshness/rate behavior | LIVE-020, UI-020 | Redacted inspection notes |
 | LIVE-040 | deferred | Evaluate read-only Trader API account positions | Trader API entitlement | Explicit go/no-go decision |
@@ -55,6 +56,7 @@ Git or chat.
 
 | ID | Status | Work item | Depends on | Completion evidence |
 | --- | --- | --- | --- | --- |
+| DATA-005 | done | Milestone 6K: versioned, size-bounded canonical snapshot/replay provider and synthetic generator | CORE-050, UI-054 | Shared conformance and loading/filter/history tests; no vendor data committed |
 | DATA-010 | backlog | Select the second provider based on live vs historical needs; initial candidates are Tradier, Alpaca, Massive, ORATS, and Databento | LIVE-020 | Short decision record with current official API evidence |
 | DATA-020 | backlog | Implement the selected provider through existing capability contracts | DATA-010 | Shared conformance suite passes without core-analysis changes |
 | DATA-030 | backlog | Define snapshot provenance/synchronization rules if positions and quotes use different providers | DATA-020 | Mixed-source domain and warning tests |

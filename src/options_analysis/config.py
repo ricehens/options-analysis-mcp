@@ -43,6 +43,8 @@ class AppSettings(BaseSettings):
     allow_live_smoke_tests: bool = False
     snapshot_cache_ttl_seconds: float = 1.0
     snapshot_cache_max_entries: int = 512
+    replay_bundle_path: Path | None = None
+    replay_max_bundle_bytes: int = 25_000_000
     state_db_path: Path | None = None
     schwab_client_id: SecretStr | None = None
     schwab_client_secret: SecretStr | None = None
@@ -78,6 +80,23 @@ class AppSettings(BaseSettings):
         if not expanded.is_absolute():
             raise ValueError("state database path must be absolute")
         return expanded
+
+    @field_validator("replay_bundle_path")
+    @classmethod
+    def validate_replay_bundle_path(cls, value: Path | None) -> Path | None:
+        if value is None:
+            return None
+        expanded = value.expanduser()
+        if not expanded.is_absolute():
+            raise ValueError("replay bundle path must be absolute")
+        return expanded
+
+    @field_validator("replay_max_bundle_bytes")
+    @classmethod
+    def validate_replay_bundle_limit(cls, value: int) -> int:
+        if not 1_024 <= value <= 100_000_000:
+            raise ValueError("replay bundle limit must be between 1 KiB and 100 MB")
+        return value
 
     @field_validator("enabled_providers")
     @classmethod

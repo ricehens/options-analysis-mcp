@@ -45,6 +45,13 @@ contain symbols, quantities, entry prices, and provider identity, so treat the
 file as private financial research data. It contains no Schwab tokens and must
 never become a general credential store.
 
+Replay bundles may contain valuable licensed data or reveal a person's research
+interests even when they contain no credentials. Keep real bundles outside Git,
+use user-only file permissions, document their source and allowed use, and
+remove account identifiers before capture. The built-in generator contains only
+synthetic data. Replay support must not be used to bypass website extraction
+rules or vendor licensing.
+
 ## Reporting a vulnerability
 
 Report security concerns privately to the repository owner. Do not open a

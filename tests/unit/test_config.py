@@ -69,3 +69,12 @@ def test_state_database_path_must_be_absolute() -> None:
         assert "state database path must be absolute" in str(error)
     else:
         raise AssertionError("relative state database path was accepted")
+
+
+def test_replay_bundle_path_must_be_absolute() -> None:
+    try:
+        AppSettings(_env_file=None, replay_bundle_path="relative/replay.json")
+    except ValidationError as error:
+        assert "replay bundle path must be absolute" in str(error)
+    else:
+        raise AssertionError("relative replay path was accepted")

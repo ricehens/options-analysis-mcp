@@ -15,7 +15,7 @@ Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
 ## Current checkpoint
 
-Milestone 6J is complete. A responsive React workspace is bundled into the
+Milestone 6K is complete. A responsive React workspace is bundled into the
 Python package and served by the local-only FastAPI facade, while MCP and HTTP
 reuse the same provider-neutral services. The UI provides a persistent
 SQLite-backed watchlist, selected-symbol quote summary, detailed option chain,
@@ -25,7 +25,9 @@ diagonal workflows automatically load the next available expiration. Named
 strategy drafts persist locally and reopen with current provider quotes. The
 interface text can be adjusted from 90% through 130% and persists in the local
 browser. A responsive underlying-price chart provides one-minute, five-minute,
-daily, weekly, and monthly views. Live Schwab activation remains a local step
+daily, weekly, and monthly views. A versioned, credential-free replay provider
+can load validated canonical quote, chain, and history bundles into the same
+MCP, HTTP, UI, and analytics paths. Live Schwab activation remains a local step
 requiring your developer application.
 
 Read these documents first:
@@ -52,6 +54,8 @@ Read these documents first:
   Positive quantity is long and negative quantity is short.
 - The fake provider supplies deterministic quotes, expirations, chains, selected
   option quotes, and underlying history to offline services and contract tests.
+- The replay provider loads a strict, size-bounded local snapshot bundle and
+  preserves original source provenance while routing it as `replay`.
 - The MCP server runs locally over stdio.
 - The production browser workspace and HTTP API run together on
   `127.0.0.1:8000`; OpenAPI remains available at `/api/docs`.
@@ -160,6 +164,23 @@ The watchlist database defaults to
 `~/Library/Application Support/options-analysis-mcp/state.sqlite3`. Override it
 with the absolute `OPTIONS_ANALYSIS_STATE_DB_PATH` setting when needed.
 
+## Credential-free replay data
+
+Generate a private synthetic starter bundle and run the complete app through
+the replay adapter:
+
+```console
+uv run options-analysis-replay-sample --output /private/tmp/options-replay.json
+OPTIONS_ANALYSIS_ENABLED_PROVIDERS='["replay"]' \
+OPTIONS_ANALYSIS_DEFAULT_MARKET_DATA_PROVIDER=replay \
+OPTIONS_ANALYSIS_REPLAY_BUNDLE_PATH=/private/tmp/options-replay.json \
+uv run options-analysis-web
+```
+
+The bundle is canonical data, not a saved vendor response. Keep real captures
+outside Git, check the source license before recording them, sanitize private
+fields, and never automate a web page that disallows extraction.
+
 ## Schwab local authorization
 
 Copy `.env.example` to the ignored `.env`, set the application client ID,
@@ -213,6 +234,7 @@ or captured Schwab response containing private account data.
 - `docs/MILESTONE_6H.md` — expandable data-quality and analysis warnings.
 - `docs/MILESTONE_6I.md` — adjustable, locally persisted interface typography.
 - `docs/MILESTONE_6J.md` — underlying price history API and responsive chart.
+- `docs/MILESTONE_6K.md` — validated local snapshot/replay provider.
 - `docs/MILESTONE_*.md` — durable implementation and verification decisions.
 - `TODO.md` — ordered durable work queue for this and future sessions.
 

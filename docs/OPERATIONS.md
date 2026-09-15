@@ -55,6 +55,33 @@ shows one-minute bars over one day, `5m` covers one week, `1D` covers one year,
 500 ordered bars. Availability and retention still depend on the selected
 provider.
 
+### Replay a local snapshot
+
+The replay provider proves the end-to-end application with a file instead of a
+broker session. Create a synthetic bundle:
+
+```console
+uv run options-analysis-replay-sample --output /private/tmp/options-replay.json
+```
+
+Then use these local settings and start the API:
+
+```console
+OPTIONS_ANALYSIS_ENABLED_PROVIDERS='["replay"]' \
+OPTIONS_ANALYSIS_DEFAULT_MARKET_DATA_PROVIDER=replay \
+OPTIONS_ANALYSIS_REPLAY_BUNDLE_PATH=/private/tmp/options-replay.json \
+uv run options-analysis-web
+```
+
+The loader validates schema version, nested canonical models, source metadata,
+unique symbols/contracts, chronological history, and a configurable byte bound
+before serving data. The file is never modified at runtime. Restart the process
+to load a changed bundle.
+
+Do not treat replay support as permission to download or retain market data.
+Confirm the source's license and API terms first. Keep any permitted real bundle
+outside the repository, sanitize private fields, and limit its file permissions.
+
 ## 3. Enable Schwab
 
 1. In the Schwab Developer Portal, select **Create App**.
@@ -80,6 +107,14 @@ provider.
 
 Restart the HTTP API after changing provider configuration. The browser needs
 no Schwab-specific setting and must never receive a client secret or token.
+
+If a client secret is exposed, deactivate that app and never reuse the key pair.
+The observed portal does not offer self-service secret regeneration and a
+deactivated Market Data Production app may continue to consume the one-app
+product slot. Ask Schwab Developer Support to rotate/purge the app or release
+the slot, then create replacement credentials. Callback edits may be processed
+after market hours. Complete the next OAuth flow only on the machine you intend
+to retain.
 
 ### Local workspace state
 
@@ -127,6 +162,7 @@ the scenario table before interpreting a result.
 | `rate_limit` | Respect `retryable`; reduce polling and chain breadth. |
 | `upstream_schema` | Record only category and `field_paths`; compare official docs and update the adapter/fixture synthetically. |
 | Empty or partial chain | Narrow dates/strikes, inspect warnings, and verify market/session status. |
+| Replay provider not ready | Use an absolute `OPTIONS_ANALYSIS_REPLAY_BUNDLE_PATH`, validate the JSON, and restart the process. |
 | MCP process exits | Run `make check`, then start the command in a terminal without sending non-MCP input. |
 
 ## 6. Token removal

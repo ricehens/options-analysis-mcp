@@ -9,7 +9,11 @@ def test_reusable_layers_do_not_import_concrete_providers() -> None:
         project_root / "src/options_analysis/services",
         project_root / "src/options_analysis/analytics",
     )
-    forbidden = ("options_analysis.providers.fake", "options_analysis.providers.schwab")
+    forbidden = (
+        "options_analysis.providers.fake",
+        "options_analysis.providers.replay",
+        "options_analysis.providers.schwab",
+    )
     violations: list[str] = []
 
     for root in reusable_roots:

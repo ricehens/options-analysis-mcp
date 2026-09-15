@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0 — 2026-09-14
+
+- Added a strict versioned replay bundle for canonical quote, option-chain, and
+  multi-resolution underlying-history data.
+- Added a credential-free `replay` provider with bounded loading, provider-side
+  query filtering, immutable playback, and retained original source identity.
+- Added a local synthetic sample generator plus shared provider conformance,
+  validation, remapping, and history-window tests.
+- Documented data licensing, provenance, privacy, and safe local replay use;
+  no scraped or vendor response data is committed.
+
 ## 0.6.9 — 2026-09-14
 
 - Added a bounded provider-neutral price-history HTTP endpoint with one-minute,

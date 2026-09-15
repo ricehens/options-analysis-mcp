@@ -1,6 +1,6 @@
 # Provider-Pluggable Options Data and Analysis MCP — Design
 
-Status: Browser strategy-analysis workflow implemented through Milestone 6J
+Status: Browser strategy-analysis workflow implemented through Milestone 6K
 
 Last updated: 2026-09-14
 
@@ -69,8 +69,8 @@ The initial project is an analysis data service. It is not a trading system.
 - Schwab Market Data Production endpoints.
 - Optional read-only accounts and positions through Trader API Individual.
 - Typed normalized models.
-- Provider contracts, registry, capability discovery, and a deterministic fake
-  provider for offline development.
+- Provider contracts, registry, capability discovery, a deterministic fake
+  provider, and a validated canonical replay provider for offline development.
 - Schwab as the first built-in provider adapter.
 - Structured MCP results suitable for code as well as language models.
 - Offline tests with sanitized fixtures.
@@ -116,7 +116,7 @@ logic must not live inside MCP tool functions.
        |           |
     Domain models  Provider contracts
                    |      |       |
-                Schwab  Tradier  Other plug-ins
+                Schwab  Replay  Other plug-ins
                    |
               OAuth and HTTP
 
@@ -127,6 +127,8 @@ The packages are planned as:
   routing.
 - options_analysis.providers.schwab — OAuth, HTTP client, source response
   models, and mapping for the first provider.
+- options_analysis.providers.replay — strict versioned local bundles and an
+  immutable credential-free playback adapter.
 - options_analysis.services — chain, quote, position-enrichment, and analysis
   use cases.
 - options_analysis.analytics — aggregation, payoff, and scenario calculations.
@@ -197,6 +199,12 @@ sanitized fixtures, and documented capability-specific extensions. A shared
 provider conformance suite verifies canonical mapping, errors, pagination,
 timestamps, provenance, and data-quality behavior. Milestone 1 proves this
 boundary with a deterministic fake provider before the Schwab adapter exists.
+
+The built-in `replay` adapter is a second concrete proof of this boundary. It
+loads canonical models from a size-bounded, versioned local file, remaps the
+transport identity to `replay`, and retains the recorded provider identity in
+provenance and namespaced extensions. It makes a recorded snapshot repeatable;
+it does not scrape, fetch, or grant permission to store vendor data.
 
 ### 4.4 Practical future provider candidates
 
@@ -555,6 +563,7 @@ behavior.
 - Provider registration, allow-listing, and capability routing.
 - Deterministic fake-provider behavior.
 - Shared provider conformance tests.
+- Replay-bundle schema validation, size bounds, filtering, and source retention.
 - Secret redaction.
 - Token-store permissions and atomic replacement.
 - OAuth state and callback validation.
@@ -575,6 +584,9 @@ Sanitized provider responses may be captured only through an explicit developer
 workflow. Sanitization must remove account numbers, tokens, request identifiers,
 and any other private data before a fixture is admitted. Fixtures are grouped by
 provider and exercised through the shared conformance suite where applicable.
+Canonical replay bundles also require a documented source and usage note. Keep
+licensed or personal captures outside Git unless redistribution is explicitly
+permitted.
 
 ### 13.3 Live smoke tests
 
@@ -721,7 +733,7 @@ Acceptance:
 - Fake-provider workspace works end to end through the Vite proxy.
 - Python checks and frontend production build pass.
 
-### Milestone 6B–6J — Browser analysis workflow
+### Milestone 6B–6K — Browser analysis workflow and offline data replay
 
 - 6B: SQLite-backed watchlist persistence. (complete)
 - 6C: rich option-chain filters and contract selection. (complete)
@@ -739,6 +751,8 @@ Acceptance:
   130%, without replacing native browser zoom. (complete)
 - 6J: bounded provider-neutral underlying history over HTTP with responsive
   one-minute, five-minute, daily, weekly, and monthly chart views. (complete)
+- 6K: versioned, size-bounded local replay bundles for quotes, option chains,
+  selected contracts, and multi-resolution history. (complete)
 
 Owner-driven live Schwab validation is tracked independently as `LIVE-010`
 through `LIVE-030` in `TODO.md` so UI packaging does not depend on credentials.

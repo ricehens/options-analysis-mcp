@@ -4,12 +4,18 @@ Last updated: 2026-09-14
 
 ## Current state
 
-Milestone 6J underlying price charting is complete on `codex/milestone-6j`.
-The browser can request bounded 1-minute, 5-minute, daily, weekly, and monthly
-history through the provider-neutral service and HTTP facade. A responsive,
-accessible SVG chart shows the close series, range, net change, dates, provider,
-and bar count. Live Schwab activation still requires the owner-created portal
-application to reach ready-for-use status and be configured locally.
+Milestone 6K validated snapshot replay is complete on `codex/milestone-6k`.
+The credential-free `replay` provider loads a strict, versioned, size-bounded
+canonical bundle and drives the existing MCP, HTTP, browser, and analysis paths
+without network access. The synthetic generator includes option quotes/Greeks
+and 1-minute, 5-minute, daily, weekly, and monthly underlying history.
+
+Live Schwab activation is paused. Credentials for the first developer app were
+exposed outside their intended secret store, that app was deactivated, the
+ignored local `.env` was deleted, and no local token file was created. Do not
+reuse those credentials. Obtain replacement credentials through Schwab
+Developer Support or a replacement app, then authorize only on the retained
+machine.
 
 Repository: https://github.com/xuemingshen-oracle/options-analysis-mcp
 
@@ -37,6 +43,8 @@ milestone; do not rely on chat history as the backlog.
 - [x] Milestone 6H — Expandable warning and provenance details
 - [x] Milestone 6I — Adjustable, browser-persisted interface typography
 - [x] Milestone 6J — Underlying price charts and interval selection
+- [x] Milestone 6K — Validated canonical snapshot/replay provider
+- [ ] Milestone 6L — Persistent light/dark/system visual themes
 - [ ] Milestone 7 — Optional streaming; decision gate not met
 
 ## Browser interface
@@ -67,6 +75,8 @@ milestone; do not rely on chat history as the backlog.
   browser zoom, and keep the preference in browser-local storage.
 - The underlying chart separates interval selection from provider logic and
   handles loading, no-data, and provider-error states without blocking options.
+- The replay adapter supports the same quote, chain, selected-contract, and
+  history capabilities using an immutable local canonical bundle.
 - Production assets are packaged under `options_analysis.web.static`, use
   same-origin API calls, and receive a restrictive content security policy.
 
@@ -100,19 +110,21 @@ stable, secret-safe detail object for handled failures.
 
 ## Verification evidence
 
-Milestone 6J release checks pass: mypy strict reports no issues across 55 source
-files, all 76 Python tests and 23 TypeScript tests pass, and the React production
+Milestone 6K release checks pass: mypy strict reports no issues across 60 source
+files, all 84 Python tests and 23 TypeScript tests pass, and the React production
 bundle and Python distributions build successfully. Detailed evidence is
-recorded in `docs/MILESTONE_6J.md`.
+recorded in `docs/MILESTONE_6K.md`.
 
 ## Required owner activation
 
-1. Follow `docs/MILESTONE_2.md` and `docs/OPERATIONS.md` for local OAuth.
-2. Confirm current official endpoints and the mapping assumptions in
+1. Replace the exposed developer credentials; do not reactivate or reuse them.
+2. Follow `docs/MILESTONE_2.md` and `docs/OPERATIONS.md` for local OAuth on the
+   retained machine.
+3. Confirm current official endpoints and the mapping assumptions in
    `docs/MILESTONE_3.md`.
-3. Run one narrow live stock quote, expiration list, chain, selected option
+4. Run one narrow live stock quote, expiration list, chain, selected option
    quote, and position analysis without saving provider bodies.
-4. Decide whether Trader API Individual is available and whether account
+5. Decide whether Trader API Individual is available and whether account
    positions are worth adding.
 
 Never paste or commit credentials, callbacks, token values, account data, or
