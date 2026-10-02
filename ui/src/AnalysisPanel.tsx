@@ -40,6 +40,15 @@ function premiumLabel(value: DecimalValue | null): string {
   return parsed >= 0 ? `${money(parsed)} debit` : `${money(Math.abs(parsed))} credit`;
 }
 
+function scenarioMove(change: DecimalValue, spot: DecimalValue | null): string {
+  const amount = decimal(change);
+  const underlying = decimal(spot);
+  if (amount === null) return "—";
+  if (underlying === null || underlying <= 0) return money(amount);
+  const percent = amount / underlying * 100;
+  return `${percent > 0 ? "+" : ""}${percent.toFixed(1)}%`;
+}
+
 export default function AnalysisPanel({ analysis, loading, error }: Props) {
   if (error) return <div className="analysis-error" role="alert">{error}</div>;
   if (loading) {
@@ -65,18 +74,29 @@ export default function AnalysisPanel({ analysis, loading, error }: Props) {
       </div>
 
       <div className="greek-grid">
-        {(["delta", "gamma", "theta", "vega"] as const).map((name) => (
-          <div className={greeks[name].complete ? "" : "incomplete"} key={name}>
-            <span>{name}</span>
-            <strong>{signed(greeks[name].value, 2)}</strong>
-          </div>
-        ))}
+        {(["delta", "gamma", "theta", "vega"] as const).map((name) => {
+          const exposure = greeks[name];
+          const unavailable = !exposure.complete && analysis.positions.every(
+            (position) => exposure.missing_symbols.includes(position.instrument.symbol),
+          );
+          return (
+            <div
+              className={exposure.complete ? "" : "incomplete"}
+              key={name}
+              title={exposure.complete ? undefined : `Missing ${name}: ${exposure.missing_symbols.join(", ")}`}
+            >
+              <span>{name}</span>
+              <strong>{unavailable ? "—" : signed(exposure.value, 2)}</strong>
+              {!exposure.complete ? <small>{unavailable ? "Unavailable" : "Partial"}</small> : null}
+            </div>
+          );
+        })}
       </div>
 
       <div className="payoff-card">
         <div className="draft-heading">
           <span className="eyebrow">Expiration payoff</span>
-          <span>{analysis.expiration_date ?? "Multiple dates"}</span>
+          <span>{analysis.expiration_date ?? (analysis.positions.some((position) => position.instrument.option) ? "Multiple dates" : "Stock only")}</span>
         </div>
         {chart ? (
           <>
@@ -96,22 +116,24 @@ export default function AnalysisPanel({ analysis, loading, error }: Props) {
             </div>
           </>
         ) : (
-          <p className="draft-empty">A single expiration and complete entry prices are required.</p>
+          <p className="draft-empty">Payoff requires one underlying, compatible standard contracts, and complete entry prices. Review analysis warnings for missing data.</p>
         )}
       </div>
 
       <div className="scenario-card">
         <span className="eyebrow">Delta-gamma scenarios</span>
+        <p className="draft-empty">Estimated change from today, with time and volatility unchanged. Large moves can be inaccurate.</p>
         <div className="scenario-row scenario-heading">
-          <span>Move</span><span>Underlying</span><span>Estimated P/L</span>
+          <span>Move</span><span>Underlying</span><span>P/L change</span>
         </div>
         {analysis.scenarios.map((scenario) => (
           <div className="scenario-row" key={String(scenario.underlying_change)}>
-            <span>{signed((decimal(scenario.underlying_change) ?? 0) * 100, 0)}%</span>
+            <span>{scenarioMove(scenario.underlying_change, analysis.underlying_price)}</span>
             <span>{money(scenario.underlying_price)}</span>
             <strong>{money(scenario.estimated_profit_loss)}</strong>
           </div>
         ))}
+        {!analysis.scenarios.length ? <p className="draft-empty">Price scenarios require one underlying and a current underlying price.</p> : null}
       </div>
 
       <WarningDisclosure
