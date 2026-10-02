@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__SYMBOL__ · Hold / close / adjust</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,sans-serif;color:#182b3a;background:#eff3f7}
+*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:36px 24px 60px}
+header{padding:8px 0 20px}h1{font-size:clamp(1.8rem,4vw,2.8rem);letter-spacing:-.04em;margin:.3em 0}
+h2{font-size:1.2rem;margin:0 0 16px}p,li{line-height:1.55}p{max-width:85ch}.eyebrow{color:#347477;font-weight:700;font-size:.77rem;letter-spacing:.14em;text-transform:uppercase}
+.muted{color:#546578}.card{background:white;border:1px solid #dce3ec;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 4px 18px #142a3c05}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0 24px}.metric{border-left:3px solid #73a9a1;padding:5px 12px}.metric span{font-size:.8rem;color:#546578;display:block}.metric strong{font-size:1.25rem;display:block;overflow-wrap:anywhere}
+.scroll{overflow-x:auto;max-width:100%;border:1px solid #e3e8ee;border-radius:10px}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.88rem;white-space:nowrap}caption{text-align:left;font-weight:600;padding:12px}th,td{padding:12px 14px;text-align:right;border-bottom:1px solid #e5eaf0}th:first-child,td:first-child{text-align:left}thead{background:#f2f6f9;color:#475c6d}tbody th{font-weight:600}tbody tr:hover{background:#f8fafc}
+details{border-top:1px solid #e3e8ee;padding:16px 0}summary{cursor:pointer;font-weight:600}details>.scroll{margin-top:16px}li{margin:8px 0}label{font-weight:600;font-size:.88rem}select{font:inherit;padding:8px 12px;border:1px solid #bbc9d5;border-radius:8px;background:white;color:inherit;margin-left:10px;max-width:100%}select:focus-visible,summary:focus-visible{outline:3px solid #6eb7bb;outline-offset:3px}.chart-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chart-scroll{overflow-x:auto}svg{display:block;width:100%;min-width:640px;height:auto;min-height:220px}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem}.legend span{display:flex;align-items:center;gap:6px}.swatch{width:20px;height:4px;display:inline-block}.notice{background:#fff8e8;border:1px solid #f1ddb1;border-radius:10px;padding:12px 16px}.formula{font-family:ui-monospace,monospace;font-size:.85rem;background:#f2f6f9;padding:14px;border-radius:10px;overflow-wrap:anywhere}footer{font-size:.82rem;color:#546578}button{font:inherit}
+@media(max-width:640px){main{padding:20px 12px 40px}.card{padding:18px 14px;border-radius:12px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric strong{font-size:1.05rem}select{margin:8px 0;display:block}.chart-top{display:block}th,td{padding:10px}svg{min-height:170px}}
+@media print{body{background:white}main{max-width:none;padding:0}.card{break-inside:avoid;box-shadow:none}details{display:block}select{display:none}}
+</style></head><body><main>
+<header><div class="eyebrow">Experimental decision lab · user assumptions</div>
+<h1>__SYMBOL__: hold, close, or adjust</h1>
+<p class="muted">One cash-flow ledger. One common future date. Compare what each action changes without resetting the original basis.</p>
+<p>Valuation date <strong>__ASOF__</strong> · Underlying <strong>__SPOT__</strong> · Common horizon <strong>__HORIZON__</strong></p></header>
+<section class="card" aria-labelledby="baseline"><h2 id="baseline">The same starting position</h2>
+<div class="metrics"><div class="metric"><span>Signed original entry value</span><strong>__ENTRY__</strong></div><div class="metric"><span>Actual entry fees</span><strong>__ENTRY_FEES__</strong></div><div class="metric"><span>Today's signed value</span><strong>__CURRENT__</strong></div><div class="metric"><span>Current P/L after entry fees</span><strong>__CURRENT_PL__</strong></div></div>
+<p class="muted">A negative entry value is a credit. A negative position value is a liability. Current value uses entered marks where available and model prices otherwise.</p></section>
+<section class="card" aria-labelledby="curve-title"><div class="chart-top"><h2 id="curve-title">Common horizon outcomes</h2><label for="metric">Chart measure<select id="metric"><option value="total_profit_loss">Total P/L from original entry</option><option value="change_from_today">Change from today's value</option><option value="advantage_vs_hold">Advantage versus Hold</option></select></label></div>
+<p class="muted">All curves use __HORIZON__. Closing produces cash; adjustments retain both their cash debit or credit and the new position value.</p>
+<div class="chart-scroll" tabindex="0" role="region" aria-label="Scrollable comparison chart"><svg id="chart" role="img" aria-label="Position comparison curves at the common horizon" viewBox="0 0 1040 350"></svg></div><div id="legend" class="legend" aria-label="Alternative colors"></div>
+<noscript><p>The full numeric outcomes are in the table below. Enable JavaScript to draw and switch chart measures.</p></noscript>
+<p class="muted">The plotted price range is a set of scenarios, not a maximum-loss bound. Curves are theoretical; no probability or preferred action is implied. On narrow screens, scroll the chart and tables sideways to inspect all values.</p></section>
+<section class="card" aria-labelledby="cash-title"><h2 id="cash-title">Today's actions and cash</h2><div class="scroll"><table><caption>Positive cash is received; negative cash is paid</caption><thead><tr><th>Alternative</th><th>Gross trade cash</th><th>Trade fees</th><th>Net cash today</th><th>Future exit fees</th><th>Remaining legs</th></tr></thead><tbody>__RECONCILIATION__</tbody></table></div>
+<p class="formula">Future wealth = net cash today + future signed position value − future exit fees<br>Total P/L = future wealth − original signed entry value − entry fees<br>Change from today = future wealth − today's signed position value</p>
+__LEDGERS__</section>
+<section class="card" aria-labelledby="scenario-title"><h2 id="scenario-title">Scenario comparison · __HORIZON__</h2><div class="scroll"><table><caption>Dollar amounts; each price group uses identical market assumptions</caption><thead><tr><th>Alternative</th><th>Underlying</th><th>Future position</th><th>Future wealth</th><th>Total P/L</th><th>Change from today</th><th>Versus Hold</th></tr></thead><tbody>__SCENARIOS__</tbody></table></div></section>
+<section class="card"><h2>Input and model checks</h2><div class="notice">__WARNINGS__</div><details><summary>Accounting and model assumptions</summary><ul>__ASSUMPTIONS__</ul></details></section>
+<footer>This local report contains no external scripts or network requests. It compares hypothetical actions using explicit user fills. Cash-flow receipts are not tax-lot realized profit; tax treatment and transaction execution are outside the model.</footer>
+</main><script type="application/json" id="comparison-data">__DATA__</script>
+<script>
+const report = JSON.parse(document.getElementById('comparison-data').textContent);
+const palette=['#247f83','#74839a','#bf652c','#7759b4','#a44972','#447248','#aa7916','#436bc1','#743f30','#3f6b65'];
+const svg=document.getElementById('chart'), legend=document.getElementById('legend');
+const money=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+function node(tag,attrs,text){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;svg.appendChild(n);return n;}
+report.alternatives.forEach((alt,i)=>{const item=document.createElement('span');const color=document.createElement('i');color.className='swatch';color.style.backgroundColor=palette[i];item.append(color,document.createTextNode(alt.name));legend.append(item);});
+function draw(){svg.replaceChildren();const metric=document.getElementById('metric').value;const all=report.alternatives.flatMap(a=>a.curve);let minY=Math.min(0,...all.map(p=>Number(p[metric]))),maxY=Math.max(0,...all.map(p=>Number(p[metric])));if(minY===maxY){minY-=1;maxY+=1;}const span=maxY-minY;minY-=span*.08;maxY+=span*.08;const minX=Math.min(...all.map(p=>Number(p.underlying_price))),maxX=Math.max(...all.map(p=>Number(p.underlying_price)));const x=v=>96+(v-minX)/(maxX-minX)*908,y=v=>24+(maxY-v)/(maxY-minY)*268;
+for(let i=0;i<5;i++){const val=minY+(maxY-minY)*i/4;node('line',{x1:96,x2:1004,y1:y(val),y2:y(val),stroke:'#e5eaf0'});node('text',{x:86,y:y(val)+4,'text-anchor':'end',fill:'#546578','font-size':13},money.format(val));}
+for(let i=0;i<6;i++){const val=minX+(maxX-minX)*i/5;node('text',{x:x(val),y:318,'text-anchor':'middle',fill:'#546578','font-size':13},money.format(val));}
+node('line',{x1:96,x2:1004,y1:y(0),y2:y(0),stroke:'#94a5b5','stroke-dasharray':'5 4'});
+node('line',{x1:x(Number(report.spot)),x2:x(Number(report.spot)),y1:24,y2:292,stroke:'#b6c5d2','stroke-dasharray':'3 4'});
+report.alternatives.forEach((alt,i)=>{const points=alt.curve.map(p=>x(Number(p.underlying_price))+','+y(Number(p[metric]))).join(' ');const line=node('polyline',{points,fill:'none',stroke:palette[i],'stroke-width':i===1?2:3,'stroke-dasharray':i===1?'7 4':'none'});const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=alt.name;line.append(title);});
+node('text',{x:550,y:344,'text-anchor':'middle',fill:'#546578','font-size':13},'Underlying price at the common horizon');}
+document.getElementById('metric').addEventListener('change',draw);draw();
+</script></body></html>
