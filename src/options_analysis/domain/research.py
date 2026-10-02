@@ -18,6 +18,18 @@ ResearchDecimal = Annotated[
 ]
 
 
+def _bounded_precision(value: Decimal) -> Decimal:
+    """Keep fixed-point responses bounded even for hostile exponent inputs."""
+    if not value.is_finite():
+        raise ValueError("numeric inputs must be finite")
+    parts = value.as_tuple()
+    if not isinstance(parts.exponent, int) or parts.exponent < -30:
+        raise ValueError("numeric inputs support at most 30 decimal places")
+    if len(parts.digits) > 32:
+        raise ValueError("numeric inputs support at most 32 significant digits")
+    return value
+
+
 class ManualPositionLeg(DomainModel):
     kind: Literal["stock", "call", "put"]
     quantity: ResearchDecimal = Field(ge=Decimal("-1000000"), le=Decimal("1000000"))
@@ -29,6 +41,18 @@ class ManualPositionLeg(DomainModel):
     expiration: date | None = None
     implied_volatility: ResearchDecimal = Field(default=Decimal("0.30"), ge=0, le=5)
     multiplier: ResearchDecimal | None = Field(default=None, gt=0, le=10000)
+
+    @field_validator(
+        "quantity",
+        "entry_price",
+        "current_price",
+        "strike",
+        "implied_volatility",
+        "multiplier",
+    )
+    @classmethod
+    def bounded_numeric_precision(cls, value: Decimal | None) -> Decimal | None:
+        return None if value is None else _bounded_precision(value)
 
     @model_validator(mode="after")
     def validate_terms(self) -> Self:
@@ -80,6 +104,19 @@ class ManualResearchRequest(DomainModel):
     )
     risk_budget: ResearchDecimal | None = Field(default=None, gt=0, le=1000000000)
 
+    @field_validator(
+        "spot",
+        "risk_free_rate",
+        "dividend_yield",
+        "fee_per_contract",
+        "fixed_fees",
+        "iv_shift",
+        "risk_budget",
+    )
+    @classmethod
+    def bounded_numeric_precision(cls, value: Decimal | None) -> Decimal | None:
+        return None if value is None else _bounded_precision(value)
+
     @field_validator("symbol")
     @classmethod
     def normalize_symbol(cls, value: str) -> str:
@@ -93,7 +130,9 @@ class ManualResearchRequest(DomainModel):
     def validate_moves(
         cls, values: tuple[ResearchDecimal, ...]
     ) -> tuple[ResearchDecimal, ...]:
-        if any(not value.is_finite() or value < -1 or value > 5 for value in values):
+        for value in values:
+            _bounded_precision(value)
+        if any(value < -1 or value > 5 for value in values):
             raise ValueError("scenario moves must be finite and between -1 and 5")
         return tuple(sorted(set(values)))
 
@@ -150,6 +189,8 @@ class ResearchScenario(DomainModel):
     position_value: ResearchDecimal
     profit_loss: ResearchDecimal
     change_from_today: ResearchDecimal
+    modeled_greeks: ResearchGreeks
+    greek_boundary: bool
 
 
 class ResearchScenarioSlice(DomainModel):

@@ -108,7 +108,8 @@ def test_vertical_fees_break_even_sizing_and_exact_expiry() -> None:
     assert result.sizing.max_position_units == 3
     assert result.sizing.fits_budget is True
     assert result.payoff_points == result.horizon_points
-    assert result.reward_risk_ratio == Decimal(196) / 304
+    assert result.reward_risk_ratio is not None
+    assert abs(result.reward_risk_ratio - Decimal(196) / 304) < Decimal("1e-27")
 
 
 def test_credit_condor_and_multiplier_scaling() -> None:
@@ -327,6 +328,8 @@ def test_invalid_analysis_inputs_fail_at_boundary(updates: dict[str, Any]) -> No
         {"implied_volatility": "0.0000001"},
         {"implied_volatility": "Infinity"},
         {"multiplier": 0},
+        {"entry_price": "0e-100000000"},
+        {"current_price": "1e-100000000"},
     ],
 )
 def test_invalid_leg_inputs_fail_at_boundary(updates: dict[str, Any]) -> None:
@@ -359,3 +362,106 @@ def test_budget_unbounded_zero_risk_and_flat_payoff_are_explicit() -> None:
     assert flat.sizing.risk_per_position == 0
     assert flat.sizing.max_position_units is None
     assert "flat_break_even" in {finding.code for finding in flat.findings}
+
+
+def test_horizon_greeks_match_price_derivatives_after_time_and_iv_shift() -> None:
+    result = analyze_manual_position(
+        request(
+            option(strike=95),
+            option(quantity=-2, strike=100),
+            option(strike=105),
+            {"kind": "stock", "quantity": 7, "entry_price": 100},
+            horizon_days=7,
+            iv_shift="0.03",
+            scenario_moves=["-0.0001", "0", "0.0001"],
+        )
+    )
+    down, center, up = result.scenarios
+    bump = float(up.underlying_price - center.underlying_price)
+    numerical_delta = float(up.position_value - down.position_value) / (2 * bump)
+    numerical_gamma = (
+        float(up.position_value - 2 * center.position_value + down.position_value)
+        / bump**2
+    )
+    assert float(center.modeled_greeks.delta) == pytest.approx(
+        numerical_delta, rel=1e-6
+    )
+    assert float(center.modeled_greeks.gamma) == pytest.approx(
+        numerical_gamma, rel=1e-5
+    )
+    assert center.modeled_greeks.gamma < 0
+    assert center.greek_boundary is False
+
+
+def test_calibrated_zero_day_scenario_greeks_match_current_summary() -> None:
+    mark = european_option("call", 100, 100, 30 / 365, 0.53).price
+    result = analyze_manual_position(
+        request(
+            option(quantity=-2, current_price=mark),
+            horizon_days=0,
+            calibrate_iv_from_marks=True,
+        )
+    )
+    at_spot = next(row for row in result.scenarios if row.move == 0)
+    assert at_spot.modeled_greeks == result.modeled_greeks
+    assert at_spot.modeled_greeks.delta < 0
+    assert at_spot.modeled_greeks.gamma < 0
+    assert at_spot.greek_boundary is False
+
+
+def test_calendar_horizon_greeks_use_each_legs_remaining_time() -> None:
+    later = dict(option(strike=110), expiration="2026-12-01")
+    result = analyze_manual_position(
+        request(option(quantity=-1), later, horizon_days=100)
+    )
+    at_spot = next(row for row in result.scenarios if row.move == 0)
+    later_estimate = european_option("call", 100, 110, 30 / 365, 0.3)
+    assert float(at_spot.modeled_greeks.delta) == pytest.approx(
+        -50 + later_estimate.delta * 100
+    )
+    assert float(at_spot.modeled_greeks.gamma) == pytest.approx(
+        later_estimate.gamma * 100
+    )
+    assert at_spot.greek_boundary is True
+    assert all(row.greek_boundary for row in result.timeline[-1].scenarios)
+
+
+def test_stock_scenario_greeks_are_constant_without_option_boundary_flags() -> None:
+    result = analyze_manual_position(
+        request(
+            {"kind": "stock", "quantity": -12, "entry_price": 100},
+            scenario_moves=[-1, 0, 5],
+            horizon_days=3650,
+        )
+    )
+    for day in result.timeline:
+        for row in day.scenarios:
+            assert row.modeled_greeks.delta == -12
+            assert row.modeled_greeks.gamma == 0
+            assert row.modeled_greeks.theta == 0
+            assert row.greek_boundary is False
+
+
+def test_very_small_finite_position_does_not_overflow_decimal_sizing() -> None:
+    result = analyze_manual_position(
+        request(
+            {"kind": "stock", "quantity": "1e-20", "entry_price": "1e-20"},
+            risk_budget=1,
+        )
+    )
+    assert result.sizing.max_position_units == 10**40
+
+
+def test_tiny_uncovered_tail_is_not_rounded_into_bounded_loss() -> None:
+    result = analyze_manual_position(
+        request(
+            {
+                "kind": "stock",
+                "quantity": "99.999999999999999999999999999999",
+                "entry_price": 100,
+            },
+            option(quantity=-1),
+        )
+    )
+    assert result.max_loss_bounded is False
+    assert result.max_loss is None

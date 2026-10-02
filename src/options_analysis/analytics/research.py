@@ -1,7 +1,7 @@
 """Deterministic research for manually supplied, standard option positions."""
 
 from datetime import timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from itertools import pairwise
 from typing import Literal
 
@@ -90,6 +90,21 @@ def _model_value(
     return total
 
 
+def _aggregate_greeks(
+    request: ManualResearchRequest,
+    spot: Decimal,
+    days: int = 0,
+    iv_shift: Decimal = ZERO,
+) -> ResearchGreeks:
+    totals = {name: ZERO for name in ("delta", "gamma", "theta", "vega", "rho")}
+    for leg in request.legs:
+        estimate = _estimate(leg, request, spot, days, iv_shift)
+        units = _units(leg)
+        for name in totals:
+            totals[name] += _decimal(getattr(estimate, name)) * units
+    return ResearchGreeks(**totals)
+
+
 def _expiry_metrics(
     legs: tuple[ManualPositionLeg, ...],
     basis: Decimal,
@@ -160,7 +175,29 @@ def _finding(
     return ResearchFinding(code=code, severity=severity, title=title, detail=detail)
 
 
+def _whole_position_units(budget: Decimal, risk: Decimal) -> int:
+    # Decimal floor division raises InvalidOperation when the integer quotient
+    # exceeds its arithmetic context precision. Integer ratios remain exact.
+    budget_numerator, budget_denominator = budget.as_integer_ratio()
+    risk_numerator, risk_denominator = risk.as_integer_ratio()
+    return (budget_numerator * risk_denominator) // (
+        budget_denominator * risk_numerator
+    )
+
+
 def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAnalysis:
+    """Analyze within precision exceeding the bounded inputs' exact products.
+
+    Up to three 32-digit inputs multiply per leg and 40 legs aggregate. The
+    local context prevents small uncovered tails disappearing by cancellation
+    against a larger stock or option position. It does not alter caller state.
+    """
+    with localcontext() as context:
+        context.prec = 128
+        return _analyze_manual_position(request)
+
+
+def _analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAnalysis:
     """Analyze one underlying without quote providers or network access.
 
     Current value uses entered marks where supplied, otherwise the model.
@@ -247,7 +284,6 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
     )
     basis = entry + fees
     breakdown: list[ResearchLegBreakdown] = []
-    greek_totals = {name: ZERO for name in ("delta", "gamma", "theta", "vega", "rho")}
     modeled_marks = 0
     mismatch_indices: list[int] = []
     for index, leg in enumerate(request.legs):
@@ -263,8 +299,6 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
         ):
             mismatch_indices.append(index + 1)
         units = _units(leg)
-        for name in greek_totals:
-            greek_totals[name] += _decimal(getattr(estimate, name)) * units
         intrinsic = _intrinsic(leg, request.spot)
         assert leg.multiplier is not None
         breakdown.append(
@@ -420,7 +454,7 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
     risk = max(ZERO, -max_loss) if max_loss is not None else None
     budget = request.risk_budget
     max_units = (
-        int(budget // risk)
+        _whole_position_units(budget, risk)
         if budget is not None and risk is not None and risk > 0
         else None
     )
@@ -469,6 +503,18 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
                     position_value=value,
                     profit_loss=value - basis,
                     change_from_today=value - current_value,
+                    modeled_greeks=_aggregate_greeks(
+                        request, price, days, request.iv_shift
+                    ),
+                    greek_boundary=any(
+                        leg.implied_volatility + request.iv_shift == 0
+                        or price == 0
+                        or (
+                            leg.expiration is not None
+                            and (leg.expiration - request.valuation_date).days == days
+                        )
+                        for leg in option_legs
+                    ),
                 )
             )
         return tuple(results)
@@ -523,9 +569,13 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
         "Scenarios report both P/L from entry after reserved fees and value change "
         "from today's entered/model marks. A zero-day scenario may differ from "
         "entered marks.",
-        "Greeks are modeled at today's unshifted IV: delta per $1, gamma per $1 "
-        "squared, theta per calendar day, vega per IV percentage point, rho per rate "
-        "percentage point.",
+        "Summary Greeks use today's unshifted IV. Scenario Greeks use each "
+        "scenario's price, date and shifted IV. Units: delta per $1, gamma as "
+        "delta change per $1, theta per calendar day, vega per IV percentage "
+        "point, rho per rate percentage point.",
+        "Scenario greek_boundary flags expiry, zero-IV or zero-spot limits. "
+        "At exercise kinks the convention is midpoint delta and zero gamma; "
+        "these boundary values are not reliable hedge estimates.",
         "The model excludes early exercise, discrete dividends, bid/ask spreads, "
         "liquidity, borrow fees, margin, taxes and exercise/assignment cash flows. "
         "Stock dividend cash flows are not added to P/L.",
@@ -553,7 +603,7 @@ def analyze_manual_position(request: ManualResearchRequest) -> ManualResearchAna
         current_model_value=current_model_value,
         current_profit_loss=current_value - basis,
         total_fees=fees,
-        modeled_greeks=ResearchGreeks(**greek_totals),
+        modeled_greeks=_aggregate_greeks(request, request.spot),
         max_profit=max_profit,
         max_profit_bounded=profit_bounded,
         max_loss=max_loss,
