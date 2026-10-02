@@ -23,6 +23,7 @@ options-analysis-replay-sample = "options_analysis.providers.replay.cli:main"
 options-analysis-schwab-auth = "options_analysis.providers.schwab.cli:main"
 options-analysis-schwab-smoke = "options_analysis.providers.schwab.cli:smoke_main"
 options-analysis-web = "options_analysis.web.server:main"
+options-analysis-distribution-lab = "options_analysis.experiments.distribution:main"
 
 [dependency-groups]
 dev = [
