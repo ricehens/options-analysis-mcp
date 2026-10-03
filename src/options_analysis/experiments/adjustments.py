@@ -6,10 +6,10 @@ explicit and are never silently replaced with modeled prices.
 """
 
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from typing import Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from options_analysis.analytics.pricing import european_option
 from options_analysis.analytics.research import analyze_manual_position
@@ -18,13 +18,21 @@ from options_analysis.domain.research import (
     ManualPositionLeg,
     ManualResearchRequest,
     ResearchDecimal,
+    _bounded_precision,
 )
 
 ZERO = Decimal(0)
 ContractKey = tuple[str, Decimal | None, date | None, Decimal]
 
 
-class AdjustmentTrade(DomainModel):
+class _LabInputModel(DomainModel):
+    @field_validator("*")
+    @classmethod
+    def bounded_numeric_precision(cls, value: object) -> object:
+        return _bounded_precision(value) if isinstance(value, Decimal) else value
+
+
+class AdjustmentTrade(_LabInputModel):
     kind: Literal["stock", "call", "put"]
     quantity: ResearchDecimal = Field(ge=-1000000, le=1000000)
     fill_price: ResearchDecimal = Field(ge=0, le=1000000)
@@ -53,19 +61,19 @@ class AdjustmentTrade(DomainModel):
         return self
 
 
-class AdjustmentPlan(DomainModel):
+class AdjustmentPlan(_LabInputModel):
     name: str = Field(min_length=1, max_length=80)
     trades: tuple[AdjustmentTrade, ...] = Field(min_length=1, max_length=40)
     future_exit_fees: ResearchDecimal = Field(default=ZERO, ge=0, le=1000000)
 
 
-class CloseFill(DomainModel):
+class CloseFill(_LabInputModel):
     leg_index: int = Field(ge=0, le=39)
     fill_price: ResearchDecimal = Field(ge=0, le=1000000)
     fees: ResearchDecimal = Field(default=ZERO, ge=0, le=1000000)
 
 
-class AdjustmentComparisonRequest(DomainModel):
+class AdjustmentComparisonRequest(_LabInputModel):
     position: ManualResearchRequest
     entry_fees: ResearchDecimal = Field(default=ZERO, ge=0, le=1000000)
     hold_future_exit_fees: ResearchDecimal = Field(default=ZERO, ge=0, le=1000000)
@@ -220,6 +228,18 @@ def _value(
 
 
 def compare_adjustments(request: AdjustmentComparisonRequest) -> AdjustmentComparison:
+    """Keep ledger products and cancellation exact beyond input precision.
+
+    Three bounded 32-digit quantities can multiply in a cash-flow row, followed
+    by at most 40 row additions. Use the same local precision as core research
+    so small retained positions and cash differences survive cancellation.
+    """
+    with localcontext() as context:
+        context.prec = 128
+        return _compare_adjustments(request)
+
+
+def _compare_adjustments(request: AdjustmentComparisonRequest) -> AdjustmentComparison:
     source = request.position
     original = analyze_manual_position(source)
     warnings = [f"{item.title}: {item.detail}" for item in original.findings]

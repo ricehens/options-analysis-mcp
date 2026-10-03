@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from pathlib import Path
 
 import pytest
@@ -163,3 +163,57 @@ def test_zero_day_theoretical_mark_mismatch_is_not_hidden() -> None:
     result = compare_adjustments(AdjustmentComparisonRequest.model_validate(data))
     assert result.alternatives[0].scenarios[0].change_from_today != 0
     assert any("Entered marks differ" in warning for warning in result.warnings)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("entry_fees",),
+        ("hold_future_exit_fees",),
+        ("close_fills", 0, "fill_price"),
+        ("close_fills", 0, "fees"),
+        ("adjustments", 0, "future_exit_fees"),
+        ("adjustments", 0, "trades", 0, "fees"),
+        ("adjustments", 0, "trades", 0, "fill_price"),
+    ],
+)
+@pytest.mark.parametrize("value", ["0e-100000000", "0." + "1" * 33])
+def test_lab_numeric_imports_bound_output_size(path: tuple, value: str) -> None:
+    data = sample()
+    target = data
+    for part in path[:-1]:
+        target = target[part]
+    target[path[-1]] = value
+    with pytest.raises(ValueError, match=r"at most (30 decimal places|32 significant)"):
+        AdjustmentComparisonRequest.model_validate(data)
+
+
+def test_small_cash_difference_survives_large_close_flows_and_caller_precision() -> (
+    None
+):
+    # Each fill is within the precision limit, but multiplying and then netting
+    # these two stock trades needs more than Decimal's default 28 digits.
+    data = {
+        "position": {
+            "symbol": "DEMO",
+            "spot": 1,
+            "valuation_date": "2026-10-01",
+            "horizon_days": 1,
+            "scenario_moves": [0],
+            "legs": [
+                {"kind": "stock", "quantity": 1000000, "entry_price": 1},
+                {"kind": "stock", "quantity": -1000000, "entry_price": 1},
+            ],
+        },
+        "close_fills": [
+            {"leg_index": 0, "fill_price": "1.000000000000000000000000000001"},
+            {"leg_index": 1, "fill_price": "1"},
+        ],
+    }
+    request = AdjustmentComparisonRequest.model_validate(data)
+    with localcontext() as context:
+        context.prec = 12
+        result = compare_adjustments(request)
+        assert context.prec == 12
+    assert result.alternatives[1].net_cash_flow == Decimal("1e-24")
+    assert result.alternatives[1].scenarios[0].total_profit_loss == Decimal("1e-24")
