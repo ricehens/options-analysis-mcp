@@ -14,6 +14,13 @@ uv run options-analysis-web
 Open **http://127.0.0.1:8000**. The production UI is included in the repository.
 The initial XYZ position is a labeled synthetic example, not a live quote.
 
+**On your iPhone:** the interface has dedicated mobile Position, Analysis and
+Plan views and can be added to Safari's Home Screen. To use a phone on the same
+trusted Wi-Fi as your Mac, start with `.venv/bin/options-analysis-web --host 0.0.0.0`
+and open `http://<your-Mac-LAN-IP>:8000` on the phone. The Mac must stay awake with
+the server running. See [mobile setup and Home Screen installation](docs/MOBILE.md)
+for steps, storage/backup behavior and network limits.
+
 **Position workbench** is the main workflow:
 
 - Enter any combination of stock, calls and puts with actual entry prices,

@@ -14,7 +14,23 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      testIgnore: "mobile.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "mobile-safari",
+      testMatch: "mobile.spec.ts",
+      use: { ...devices["iPhone 13"], defaultBrowserType: "webkit" },
+    },
+    {
+      name: "mobile-chrome",
+      testMatch: "mobile.spec.ts",
+      use: { ...devices["Pixel 7"], defaultBrowserType: "chromium" },
+    },
+  ],
   webServer: {
     command:
       "../.venv/bin/python -m uvicorn options_analysis.web.app:app --host 127.0.0.1 --port 8010",

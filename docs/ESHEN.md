@@ -39,6 +39,12 @@ The initial XYZ position is a clearly labeled synthetic example. The default
 market-data provider is also synthetic. Saved manual marks do not refresh
 automatically when the server starts or the page reloads.
 
+For an iPhone on the same trusted Wi-Fi, use
+`.venv/bin/options-analysis-web --host 0.0.0.0`, open
+`http://<your-Mac-LAN-IP>:8000` in Safari, and choose **Share → Add to Home
+Screen**. Keep the Mac awake and the server running. See [MOBILE.md](MOBILE.md)
+for the complete setup, storage guidance and installation steps.
+
 ## Design and scope
 
 The shared ChatGPT conversation was successfully reviewed. It motivated the
@@ -446,9 +452,54 @@ guidance now uses `eshen/*` branches and keeps pushing, publishing and merging
 as explicit actions. The backlog records evaluation of both experiments and
 possible later work on review history, American exercise and device sync.
 
+## Mobile and Home Screen follow-up
+
+The mobile follow-up stays on `eshen/main` and uses the existing mint/green
+palette, cards and light/dark themes. It adds a phone workflow without changing
+the underlying financial models:
+
+- At phone widths, the workbench separates **Position**, **Analysis**, and
+  **Plan & saves**. Switching sections preserves the draft. A fixed bottom
+  action offers calculation, result review, editing or saving as appropriate.
+- Position legs collapse into summaries. Entry controls have larger touch
+  targets, at least 16px input text, appropriate numeric keyboards, and native
+  date pickers. Synthetic/snapshot labels remain visible in a compact form.
+- Analysis has a phone-sized payoff chart with fewer, compact axis labels and
+  a touch inspection slider that retains full dollar values. Horizon scenarios
+  become readable cards; wider date
+  roadmaps retain their own scroll area and a pinned first column.
+- The shell uses a compact header and bottom navigation between Workbench and
+  Market. Navigation restores each workspace's scroll position. Keyboard
+  detection hides bottom controls while editing with the software keyboard.
+  Safe-area spacing accommodates the Home Screen view and home indicator.
+- The market explorer gets larger controls, a scrollable watchlist, compact
+  filter layout, and an explicit swipe hint on wide option chains.
+- An accessible settings dialog provides appearance, text size, Safari Home
+  Screen instructions, and browser-storage guidance. Browser offline events
+  show a connection notice. Theme-color metadata follows the selected theme.
+- The app manifest declares a standalone launch view and stable identity.
+  Apple metadata and 180/192/512px PNG icons use the existing Option Atlas
+  artwork. No service worker or offline calculation/cache was added: analysis
+  and market data still require the running Python server.
+- The server accepts optional `--host` and validated `--port` arguments. The
+  default stays `127.0.0.1:8000`; LAN access is an explicit startup choice.
+- A new [MOBILE.md](MOBILE.md) guide explains same-network access, installation,
+  reachability, local storage and backups. Phone/browser/address libraries are
+  separate; the Home Screen app may have a separate storage context too.
+
+Implementation lives in `PositionWorkbench.tsx`, `ResearchChart.tsx`,
+`workbench.css`, `App.tsx`, `MobileAppHelp.tsx`, `styles.css`, the HTML/manifest
+and public icons, plus `web/server.py`. Updated production assets are bundled
+with the Python application. `test_web_server.py` covers CLI defaults and
+validation; `ui/e2e/mobile.spec.ts` exercises iPhone/WebKit and
+Android/Chromium workflows. See [WORKBENCH_QA.md](WORKBENCH_QA.md) for the mobile
+verification checkpoint and real-device limits.
+
 ## Verification delivered
 
-The implementation was checked on macOS with Python 3.12 and Chromium:
+The original workbench checkpoint was checked on macOS with Python 3.12 and
+Chromium. The later mobile checkpoint, including WebKit, is recorded in
+[WORKBENCH_QA.md](WORKBENCH_QA.md):
 
 | Check | Recorded result |
 | --- | --- |
@@ -487,7 +538,7 @@ uv sync --all-groups
 make web-sync
 make release-check
 cd ui
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
 ```
 

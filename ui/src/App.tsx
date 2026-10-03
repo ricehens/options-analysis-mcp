@@ -15,6 +15,7 @@ import {
 } from "./api";
 import AnalysisPanel from "./AnalysisPanel";
 import PositionWorkbench from "./PositionWorkbench";
+import MobileAppHelp, { AppPreferences } from "./MobileAppHelp";
 import { fromProviderAnalysis } from "./research";
 import type { WorkbenchSetup } from "./workbenchState";
 import PriceHistoryChart from "./PriceHistoryChart";
@@ -58,15 +59,12 @@ import type {
 } from "./types";
 import {
   applyThemePreference,
-  FONT_SCALE_OPTIONS,
   loadFontScale,
   loadThemePreference,
   persistFontScale,
   persistThemePreference,
-  stepFontScale,
 } from "./preferences";
 import type { FontScale, ThemePreference } from "./preferences";
-import ThemeControls from "./ThemeControls";
 import WarningDisclosure from "./WarningDisclosure";
 
 function money(value: DecimalValue | null | undefined): string {
@@ -931,14 +929,22 @@ function MarketExplorer({
 
             <div className="chain-meta">
               <span>{rows.length} strikes shown</span>
-              <span>Click + to add a contract to the draft</span>
+              <span>Tap + to add a contract to the draft</span>
+              <span className="mobile-chain-hint">
+                Swipe the chain to compare calls and puts →
+              </span>
               <WarningDisclosure
                 title="Chain warnings"
                 warnings={workspace?.chain.warnings ?? []}
               />
             </div>
 
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              aria-label="Scrollable option chain"
+              role="region"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">
                   Calls and puts for {selectedSymbol} expiring {expiration}
@@ -1272,6 +1278,7 @@ function MarketExplorer({
                       </select>
                       <input
                         aria-label={`Quantity for ${symbol}`}
+                        inputMode="numeric"
                         max="1000000"
                         min="1"
                         onChange={(event) =>
@@ -1287,6 +1294,7 @@ function MarketExplorer({
                       />
                       <input
                         aria-label={`Entry price for ${symbol}`}
+                        inputMode="decimal"
                         min="0"
                         onChange={(event) =>
                           updateDraftLeg(symbol, {
@@ -1389,16 +1397,29 @@ function App() {
   });
   const [view, setView] = useState<"workbench" | "market">("workbench");
   const [marketVisited, setMarketVisited] = useState(false);
+  const [online, setOnline] = useState(() => navigator.onLine);
+  const scrollPositions = useRef({ workbench: 0, market: 0 });
   const [importedSetup, setImportedSetup] = useState<WorkbenchSetup | null>(
     null,
   );
   useEffect(() => {
     applyThemePreference(document.documentElement, theme);
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateBrowserTheme = () => {
+      const dark =
+        theme === "dark" || (theme === "system" && systemTheme.matches);
+      document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+        meta.setAttribute("content", dark ? "#111b19" : "#ffffff");
+      });
+    };
+    updateBrowserTheme();
+    systemTheme.addEventListener("change", updateBrowserTheme);
     try {
       persistThemePreference(window.localStorage, theme);
     } catch {
       /* Theme still works when browser storage is unavailable. */
     }
+    return () => systemTheme.removeEventListener("change", updateBrowserTheme);
   }, [theme]);
 
   useEffect(() => {
@@ -1410,9 +1431,69 @@ function App() {
     }
   }, [fontScale]);
 
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    let fullHeight = viewport?.height ?? window.innerHeight;
+    const update = () => {
+      const focused = document.activeElement;
+      const editing =
+        focused instanceof HTMLElement &&
+        focused.matches(
+          'textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]), [contenteditable="true"]',
+        );
+      const height = viewport?.height ?? window.innerHeight;
+      if (!editing) fullHeight = height;
+      const keyboard =
+        editing &&
+        (!viewport ||
+          fullHeight - height > 120 ||
+          window.innerHeight - height > 120);
+      document.documentElement.classList.toggle("app-keyboard-open", keyboard);
+    };
+    const resetHeight = () => {
+      fullHeight = window.innerHeight;
+      update();
+    };
+    document.addEventListener("focusin", update);
+    document.addEventListener("focusout", update);
+    viewport?.addEventListener("resize", update);
+    window.addEventListener("orientationchange", resetHeight);
+    return () => {
+      document.removeEventListener("focusin", update);
+      document.removeEventListener("focusout", update);
+      viewport?.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", resetHeight);
+      document.documentElement.classList.remove("app-keyboard-open");
+    };
+  }, []);
+
+  function switchView(next: "workbench" | "market") {
+    if (next === view) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    scrollPositions.current[view] = window.scrollY;
+    setView(next);
+    if (next === "market") setMarketVisited(true);
+    requestAnimationFrame(() =>
+      window.scrollTo({ top: scrollPositions.current[next] }),
+    );
+  }
+
   function openResearch(analysis: PositionAnalysis, name: string) {
     const setup = fromProviderAnalysis(analysis, name);
     setImportedSetup(setup);
+    scrollPositions.current.workbench = 0;
     setView("workbench");
     window.scrollTo({ top: 0 });
   }
@@ -1431,7 +1512,7 @@ function App() {
           href="#"
           onClick={(event) => {
             event.preventDefault();
-            setView("workbench");
+            switchView("workbench");
           }}
         >
           <span className="brand-mark">OA</span>
@@ -1442,64 +1523,68 @@ function App() {
         <nav className="app-view-tabs" aria-label="Workspace">
           <button
             type="button"
+            aria-label="Position workbench"
             aria-current={view === "workbench" ? "page" : undefined}
-            onClick={() => setView("workbench")}
+            onClick={() => switchView("workbench")}
           >
-            Position workbench
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+            >
+              <path d="M4 4v16h16M7 15l4-6 4 3 5-7" />
+            </svg>
+            <span className="app-tab-full">Position workbench</span>
+            <span className="app-tab-short" aria-hidden="true">
+              Workbench
+            </span>
           </button>
           <button
             type="button"
+            aria-label="Market explorer"
             aria-current={view === "market" ? "page" : undefined}
-            onClick={() => {
-              setView("market");
-              setMarketVisited(true);
-            }}
+            onClick={() => switchView("market")}
           >
-            Market explorer
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+            >
+              <circle cx="10" cy="10" r="6" />
+              <path d="m15 15 5 5M7 11l2-3 2 2 2-3" />
+            </svg>
+            <span className="app-tab-full">Market explorer</span>
+            <span className="app-tab-short" aria-hidden="true">
+              Market
+            </span>
           </button>
         </nav>
         <div className="app-preferences">
-          <ThemeControls onChange={setTheme} theme={theme} />
-
-          <div className="preference-card text-size-card">
-            <span>Text size</span>
-            <div
-              aria-label="Text size"
-              className="text-size-controls"
-              role="group"
-            >
-              <button
-                aria-label="Decrease text size"
-                disabled={fontScale === FONT_SCALE_OPTIONS[0]}
-                onClick={() =>
-                  setFontScale((current) => stepFontScale(current, -1))
-                }
-                type="button"
-              >
-                A−
-              </button>
-              <button
-                aria-label={`Reset text size, current ${fontScale} percent`}
-                onClick={() => setFontScale(100)}
-                title="Reset text size"
-                type="button"
-              >
-                {fontScale}%
-              </button>
-              <button
-                aria-label="Increase text size"
-                disabled={fontScale === FONT_SCALE_OPTIONS.at(-1)}
-                onClick={() =>
-                  setFontScale((current) => stepFontScale(current, 1))
-                }
-                type="button"
-              >
-                A+
-              </button>
-            </div>
-          </div>
+          <AppPreferences
+            theme={theme}
+            onThemeChange={setTheme}
+            fontScale={fontScale}
+            onFontScaleChange={setFontScale}
+          />
         </div>
+        <MobileAppHelp
+          theme={theme}
+          onThemeChange={setTheme}
+          fontScale={fontScale}
+          onFontScaleChange={setFontScale}
+        />
       </header>
+      {!online ? (
+        <div className="app-offline-status" role="status">
+          <strong>You’re offline.</strong> Existing results remain visible.
+          Reconnect to the running server before calculating or loading market
+          data.
+        </div>
+      ) : null}
       <div hidden={view !== "workbench"}>
         <PositionWorkbench
           initialSetup={importedSetup}

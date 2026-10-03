@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — mobile follow-up
+
+- Add phone-specific Position/Analysis/Plan sections, collapsible legs, larger
+  touch controls, readable payoff/scenario views and keyboard-aware actions.
+- Add safe-area bottom navigation, a mobile settings/help dialog, and improved
+  market-explorer controls while retaining the desktop layout and themes.
+- Supply Safari Home Screen metadata and app icons with standalone launch
+  support; document same-Wi-Fi installation and browser-local backups.
+- Accept explicit `--host`/`--port` server arguments for trusted-LAN access;
+  retain the default `127.0.0.1:8000` startup.
+- Add iPhone/WebKit and Android/Chromium browser regression coverage.
+
 ## 0.9.0 — 2026-10-02
 
 - Make the provider-independent position workbench the main application flow,

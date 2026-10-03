@@ -67,7 +67,7 @@ uv sync --all-groups
 make web-sync
 make release-check
 cd ui
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
 ```
 
@@ -97,6 +97,51 @@ checks above all completed successfully.
 Schwab OAuth and live responses were not exercised. No broker orders, American
 exercise engine, assignment path, margin requirement, tax lot accounting or
 historical option backtest is implemented. Current marks remain explicit user
-inputs or copied provider snapshots. Cross-browser verification beyond Chromium
-and a full screen-reader audit remain future work. Workbench storage is local
+inputs or copied provider snapshots. A full screen-reader audit remains future
+work; mobile browser coverage is recorded below. Workbench storage is local
 to one browser origin; the JSON backup is the portable copy.
+
+## Mobile follow-up — 2026-10-03
+
+The phone workflow adds dedicated sections, collapsible legs, larger controls,
+mobile chart/scenario layouts, safe-area navigation, and Safari Home Screen
+metadata/icons. Desktop behavior remains covered by the existing suite.
+
+| Check | Result |
+| --- | --- |
+| Python suite, including eight new server CLI checks | 217 passed |
+| TypeScript unit suite | 72 passed |
+| Desktop Chromium browser suite | 15 passed |
+| iPhone/WebKit mobile browser suite | 6 passed |
+| Android/Chromium mobile browser suite | 6 passed |
+| Ruff formatting/lint and strict mypy | Clean |
+| React type checking and production build | Passed |
+| Python distributions and exact packaged-asset verification | Passed |
+
+Mobile browser checks exercise actual packaged assets: changed entry prices
+produce the expected new risk numbers, leg expansion preserves edits, all three
+workbench sections fit narrow viewports, touch fields remain at least 44px high
+with at least 16px text in portrait and landscape, and saved plans survive
+reload and backup/import. A reduced editing viewport and simulated
+`visualViewport` resize verify keyboard-triggered navigation hiding and
+restoration. HTTP checks confirm manifest and icon delivery.
+Large covered-call positions keep every axis label within the mobile SVG while
+the chart inspector retains unabridged dollar amounts. Screenshot checks use
+viewport captures: Playwright's full-page Chromium capture was observed to
+disable coarse-pointer emulation during a later viewport change.
+
+Visual review covered 320/390/430px phone widths, 844px landscape, 1440px desktop,
+light/dark themes, and enlarged text. It caught native Safari selects ignoring
+minimum height; the final styles use explicit sizing and styled arrows for touch
+devices in both orientations. An additional WebKit axe run found no violations
+of the checked WCAG 2 A/AA and 2.1 A/AA rules across Position, Analysis and Plan.
+
+The server CLI retains its loopback default and validates port arguments. The
+new [MOBILE.md](MOBILE.md) guide documents explicit LAN binding, Safari setup,
+server availability, and browser/app-local backups. No offline cache, offline
+pricing, authentication or device synchronization was added.
+
+Browser emulation does not exercise the native Safari share sheet, an actual
+Home Screen installation, physical screen cutouts or the real iOS keyboard.
+Those require an iPhone check. The documented setup also depends on the user's
+Wi-Fi and firewall configuration, which were not changed during implementation.

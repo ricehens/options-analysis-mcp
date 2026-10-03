@@ -1,6 +1,6 @@
 # Project Status and Continuation Handoff
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 
 ## Current state
 
@@ -25,6 +25,13 @@ quoted positions can transfer into the workbench after entry basis is complete.
 
 See `docs/WORKBENCH.md` for the accounting contract, model scope and commands.
 The latest validation evidence is recorded in `docs/WORKBENCH_QA.md`.
+
+The phone interface now has Position/Analysis/Plan sections, collapsible legs,
+larger touch controls, readable charts/scenario cards, bottom navigation and
+keyboard-aware actions. Safari Home Screen metadata/icons and an in-app help
+dialog support a standalone launch. Start with `--host 0.0.0.0` for explicit
+trusted-LAN access; the normal command remains loopback-only. The Mac/server
+must stay running. See `docs/MOBILE.md` for installation and backup guidance.
 
 Experiments are isolated from core UI and remain unmerged:
 

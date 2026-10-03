@@ -356,7 +356,10 @@ test("desktop, mobile, dark and enlarged text layouts remain usable", async ({
       overflow.viewport + 1,
     );
     await expect(
-      page.getByRole("button", { name: "Recalculate", exact: false }),
+      page.getByRole("button", {
+        name: width <= 760 ? "View analysis" : "Recalculate",
+        exact: true,
+      }),
     ).toBeVisible();
     if (width === 1440 || width === 390)
       await page.screenshot({

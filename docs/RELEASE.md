@@ -6,7 +6,8 @@
    `src/options_analysis/__init__.py` together.
 3. Update `CHANGELOG.md`, `README.md`, `STATUS.md`, and the milestone note.
 4. Run `make web-sync` when `ui/package-lock.json` changed.
-5. Run `make web-e2e` after installing Chromium with `npx playwright install chromium`
+5. Run `make web-e2e` after installing Chromium and WebKit with
+   `npx playwright install chromium webkit`
    from `ui/`. Then run `make release-check` (or add `UV=.uv-bootstrap/bin/uv`). This includes
    the React type check and production build.
 6. Inspect wheel contents and confirm `options_analysis.testing` and

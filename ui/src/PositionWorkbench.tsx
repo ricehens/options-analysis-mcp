@@ -77,6 +77,17 @@ function Field({
         aria-label={label}
         aria-describedby={hint ? hintId : undefined}
         type={type}
+        inputMode={
+          type === "number" && !min?.startsWith("-")
+            ? step === "1"
+              ? "numeric"
+              : "decimal"
+            : undefined
+        }
+        autoCapitalize={
+          type === "text" && label === "Underlying" ? "characters" : undefined
+        }
+        autoCorrect="off"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         min={min}
@@ -122,11 +133,15 @@ function LegEditor({
   onRemove: () => void;
 }) {
   const option = leg.kind !== "stock";
+  const [expanded, setExpanded] = useState(
+    index === 0 || leg.entryPrice === "",
+  );
+  const fieldsId = useId();
   return (
-    <fieldset className="wb-leg">
+    <fieldset className={`wb-leg ${expanded ? "is-expanded" : "is-collapsed"}`}>
       <legend>Leg {index + 1}</legend>
       <div className="wb-leg-header">
-        <strong>
+        <strong className="wb-leg-desktop-title">
           <span className={`wb-leg-side ${leg.action}`}>
             {leg.action === "buy" ? "LONG" : "SHORT"}
           </span>{" "}
@@ -134,6 +149,33 @@ function LegEditor({
             ? `${leg.kind === "call" ? "Call" : "Put"} option`
             : "Stock / ETF"}
         </strong>
+        <button
+          className="wb-leg-expander"
+          type="button"
+          aria-label={`${expanded ? "Collapse" : "Edit"} leg ${index + 1}`}
+          aria-expanded={expanded}
+          aria-controls={fieldsId}
+          onClick={() => setExpanded((current) => !current)}
+        >
+          <span className={`wb-leg-side ${leg.action}`}>
+            {leg.action === "buy" ? "LONG" : "SHORT"}
+          </span>
+          <span>
+            <strong>
+              {leg.quantity || "—"}{" "}
+              {option
+                ? `${leg.kind} · ${leg.strike ? money(leg.strike) : "strike needed"}`
+                : "shares"}
+            </strong>
+            <small>
+              {option ? `${leg.expiration || "Set expiration"} · ` : ""}Entry{" "}
+              {leg.entryPrice === "" ? "needed" : money(leg.entryPrice, 2)}
+            </small>
+          </span>
+          <span className="wb-leg-chevron" aria-hidden="true">
+            {expanded ? "−" : "+"}
+          </span>
+        </button>
         <button
           type="button"
           className="wb-icon-button"
@@ -144,7 +186,7 @@ function LegEditor({
           ×
         </button>
       </div>
-      <div className="wb-leg-fields">
+      <div className="wb-leg-fields" id={fieldsId}>
         <label className="wb-field">
           <span>Instrument</span>
           <select
@@ -471,8 +513,8 @@ function Results({
               probabilities.
             </p>
             {tableMode === "horizon" ? (
-              <div className="wb-table-scroll">
-                <table className="wb-table">
+              <div className="wb-table-scroll wb-horizon-scroll">
+                <table className="wb-table wb-horizon-table">
                   <caption className="sr-only">
                     Scenario P/L from entry and change from today at the
                     selected horizon
@@ -495,11 +537,19 @@ function Results({
                           {Number(row.move) > 0 ? "+" : ""}
                           {percent(row.move)}
                         </th>
-                        <td>{money(row.underlying_price, 2)}</td>
-                        <td className={pnlClass(row.profit_loss)}>
+                        <td data-label="Underlying">
+                          {money(row.underlying_price, 2)}
+                        </td>
+                        <td
+                          data-label="P/L from entry"
+                          className={pnlClass(row.profit_loss)}
+                        >
                           {signedMoney(row.profit_loss)}
                         </td>
-                        <td className={pnlClass(row.change_from_today)}>
+                        <td
+                          data-label="From today"
+                          className={pnlClass(row.change_from_today)}
+                        >
                           {signedMoney(row.change_from_today)}
                         </td>
                       </tr>
@@ -547,7 +597,12 @@ function Results({
                   </div>
                 </div>
                 {timeline.length ? (
-                  <div className="wb-table-scroll">
+                  <div
+                    className="wb-table-scroll"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable date roadmap"
+                  >
                     <table className="wb-table wb-roadmap">
                       <caption className="sr-only">
                         {basis === "profit_loss"
@@ -763,6 +818,9 @@ export default function PositionWorkbench({
   const [notice, setNotice] = useState<string | null>(null);
   const [storageError, setStorageError] = useState(false);
   const [undoState, setUndoState] = useState<WorkbenchState | null>(null);
+  const [mobileSection, setMobileSection] = useState<
+    "position" | "analysis" | "plan"
+  >("position");
   const fileInput = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
   const requestSequence = useRef(0);
@@ -786,6 +844,21 @@ export default function PositionWorkbench({
   const currentAnalysis =
     analysisKey && requestState.key === analysisKey ? analysis : null;
   const dirtyResults = analysis !== null && currentAnalysis === null;
+
+  function openMobileSection(section: typeof mobileSection) {
+    setMobileSection(section);
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      const focused = document.activeElement;
+      if (
+        focused instanceof HTMLElement &&
+        focused.matches("input, textarea, select")
+      )
+        focused.blur();
+      requestAnimationFrame(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
+    }
+  }
 
   function updateSetup(update: Partial<WorkbenchSetup>) {
     setState((current) => ({
@@ -815,7 +888,7 @@ export default function PositionWorkbench({
     }));
     setError(null);
   }
-  async function calculate(target = setup) {
+  async function calculate(target = setup, reveal = false) {
     let request;
     try {
       request = buildResearchRequest(target);
@@ -836,6 +909,7 @@ export default function PositionWorkbench({
       if (sequence !== requestSequence.current) return;
       setAnalysis(result);
       setAnalysisKey(JSON.stringify(request));
+      if (reveal) openMobileSection("analysis");
     } catch (reason) {
       if (abort.signal.aborted) return;
       setError(
@@ -867,6 +941,7 @@ export default function PositionWorkbench({
     importedSetup.current = initialSetup;
     setUndoState(state);
     setState((current) => ({ ...current, current: initialSetup }));
+    openMobileSection("position");
     setNotice(
       "Position opened from the market explorer. Check the imported assumptions before using the result.",
     );
@@ -907,6 +982,7 @@ export default function PositionWorkbench({
       const saved = mergeSavedSetups(state.saved, incoming.saved);
       setUndoState(state);
       setState({ current: incoming.current, saved });
+      openMobileSection("position");
       setNotice(
         `Backup imported. Your saved library now contains ${saved.length} setups.`,
       );
@@ -935,7 +1011,12 @@ export default function PositionWorkbench({
   const briefFilename = `${setup.symbol.toLowerCase().replace(/[^a-z0-9_-]/g, "") || "position"}-review.txt`;
 
   return (
-    <main className="wb-shell" id="workbench-content" tabIndex={-1}>
+    <main
+      className="wb-shell"
+      id="workbench-content"
+      tabIndex={-1}
+      data-mobile-section={mobileSection}
+    >
       <header className="wb-intro">
         <div>
           <span className="wb-kicker">Your position, in perspective</span>
@@ -949,16 +1030,45 @@ export default function PositionWorkbench({
           <span aria-hidden="true">◉</span> Private · stored in this browser
         </span>
       </header>
+      <nav className="wb-mobile-sections" aria-label="Workbench sections">
+        {(
+          [
+            ["position", "Position"],
+            ["analysis", "Analysis"],
+            ["plan", "Plan & saves"],
+          ] as const
+        ).map(([section, label]) => (
+          <button
+            key={section}
+            type="button"
+            aria-current={mobileSection === section ? "page" : undefined}
+            onClick={() => openMobileSection(section)}
+          >
+            {label}
+            {section === "analysis" && dirtyResults ? (
+              <span
+                className="wb-needs-refresh"
+                aria-label="needs recalculation"
+              />
+            ) : null}
+          </button>
+        ))}
+      </nav>
       <div
         className={`wb-data-banner ${setup.isExample ? "example" : "manual"}`}
       >
         <strong>
           {setup.isExample ? "Synthetic example" : "Manual snapshot"}
         </strong>
-        <span>
+        <span className="wb-data-banner-detail">
           {setup.isExample
             ? "These prices are invented for exploration. Replace them with your position and current data."
             : `Pricing date: ${setup.valuationDate || "not set"}. Entered or copied prices stay fixed until you update them. The workbench does not fetch or verify live quotes.`}
+        </span>
+        <span className="wb-data-banner-compact">
+          {setup.isExample
+            ? "Invented prices for practice."
+            : `${setup.valuationDate || "Date not set"} · update prices before each review.`}
         </span>
         {setup.isExample ? (
           <button
@@ -1001,6 +1111,19 @@ export default function PositionWorkbench({
           </button>
         </div>
       ) : null}
+      <div className="wb-mobile-position-summary">
+        <div>
+          <strong>{setup.name || "Untitled position"}</strong>
+          <span>
+            {setup.symbol || "Set underlying"} · {setup.legs.length}{" "}
+            {setup.legs.length === 1 ? "leg" : "legs"} ·{" "}
+            {setup.valuationDate || "Set date"}
+          </span>
+        </div>
+        <button type="button" onClick={() => openMobileSection("position")}>
+          Edit
+        </button>
+      </div>
 
       <section
         className="wb-card wb-editor"
@@ -1232,7 +1355,7 @@ export default function PositionWorkbench({
             className="wb-button primary"
             type="button"
             disabled={busy}
-            onClick={() => void calculate()}
+            onClick={() => void calculate(setup, true)}
           >
             {busy
               ? "Calculating…"
@@ -1248,27 +1371,29 @@ export default function PositionWorkbench({
           {error}
         </div>
       ) : null}
-      {currentAnalysis && !busy ? (
-        <Results analysis={currentAnalysis} setup={setup} />
-      ) : (
-        <div className="wb-results-placeholder" role="status">
-          <span aria-hidden="true">⌁</span>
-          <h2>
-            {busy
-              ? "Mapping your position"
-              : dirtyResults
-                ? "Results need a refresh"
-                : "Your risk map starts here"}
-          </h2>
-          <p>
-            {busy
-              ? "Calculating payoff, scenarios, and the decision review."
-              : dirtyResults
-                ? "The inputs have changed. Analyze again to avoid making a decision from stale numbers."
-                : "Enter your legs, actual entry prices, and market assumptions, then analyze the position."}
-          </p>
-        </div>
-      )}
+      <div className="wb-analysis-section">
+        {currentAnalysis && !busy ? (
+          <Results analysis={currentAnalysis} setup={setup} />
+        ) : (
+          <div className="wb-results-placeholder" role="status">
+            <span aria-hidden="true">⌁</span>
+            <h2>
+              {busy
+                ? "Mapping your position"
+                : dirtyResults
+                  ? "Results need a refresh"
+                  : "Your risk map starts here"}
+            </h2>
+            <p>
+              {busy
+                ? "Calculating payoff, scenarios, and the decision review."
+                : dirtyResults
+                  ? "The inputs have changed. Analyze again to avoid making a decision from stale numbers."
+                  : "Enter your legs, actual entry prices, and market assumptions, then analyze the position."}
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="wb-notebook-grid">
         <section className="wb-card" aria-labelledby="wb-plan-heading">
@@ -1278,6 +1403,14 @@ export default function PositionWorkbench({
               <h2 id="wb-plan-heading">Your trade plan</h2>
             </div>
             <span className="wb-pill">Autosaved draft</span>
+          </div>
+          <div className="wb-mobile-plan-name">
+            <Field
+              label="Plan setup name"
+              type="text"
+              value={setup.name}
+              onChange={(name) => updateSetup({ name })}
+            />
           </div>
           <div className="wb-plan-fields">
             <label className="wb-field">
@@ -1394,6 +1527,7 @@ export default function PositionWorkbench({
                     onClick={() => {
                       setUndoState(state);
                       updateSetup(row.setup);
+                      openMobileSection("position");
                       setNotice(
                         `Opened “${row.setup.name}”. Prices are the saved values, not refreshed quotes.`,
                       );
@@ -1484,6 +1618,7 @@ export default function PositionWorkbench({
                 lossBudget: "",
               };
               updateSetup(next);
+              openMobileSection("position");
               setNotice(
                 "Started a blank position. Your saved setups are available below.",
               );
@@ -1492,6 +1627,51 @@ export default function PositionWorkbench({
             Start a blank position
           </button>
         </section>
+      </div>
+      <div className="wb-mobile-actions">
+        <div id="wb-mobile-action-status">
+          <strong>
+            {mobileSection === "plan"
+              ? "Keep your plan"
+              : `${setup.symbol || "Your position"} · ${setup.legs.length} legs`}
+          </strong>
+          <span>
+            {error ??
+              (mobileSection === "plan"
+                ? storageError
+                  ? "Only in this tab · export a backup"
+                  : "Draft saved in this browser"
+                : (requestState.validationError ??
+                  (dirtyResults
+                    ? "Inputs changed · analyze again"
+                    : currentAnalysis
+                      ? "Analysis ready"
+                      : "Enter your position to begin")))}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="wb-button primary"
+          disabled={busy && mobileSection !== "plan"}
+          aria-describedby="wb-mobile-action-status"
+          onClick={() => {
+            if (mobileSection === "plan") saveSetup();
+            else if (mobileSection === "analysis" && currentAnalysis)
+              openMobileSection("position");
+            else if (currentAnalysis) openMobileSection("analysis");
+            else void calculate(setup, true);
+          }}
+        >
+          {mobileSection === "plan"
+            ? "Save setup"
+            : busy
+              ? "Calculating…"
+              : currentAnalysis
+                ? mobileSection === "analysis"
+                  ? "Edit position"
+                  : "View analysis"
+                : "Analyze position"}
+        </button>
       </div>
       <footer className="wb-footer">
         An analysis workspace, not an execution system. Review quote quality,
