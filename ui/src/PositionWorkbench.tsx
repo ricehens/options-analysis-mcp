@@ -402,6 +402,11 @@ function Results({
               </span>
             </div>
             <ResearchChart analysis={analysis} />
+            <p className="wb-caption">
+              Modeled sensitivities at {analysis.valuation_date} and spot{" "}
+              {money(analysis.spot, 2)}. Use the date roadmap to inspect future
+              delta and gamma.
+            </p>
             <div className="wb-greeks" aria-label="Modeled position Greeks">
               <div>
                 <span>Delta</span>
@@ -458,7 +463,9 @@ function Results({
               </div>
             </div>
             <p className="wb-caption">
-              At {analysis.horizon_days} days forward ({analysis.horizon_date}),
+              {tableMode === "horizon"
+                ? `At ${analysis.horizon_days} days forward (${analysis.horizon_date}),`
+                : `Dates measured from ${analysis.valuation_date},`}{" "}
               with IV {Number(setup.ivShift) >= 0 ? "+" : ""}
               {setup.ivShift} percentage points. Values are scenarios, not
               probabilities.

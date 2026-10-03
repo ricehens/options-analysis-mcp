@@ -32,6 +32,26 @@ use the synthetic symbol XYZ and are visibly labeled. Transferring a market
 explorer position preserves its entry basis; unknown basis must be filled in
 before transfer. Provider marks and default model inputs still need review.
 
+## First review of a real position
+
+1. Start a blank position, or edit an example and choose **Use as my position**.
+   Enter the underlying, pricing date and spot, followed by every stock/option
+   leg. Use positive counts with Long/Short direction and actual entry basis;
+   current marks belong in their separate fields. Check multipliers.
+2. Run **Analyze position**. Reconcile signed entry/current values in the leg
+   breakdown with your records before interpreting the graph. A negative
+   short-option current value is a liability, not a second realized loss.
+3. Enter the dates you actually want to review in **Roadmap dates**. Inspect
+   both P/L from entry and additional change from today. In **Across dates**,
+   switch to delta/gamma to inspect how exposure changes. Change IV separately
+   to see which conclusions depend on the volatility assumption.
+4. Write the thesis and its invalidation condition. Set a review date and a
+   loss budget for the whole position. Save a named setup and export a backup.
+5. When returning, update the valuation date, spot and marks together. Saved
+   setups are snapshots, not automatically refreshed holdings. The exported
+   ChatGPT brief includes assumptions and accounting context for a follow-up
+   review; sharing it remains an explicit action outside this application.
+
 ## Accounting contract
 
 For each leg, let `q` be signed quantity, `m` the multiplier (1 for stock),
