@@ -283,5 +283,11 @@ describe("payoff inspection and review handoff", () => {
     expect(brief).toContain("No current analysis is included");
     expect(brief).toContain("A break below $95");
     expect(brief).toContain("No probability-of-profit claim");
+    setup.spot = "";
+    setup.legs[0].entryPrice = "";
+    const incomplete = reviewBrief(setup, null);
+    expect(incomplete).toContain("spot not supplied");
+    expect(incomplete).toContain("entry not supplied");
+    expect(incomplete).not.toContain("entry $0.00");
   });
 });

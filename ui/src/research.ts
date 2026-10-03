@@ -539,7 +539,7 @@ export function reviewBrief(
       leg.kind === "stock"
         ? "shares"
         : `${leg.expiration} ${money(leg.strike, 2)} ${leg.kind} (multiplier ${leg.multiplier})`;
-    return `- ${leg.action === "buy" ? "Long" : "Short"} ${leg.quantity} ${contract}; entry ${money(leg.entryPrice, 2)}; current mark ${leg.currentMark === "" ? "not supplied (model used)" : money(leg.currentMark, 2)}${leg.kind === "stock" ? "" : `; IV ${leg.volatility}%`}.`;
+    return `- ${leg.action === "buy" ? "Long" : "Short"} ${leg.quantity} ${contract}; entry ${leg.entryPrice.trim() === "" ? "not supplied" : money(leg.entryPrice, 2)}; current mark ${leg.currentMark === "" ? "not supplied (model used)" : money(leg.currentMark, 2)}${leg.kind === "stock" ? "" : `; IV ${leg.volatility}%`}.`;
   });
   const findings = analysis
     ? [
@@ -553,7 +553,7 @@ export function reviewBrief(
     "Please help me evaluate the risk/reward and my decision process. Challenge my thesis, identify missing information, and compare holding, reducing, closing, or adjusting without assuming a trade is appropriate.",
     "",
     `Data: ${setup.isExample ? "SYNTHETIC EXAMPLE — not actual market quotes" : "manually entered, not independently verified or live"}.`,
-    `Underlying: ${setup.symbol}; spot ${money(setup.spot, 2)}; valuation date ${setup.valuationDate}.`,
+    `Underlying: ${setup.symbol}; spot ${setup.spot.trim() === "" ? "not supplied" : money(setup.spot, 2)}; valuation date ${setup.valuationDate}.`,
     `IV calibration from current option marks: ${setup.calibrateIv ? "enabled; check calibration findings and effective IV" : "disabled; entered per-leg IV is used"}.`,
     "",
     "## Position",
